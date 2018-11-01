@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 set -ex
 
-versions=($(cat versions))
+terraform_versions=($(cat tf-versions))
 
-for version in "${versions[@]}"
+for terraform_version in "${terraform_versions[@]}"
 do
-  echo "pushing ${version}"
-  docker push "${DOCKER_REPO}:${version}"
+  echo "pushing image for version ${terraform_version}"
+  docker push "${IMAGE_NAME}:${terraform_version}"
 done

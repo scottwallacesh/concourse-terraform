@@ -5,12 +5,23 @@ terraform_versions=($(cat tf-versions))
 
 for terraform_version in "${terraform_versions[@]}"
 do
-  echo "building ${terraform_version}"
+  echo "building image for version ${terraform_version}"
     docker build \
         --build-arg TERRAFORM_VERSION="${terraform_version}" \
-        --tag "${DOCKER_REPO}:${terraform_version}" \
+        --tag "${IMAGE_NAME}:${terraform_version}" \
+        .
+  echo "building test image for version ${terraform_version}"
+    docker build \
+        --build-arg TERRAFORM_VERSION="${terraform_version}" \
+        --tag "${IMAGE_NAME}-tests:${terraform_version}" \
         .
 done
 
-# force failure
-exit 1
+for terraform_version in "${terraform_versions[@]}"
+do
+  echo "running test image for version ${terraform_version}"
+  docker \
+    run \
+      --rm \
+      "${IMAGE_NAME}-tests:${terraform_version}" python -m unittest discover
+done
