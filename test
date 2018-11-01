@@ -3,19 +3,17 @@
 set -xeo pipefail
 
 DOCKER_IMAGE_NAME="snapkitchen/concourse-terraform-resource"
-DOCKER_IMAGE_TAG="latest"
 
-terraform_version="${1}"
+# main
 
-if [ -n "${terraform_version}" ]
-then
-  DOCKER_IMAGE_TAG="${terraform_version}"
-fi
+terraform_versions=($(cat tf-versions))
 
-test_image="${DOCKER_IMAGE_NAME}-tests:${DOCKER_IMAGE_TAG}"
-
-docker \
-  run \
-    -i \
-    --rm \
-    "${test_image}" python -m unittest discover
+for terraform_version in "${terraform_versions[@]}"
+do
+  test_image="${DOCKER_IMAGE_NAME}-tests:${terraform_version}"
+  docker \
+    run \
+      -i \
+      --rm \
+      "${test_image}" python -m unittest discover
+done

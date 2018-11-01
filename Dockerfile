@@ -5,7 +5,7 @@ CMD ["/bin/sh"]
 
 RUN pip3 --no-cache-dir install --upgrade pip
 
-ARG TERRAFORM_VERSION=0.11.10
+ARG TERRAFORM_VERSION=0.0.0
 
 COPY hashicorp.asc .
 

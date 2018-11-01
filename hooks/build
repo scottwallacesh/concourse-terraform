@@ -1,16 +1,16 @@
 #!/usr/bin/env bash
 set -ex
 
-versions=($(cat versions))
+terraform_versions=($(cat tf-versions))
 
-for version in "${versions[@]}"
+for terraform_version in "${terraform_versions[@]}"
 do
-  echo "building ${version}"
+  echo "building ${terraform_version}"
     docker build \
-        --build-arg TERRAFORM_VERSION="${version}" \
-        --tag "${DOCKER_REPO}:${version}" \
+        --build-arg TERRAFORM_VERSION="${terraform_version}" \
+        --tag "${DOCKER_REPO}:${terraform_version}" \
         .
 done
 
-# force error
+# force failure
 exit 1

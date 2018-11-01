@@ -3,7 +3,6 @@
 set -xeo pipefail
 
 DOCKER_IMAGE_NAME="snapkitchen/concourse-terraform-resource"
-DOCKER_IMAGE_TAG="latest"
 
 build_app_image() {
   # req: app_image
@@ -33,17 +32,15 @@ build_test_image() {
 
 # main
 
-terraform_version="${1}"
+terraform_versions=($(cat tf-versions))
 
-if [ -n "${terraform_version}" ]
-then
-  DOCKER_IMAGE_TAG="${terraform_version}"
-fi
+for terraform_version in "${terraform_versions[@]}"
+do
+  app_image="${DOCKER_IMAGE_NAME}:${terraform_version}"
+  test_image="${DOCKER_IMAGE_NAME}-tests:${terraform_version}"
 
-app_image="${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG}"
-test_image="${DOCKER_IMAGE_NAME}-tests:${DOCKER_IMAGE_TAG}"
-
-if build_app_image
-then
-  build_test_image
-fi
+  if build_app_image
+  then
+    build_test_image
+  fi
+done
