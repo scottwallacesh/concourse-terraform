@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+set -ex
+
+versions=($(cat versions))
+
+for version in "${versions[@]}"
+do
+  echo "building ${version}"
+    docker build \
+        --build-arg TERRAFORM_VERSION="${version}" \
+        --tag "${DOCKER_REPO}:${version}" \
+        .
+done
+
+# force error
+exit 1

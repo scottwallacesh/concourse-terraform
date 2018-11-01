@@ -64,7 +64,8 @@ def _read_value_from_var_file(file_path: str, working_dir=None) -> str:
 def _terraform(
         *args: str,
         input=None,
-        working_dir=None) -> TERRAFORM_EXIT_STATUS:
+        working_dir=None,
+        error_on_no_changes=True) -> TERRAFORM_EXIT_STATUS:
     process_args = [
         TERRAFORM_BIN_FILE_PATH,
         *args
@@ -84,22 +85,27 @@ def _terraform(
         for line in pipe.stdout:
             # log the output as it arrives
             log(line, end="")
+    raise_error = False
+    # check if we're using detailed exit codes
     if '-detailed-exitcode' in [arg.lower() for arg in args]:
         if pipe.returncode == 0:
+            if error_on_no_changes:
+                raise_error = True
             exit_status = TERRAFORM_EXIT_STATUS.SUCCESS_NO_CHANGES
         elif pipe.returncode == 2:
             exit_status = TERRAFORM_EXIT_STATUS.SUCCESS_WITH_CHANGES
         else:
-            # args are masked to prevent credentials leaking
-            raise subprocess.CalledProcessError(
-                pipe.returncode, [TERRAFORM_BIN_FILE_PATH])
+            raise_error = True
     else:
         if pipe.returncode != 0:
-            # args are masked to prevent credentials leaking
-            raise subprocess.CalledProcessError(
-                pipe.returncode, [TERRAFORM_BIN_FILE_PATH])
+            raise_error = True
         else:
             exit_status = TERRAFORM_EXIT_STATUS.SUCCESS
+    # check if we need to raise an error
+    if raise_error:
+        # args are masked to prevent credentials leaking
+        raise subprocess.CalledProcessError(
+            pipe.returncode, [TERRAFORM_BIN_FILE_PATH])
     return exit_status
 
 
@@ -120,14 +126,16 @@ def version() -> None:
 # =============================================================================
 # init
 # =============================================================================
-def init(working_dir_path: str) -> None:
+def init(
+        working_dir_path: str,
+        terraform_dir_path: str = '.') -> None:
     terraform_command_args = []
     # execute plan args
     _terraform(
         'init',
         '-input=false',
         *terraform_command_args,
-        '.',
+        terraform_dir_path,
         working_dir=working_dir_path)
 
 
@@ -136,36 +144,49 @@ def init(working_dir_path: str) -> None:
 # =============================================================================
 def plan(
         working_dir_path: str,
-        create_plan_file=False,
-        plan_file_name=None,
-        error_on_no_changes=True) -> None:
+        terraform_dir_path: str = '.',
+        create_plan_file: bool = False,
+        plan_file_path: str = None,
+        error_on_no_changes: bool = True,
+        args: list = []) -> None:
     terraform_command_args = []
+    terraform_command_args.extend(args)
     if create_plan_file:
-        terraform_command_args.append(f"-out={plan_file_name}")
+        # creating a plan file
+        terraform_command_args.append(f"-out={plan_file_path}")
+    elif plan_file_path:
+        # viewing a plan file
+        terraform_dir_path = plan_file_path
     # execute plan args
-    terraform_result = _terraform(
+    _terraform(
         'plan',
         '-input=false',
         '-detailed-exitcode',
         *terraform_command_args,
-        plan_file_name if (plan_file_name and not create_plan_file) else '.',
-        working_dir=working_dir_path)
-    if error_on_no_changes and \
-            (terraform_result is TERRAFORM_EXIT_STATUS.SUCCESS_NO_CHANGES):
-        raise RuntimeError('plan completed with no changes')
+        terraform_dir_path,
+        working_dir=working_dir_path,
+        error_on_no_changes=error_on_no_changes)
 
 
 # =============================================================================
 # apply
 # =============================================================================
-def apply(working_dir_path: str, plan_file_name=None) -> None:
+def apply(
+        working_dir_path: str,
+        terraform_dir_path: str = '.',
+        plan_file_path: str = None,
+        args: list = []) -> None:
     terraform_command_args = []
+    terraform_command_args.extend(args)
+    if plan_file_path:
+        # applying a plan file
+        terraform_dir_path = plan_file_path
     # execute plan args
     _terraform(
         'apply',
         '-input=false',
         *terraform_command_args,
-        plan_file_name if plan_file_name else '.',
+        terraform_dir_path,
         working_dir=working_dir_path)
 
 

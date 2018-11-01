@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+set -ex
+
+versions=($(cat versions))
+
+for version in "${versions[@]}"
+do
+  echo "pushing ${version}"
+  docker push "${DOCKER_REPO}:${version}"
+done

@@ -1,0 +1,49 @@
+#!/usr/bin/env sh
+
+set -xeo pipefail
+
+DOCKER_IMAGE_NAME="snapkitchen/concourse-terraform-resource"
+DOCKER_IMAGE_TAG="latest"
+
+build_app_image() {
+  # req: app_image
+  # opt: terraform_version
+  echo "building app image ${app_image}"
+  docker \
+    build \
+      --rm \
+      --file Dockerfile \
+      --tag "${app_image}" \
+      ${terraform_version:+--build-arg "TERRAFORM_VERSION=${terraform_version}"} \
+      .
+}
+
+build_test_image() {
+  # req: app_image
+  # req: test_image
+  echo "building test image ${test_image}"
+  docker \
+    build \
+      --rm \
+      --file test.Dockerfile \
+      --build-arg "APP_IMAGE=${app_image}" \
+      --tag "${test_image}" \
+      .
+}
+
+# main
+
+terraform_version="${1}"
+
+if [ -n "${terraform_version}" ]
+then
+  DOCKER_IMAGE_TAG="${terraform_version}"
+fi
+
+app_image="${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG}"
+test_image="${DOCKER_IMAGE_NAME}-tests:${DOCKER_IMAGE_TAG}"
+
+if build_app_image
+then
+  build_test_image
+fi
