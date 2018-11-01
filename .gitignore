@@ -1,0 +1,8 @@
+# osx index files
+.DS_Store
+
+# terraform test data
+test/data/terraform/.terraform
+test/data/terraform/terraform.tfstate
+test/data/terraform/terraform.tfstate.backup
+test/data/terraform/tfplan
