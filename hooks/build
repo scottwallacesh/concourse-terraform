@@ -12,8 +12,9 @@ do
         .
   echo "building test image for version ${terraform_version}"
     docker build \
-        --build-arg TERRAFORM_VERSION="${terraform_version}" \
+        --build-arg APP_IMAGE="${IMAGE_NAME}:${terraform_version}" \
         --tag "${IMAGE_NAME}-tests:${terraform_version}" \
+        --file test.Dockerfile \
         .
 done
 
