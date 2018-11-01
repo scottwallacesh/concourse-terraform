@@ -8,12 +8,12 @@ do
   echo "building image for version ${terraform_version}"
     docker build \
         --build-arg TERRAFORM_VERSION="${terraform_version}" \
-        --tag "${IMAGE_NAME}:${terraform_version}" \
+        --tag "${DOCKER_REPO}:${terraform_version}" \
         .
   echo "building test image for version ${terraform_version}"
     docker build \
         --build-arg APP_IMAGE="${IMAGE_NAME}:${terraform_version}" \
-        --tag "${IMAGE_NAME}-tests:${terraform_version}" \
+        --tag "${DOCKER_REPO}-tests:${terraform_version}" \
         --file test.Dockerfile \
         .
 done
@@ -24,5 +24,5 @@ do
   docker \
     run \
       --rm \
-      "${IMAGE_NAME}-tests:${terraform_version}" python -m unittest discover
+      "${DOCKER_REPO}-tests:${terraform_version}" python -m unittest discover
 done
