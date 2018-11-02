@@ -46,6 +46,16 @@ def create_plan_with_no_output(test_working_dir: str) -> None:
 
 
 # =============================================================================
+# create_plan_with_no_output_allow_no_changes
+# =============================================================================
+def create_plan_with_no_output_allow_no_changes(test_working_dir: str) -> None:
+    lib.terraform.plan(
+        working_dir_path=test_working_dir,
+        terraform_dir_path=TEST_TERRAFORM_DIR,
+        error_on_no_changes=False)
+
+
+# =============================================================================
 # create_plan_file
 # =============================================================================
 def create_plan_file(test_working_dir: str) -> None:

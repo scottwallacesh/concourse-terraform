@@ -2,7 +2,7 @@
 .DS_Store
 
 # terraform test data
-test/data/terraform/.terraform
-test/data/terraform/terraform.tfstate
-test/data/terraform/terraform.tfstate.backup
-test/data/terraform/tfplan
+testdata/terraform/.terraform
+testdata/terraform/terraform.tfstate
+testdata/terraform/terraform.tfstate.backup
+testdata/terraform/tfplan

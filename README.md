@@ -6,8 +6,6 @@ a [concourse-ci](https://concourse-ci.org) resource for running [terraform](http
 
 - [overview](#overview)
 
-	- [requirements](#requirements)
-
 	- [features](#features)
 
 - [behavior](#behavior)
@@ -26,15 +24,12 @@ a [concourse-ci](https://concourse-ci.org) resource for running [terraform](http
 
 this project provides a [concourse-ci](concourse-ci.org) custom resource designed to wrap [terraform](https://www.terraform.io)'s plan and apply phases
 
-### requirements
-
-- an s3 bucket
-- s3 iam credentials with permissions needed for the [s3 backend](https://www.terraform.io/docs/backends/types/s3.html)
-
 ### features
 
-- currently, only the **s3 backend** is supported and is required
+- currently, only the **local** and **s3** backends are supported
 - docker hub tags correspond to the version of terraform
+- generates plan archives using an absolute working dir (`/tmp/tfwork`)
+	- the `terraform_dir` will be copied into the terraform working dir
 
 ## behaviour
 
@@ -46,7 +41,28 @@ this project provides a [concourse-ci](concourse-ci.org) custom resource designe
 
 **parameters**
 
-TODO
+- `action`: _optional_. action to perform. allowed values: `apply`, `plan`. default: `plan`
+
+- `plan`: _optional_. parameters for the plan action.
+
+	- `terraform_dir`: _required_. path to terraform directory.
+
+- `backend_type`: _optional_. backend type to use. allowed values: `local`, `s3`. default: `local`
+
+- `backend_config`: _optional_. a key-value mapping of the backend config parameters. default: `null`
+
+	- see [backend configuration](https://www.terraform.io/docs/backends/config.html)
+	- example:  
+	  
+	  ```yaml
+	  backend_type: s3
+	  backend:
+	      bucket: mybucket
+	      key: path/to/my/key
+	      region: us-east-1
+	  ```
+
+- `debug`: _optional_. set to `true` to dump argument values on error. **may result in leaked credentials**. default: `false`
 
 ## examples
 
