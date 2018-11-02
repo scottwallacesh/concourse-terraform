@@ -11,7 +11,25 @@ then
   # run specific version
   test_image="${DOCKER_IMAGE_NAME}-tests:${1}"
   explicit_test_command_args=("${@:2}")
-  test_command_args=('python' '-m' 'unittest')
+  test_command_args=('python')
+  # optionally enable ptvsd
+  if [[ -n "${PTVSD_ENABLE}" ]]
+  then
+    test_command_args+=(
+      '-m'
+      'ptvsd'
+      '--host'
+      '0.0.0.0'
+      '--port'
+      '5678'
+    )
+  fi
+  # optionally wait for ptvsd to attach
+  if [[ -n "${PTVSD_WAIT}" ]]
+  then
+    test_command_args+=('--wait')
+  fi
+  test_command_args+=('-m' 'unittest')
   if [[ "${#explicit_test_command_args[@]}" -gt 0 ]]
   then
     test_command_args+=("${explicit_test_command_args[@]}")
@@ -22,6 +40,7 @@ then
     run \
       -i \
       --rm \
+      ${PTVSD_ENABLE:+-p 5678:5678} \
       "${test_image}" ${test_command_args[@]+"${test_command_args[@]}"}
 else
   # run all supported versions

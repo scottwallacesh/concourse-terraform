@@ -26,16 +26,17 @@ build_test_image() {
       --rm \
       --file test.Dockerfile \
       --build-arg "APP_IMAGE=${app_image}" \
+      ${PTVSD_INSTALL:+--build-arg PTVSD_INSTALL=1} \
       --tag "${test_image}" \
       .
 }
 
 # main
 
-terraform_versions=($(cat tf-versions))
-
-for terraform_version in "${terraform_versions[@]}"
-do
+if [[ -n "${1:-}" ]]
+then
+  # build specific version
+  terraform_version="${1}"
   app_image="${DOCKER_IMAGE_NAME}:${terraform_version}"
   test_image="${DOCKER_IMAGE_NAME}-tests:${terraform_version}"
 
@@ -43,4 +44,18 @@ do
   then
     build_test_image
   fi
-done
+else
+  # build all supported versions
+  terraform_versions=($(cat tf-versions))
+
+  for terraform_version in "${terraform_versions[@]}"
+  do
+    app_image="${DOCKER_IMAGE_NAME}:${terraform_version}"
+    test_image="${DOCKER_IMAGE_NAME}-tests:${terraform_version}"
+
+    if build_app_image
+    then
+      build_test_image
+    fi
+  done
+fi
