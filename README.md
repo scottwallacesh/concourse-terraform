@@ -8,6 +8,10 @@ a [concourse-ci](https://concourse-ci.org) resource for running [terraform](http
 
 	- [features](#features)
 
+	- [issues](#issues)
+
+- [source configuration](#source-configuration)
+
 - [behavior](#behavior)
 
 	- [check](#check-not-implemented)
@@ -22,15 +26,64 @@ a [concourse-ci](https://concourse-ci.org) resource for running [terraform](http
 
 ## overview
 
-this project provides a [concourse-ci](concourse-ci.org) custom resource designed to wrap [terraform](https://www.terraform.io)'s plan and apply phases
+this project provides a [concourse-ci](concourse-ci.org) custom resource designed to wrap [terraform](https://www.terraform.io)
+
+**requires using a remote state backend to persist state**
 
 ### features
 
 - docker hub tags correspond to the version of terraform
-- generates plan archives using an absolute working dir `/tmp/tfwork`
-- the contents of `terraform_dir` will be copied into `/tmp/tfwork/terraform`
+- uses remote backends to persist state
+- uses the [plan and apply on different machines](https://www.terraform.io/guides/running-terraform-in-automation.html) automation strategy
+	- generates plan archives using an absolute working dir `/tmp/tfwork`
+	- the contents of `terraform_dir` will be copied into `/tmp/tfwork/terraform`
+	- this ensures paths will be consistent when using plan files in separate pipeline steps
+
+### issues
+
+- TODO
 
 ## behaviour
+
+### source configuration
+
+- `backend_type`: _required_. backend type to use. example: `s3`.
+
+	- this will automatically generate a `backend.tf` file to be used during `init`
+
+- `backend_config`: _optional_. a key-value mapping of the backend config parameters. default: `null`
+
+	- this will pass each parameter to `init` as a `-backend-config` value
+
+example:
+
+```yaml
+source:
+  backend_type: s3
+  backend:
+	  bucket: mybucket
+	  key: path/to/my/key
+	  region: us-east-1
+```
+
+creates `backend.tf`:
+
+```hcl
+terraform {
+  backend "s3" {}
+}
+```
+
+with init parameters:
+
+```sh
+terraform init \
+	-backend-config="bucket=mybucket" \
+	-backend-config="key=path/to/my/key" \
+	-backend-config="region=us-east-1"
+```
+
+see terraform [backend configuration](https://www.terraform.io/docs/backends/config.html) for more information
 
 ### `check`: not implemented
 
@@ -38,56 +91,35 @@ this project provides a [concourse-ci](concourse-ci.org) custom resource designe
 
 ### `out`: run terraform plan or apply
 
-**parameters**
+**common parameters**
 
-- `backend_type`: _required_. backend type to use. example: `local`, `s3`.
+- `action`: _required_. action to perform. supported values:
 
-	- this will automatically generate a config file to be used during `init`:  
+	- `create_plan`
 
-	  ```
-	  terraform {
-	      backend "$backend_type" {}
-	  }
-	  ```
+	- `show_plan`
 
-- `backend_config`: _optional_. a key-value mapping of the backend config parameters. default: `null`
+	- `apply_plan`
 
-	- this will pass each parameter to `init` as a `-backend-config` value:  
+**create-plan parameters**
 
-	  ```
-	  backend_type: s3
-	  backend:
-	      bucket: mybucket
-	      key: path/to/my/key
-	      region: us-east-1
-	  ```
-	  
-	  results in:  
-	  
-	  ```
-	  terraform init <ARGS> \
-	  		-backend-config="bucket=mybucket" \
-	  		-backend-config="key=path/to/my/key" \
-	  		-backend-config="region=us-east-1"
-	  ```
-	  
+- `create_plan`: parameters for the `create_plan` action.
 
-- `action`: _optional_. action to perform. allowed values: `apply`, `plan`. default: `plan`
+	- `terraform_dir`: _required_. path to terraform directory. can be relative to the concourse working directory.
 
-- `plan`: _optional_. parameters for the plan action.
+	- `terraform_dir_path`: _optional_. path to terraform files relative to `terraform_dir`. default: `.`
 
-	- `terraform_dir`: _required_. path to terraform directory.
+**show-plan parameters**
 
-	- see [backend configuration](https://www.terraform.io/docs/backends/config.html)
-	- example:  
-	  
-	  ```yaml
-	  backend_type: s3
-	  backend:
-	      bucket: mybucket
-	      key: path/to/my/key
-	      region: us-east-1
-	  ```
+- `show_plan`: parameters for the `show_plan` action.
+
+**apply-plan parameters**
+
+- `apply_plan`: parameters for the `apply_plan` action.
+
+	- `plan_archive`: _required_. path to terraform plan archive. can be relative to the concourse working directory.
+
+	- `terraform_dir_path`: _optional_. path to terraform files relative to the `terraform_dir` used during plan. default: `.`
 
 - `debug`: _optional_. set to `true` to dump argument values on error. **may result in leaked credentials**. default: `false`
 
@@ -123,8 +155,6 @@ note: to install `ptvsd` in the test image, set the environment variable `PTVSD_
 
 **test script**
 
-for the `./test` script, you can use `ptvsd` to remote debug into the container (if installed):
-
 `./test` supports two run modes:
 
 - `./test`
@@ -134,7 +164,7 @@ for the `./test` script, you can use `ptvsd` to remote debug into the container 
 - `./test [VERSION] [ARGS]`
 
 	- runs `unittest discover ARGS` against `VERSION`
-	- supports `ptvsd` by setting environment variables:
+	- supports `ptvsd` (if installed) by setting environment variables:
 
 		- `PTVSD_ENABLE=1` runs `-m ptvsd -host 0.0.0.0 --port 5678` as the entry point
 		- `PTVSD_WAIT=1` enables `--wait` causing the process to wait for the debugger to attach
@@ -143,7 +173,7 @@ for the `./test` script, you can use `ptvsd` to remote debug into the container 
 
 builds are handled automatically by [docker hub](https://hub.docker.com)
 
-custom build hooks are used to automatically build every version in the `tf-versions` file
+custom build hooks are used to automatically build and test every version in the `tf-versions` file
 
 # license
 

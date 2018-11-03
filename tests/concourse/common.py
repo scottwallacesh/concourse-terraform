@@ -8,6 +8,8 @@ import tempfile
 # =============================================================================
 
 TEST_TERRAFORM_DIR = '/opt/resource/testdata/terraform'
+TEST_ROOT_DIR = '/opt/resource'
+RELATIVE_TEST_TERRAFORM_DIR = 'testdata/terraform'
 
 
 # =============================================================================

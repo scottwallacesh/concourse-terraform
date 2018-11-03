@@ -7,6 +7,7 @@ import sys
 from typing import Any, Dict, List, Optional
 
 # local
+import lib.terraform
 from lib.log import log, log_pretty
 
 
@@ -16,7 +17,8 @@ from lib.log import log, log_pretty
 #
 # =============================================================================
 
-TFWORK_DIR_PATH = '/tmp/tfwork'
+TERRAFORM_WORK_DIR = '/tmp/tfwork'
+TERRAFORM_DIR_NAME = 'terraform'
 
 ACTION_PLAN = 'plan'
 ACTION_APPLY = 'apply'
@@ -25,6 +27,7 @@ SUPPORTED_ACTIONS = [ACTION_PLAN, ACTION_APPLY]
 BACKEND_LOCAL = 'local'
 BACKEND_S3 = 's3'
 SUPPORTED_BACKEND_TYPES = [BACKEND_LOCAL, BACKEND_S3]
+BACKEND_FILE_NAME='backend.tf'
 
 
 # =============================================================================
@@ -34,9 +37,9 @@ SUPPORTED_BACKEND_TYPES = [BACKEND_LOCAL, BACKEND_S3]
 # =============================================================================
 
 # =============================================================================
-# _get_working_dir_path
+# _get_concourse_work_dir
 # =============================================================================
-def _get_working_dir_path() -> str:
+def _get_concourse_work_dir() -> str:
     return sys.argv[1]
 
 
@@ -49,9 +52,16 @@ def _get_working_dir_file_path(
 
 
 # =============================================================================
-# _read_payload
+# _set_working_dir_path
 # =============================================================================
-def _read_payload(stream=sys.stdin) -> Any:
+def _set_working_dir_path(working_dir_path: str) -> None:
+    os.chdir(working_dir_path)
+
+
+# =============================================================================
+# _get_request
+# =============================================================================
+def _get_request(stream=sys.stdin) -> Any:
     return json.load(stream)
 
 
@@ -63,21 +73,38 @@ def _write_payload(payload: Any, stream=sys.stdout) -> None:
 
 
 # =============================================================================
-# _prep_tfwork_dir
+# _get_terraform_dir
 # =============================================================================
-def _prep_tfwork_dir(tfwork_dir_path: str) -> None:
-    if os.path.isdir(tfwork_dir_path):
-        shutil.rmtree(tfwork_dir_path)
-    os.mkdir(tfwork_dir_path)
+def _get_terraform_dir(terraform_work_dir: str) -> str:
+    return os.path.join(terraform_work_dir, TERRAFORM_DIR_NAME)
 
 
 # =============================================================================
-# _copy_terraform_dir_to_tfwork_dir
+# _prep_terraform_dir
 # =============================================================================
-def _copy_terraform_dir_to_tfwork_dir(
-        terraform_dir_path: str,
-        tfwork_dir_path: str) -> None:
-    distutils.dir_util.copy_tree(terraform_dir_path, tfwork_dir_path)
+def _prep_terraform_dir(terraform_dir: str) -> None:
+    if os.path.isdir(terraform_dir):
+        shutil.rmtree(terraform_dir)
+    os.mkdir(terraform_dir)
+
+
+# =============================================================================
+# _copy_terraform_dir
+# =============================================================================
+def _copy_terraform_dir(
+        source: str,
+        destination: str) -> None:
+    distutils.dir_util.copy_tree(source, destination)
+
+
+# =============================================================================
+# _create_backend_file
+# =============================================================================
+def _create_backend_file(request: dict) -> Optional[str]:
+    if 'source' in request:
+        return request['source'].get('backend_type')
+    else:
+        return None
 
 
 # =============================================================================
@@ -89,8 +116,8 @@ def _copy_terraform_dir_to_tfwork_dir(
 # =============================================================================
 # _get_action
 # =============================================================================
-def _get_action(params: dict) -> str:
-    action: str = params.get('action', 'plan')
+def _get_action(request: dict) -> str:
+    action: str = request['params'].get('action', 'plan')
     if action not in SUPPORTED_ACTIONS:
         raise ValueError(
             f"action '{action}' unsupported. "
@@ -101,26 +128,25 @@ def _get_action(params: dict) -> str:
 # =============================================================================
 # _get_debug_enabled
 # =============================================================================
-def _get_debug_enabled(params: dict) -> bool:
-    return params.get('debug', False)
+def _get_debug_enabled(request: dict) -> bool:
+    return request['params'].get('debug', False)
 
 
 # =============================================================================
 # _get_plan_terraform_dir
 # =============================================================================
-def _get_plan_terraform_dir(params: dict) -> Optional[str]:
-    return params['plan']['terraform_dir']
+def _get_plan_terraform_dir(request: dict) -> Optional[str]:
+    return request['params']['plan']['terraform_dir']
 
 
 # =============================================================================
 # _get_backend_type
 # =============================================================================
-def _get_backend_type(params: dict) -> str:
-    backend_type: str = params.get('backend_type', 'local')
-    if backend_type not in SUPPORTED_BACKEND_TYPES:
-        raise ValueError(
-            f"backend_type '{backend_type}' unsupported. "
-            f"supported values are: {', '.join(SUPPORTED_BACKEND_TYPES)}")
+def _get_backend_type(backend_type: str, terraform_dir_path: str) -> None:
+    backend_file_path = os.path.join(terraform_dir_path, BACKEND_FILE_NAME)
+    if os.path.isfile(backend_file_path):
+        raise FileExistsError('backend file already exists: '
+                              f"{backend_file_path}")
 
 
 # # =============================================================================
@@ -183,38 +209,48 @@ def do_in() -> None:
 
 
 def do_out(
-        input_payload: dict = None,
-        working_dir_path: str = None,
-        tfwork_dir_path: str = TFWORK_DIR_PATH) -> None:
-    # read the concourse input payload
-    if not input_payload:
-        input_payload = _read_payload()
-    # get the working dir path from the input
-    if not working_dir_path:
-        working_dir_path = _get_working_dir_path()
+        request: dict = None,
+        concourse_work_dir: str = None,
+        terraform_work_dir: str = TERRAFORM_WORK_DIR) -> None:
+    # get the concourse request
+    if not request:
+        request = _get_request()
+    # get the concourse work dir
+    if not concourse_work_dir:
+        concourse_work_dir = _get_concourse_work_dir()
+    # change to the concourse working dir
+    _set_working_dir(concourse_work_dir)
     # get debug setting from payload params
-    debug_enabled = _get_debug_enabled(input_payload['params'])
+    debug_enabled = _get_debug_enabled(request)
     # get the backend type from payload params
-    backend_type = _get_backend_type(input_payload['params'])
+    backend_type = _get_backend_type(request)
     # get the action
-    action = _get_action(input_payload['params'])
-    # prep the tfwork directory
-    _prep_tfwork_dir(tfwork_dir_path)
+    action = _get_action(request)
+    # prep the tfwork terraform dir
+    tfwork_terraform_dir = _prep_terraform_dir(terraform_work_dir)
 
     # process action
     if action == ACTION_PLAN:
         # get terraform_dir
-        terraform_dir = _get_plan_terraform_dir(input_payload['params'])
-        # copy terrform dir contents to tfwork directory
-        _copy_terraform_dir_to_tfwork_dir(terraform_dir, tfwork_dir_path)
+        terraform_dir = _get_plan_terraform_dir(request)
+        # copy terrform dir contents to tfwork terraform dir
+        _copy_terraform_dir(
+            terraform_dir,
+            terraform_work_dir)
+        lib.terraform.plan(
+            terraform_work_dir,
+            tfwork_terraform_dir
+        )
+        # create backend file
+        _create_backend_file(backend_type, tfwork_terraform_dir)
     elif action == ACTION_APPLY:
         raise NotImplementedError()
 
-    # then copy the contents of the terraform directory into it
+    # then copy the contents of the terraform dir into it
     # also be able to create an archive of the contents
 
     # # get the template file path from the payload
-    # template_file_path: str = input_payload['params']['template']
+    # template_file_path: str = request['params']['template']
     # # get the working dir path from the input
     # working_dir_path = _get_working_dir_path()
     # # instantiate the var file paths and vars lists
@@ -222,14 +258,14 @@ def do_out(
     # vars: Optional[Dict] = None
     # vars_from_files: Optional[Dict] = None
     # # add var file paths, if provided
-    # if 'var_files' in input_payload['params']:
-    #     var_file_paths = input_payload['params']['var_files']
+    # if 'var_files' in request['params']:
+    #     var_file_paths = request['params']['var_files']
     # # add vars, if provided
-    # if 'vars' in input_payload['params']:
-    #     vars = input_payload['params']['vars']
+    # if 'vars' in request['params']:
+    #     vars = request['params']['vars']
     # # add vars from files, if provided
-    # if 'vars_from_files' in input_payload['params']:
-    #     vars_from_files = input_payload['params']['vars_from_files']
+    # if 'vars_from_files' in request['params']:
+    #     vars_from_files = request['params']['vars_from_files']
     # # dump details, if debug enabled
     # if debug_enabled:
     #     log('var_file_paths:')
