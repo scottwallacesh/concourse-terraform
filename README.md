@@ -1,6 +1,6 @@
-# concourse terraform resource
+# concourse terraform
 
-a [concourse-ci](https://concourse-ci.org) resource for running [terraform](https://www.terraform.io)
+[concourse-ci](https://concourse-ci.org) tasks for running [terraform](https://www.terraform.io)
 
 ## table of contents
 
@@ -9,16 +9,6 @@ a [concourse-ci](https://concourse-ci.org) resource for running [terraform](http
 	- [features](#features)
 
 	- [issues](#issues)
-
-- [source configuration](#source-configuration)
-
-- [behavior](#behavior)
-
-	- [check](#check-not-implemented)
-
-	- [in](#in-not-implemented)
-
-	- [out](#out-run-terraform-plan-or-apply)
 
 - [development](#development)
 

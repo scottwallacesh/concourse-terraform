@@ -4,6 +4,9 @@ import json
 import os
 import shutil
 import sys
+import tarfile
+import tempfile
+import time
 from typing import Any, Dict, List, Optional
 
 # local
@@ -19,6 +22,7 @@ from lib.log import log, log_pretty
 
 TERRAFORM_WORK_DIR = '/tmp/tfwork'
 TERRAFORM_DIR_NAME = 'terraform'
+TERRAFORM_PLAN_FILE_NAME='.tfplan'
 
 ACTION_PLAN = 'plan'
 ACTION_APPLY = 'apply'
@@ -32,16 +36,9 @@ BACKEND_FILE_NAME='backend.tf'
 
 # =============================================================================
 #
-# private io functions
+# private functions
 #
 # =============================================================================
-
-# =============================================================================
-# _get_concourse_work_dir
-# =============================================================================
-def _get_concourse_work_dir() -> str:
-    return sys.argv[1]
-
 
 # =============================================================================
 # _get_working_dir_file_path
@@ -49,27 +46,6 @@ def _get_concourse_work_dir() -> str:
 def _get_working_dir_file_path(
         working_dir_path: str, file_name: str) -> str:
     return os.path.join(working_dir_path, file_name)
-
-
-# =============================================================================
-# _set_working_dir_path
-# =============================================================================
-def _set_working_dir_path(working_dir_path: str) -> None:
-    os.chdir(working_dir_path)
-
-
-# =============================================================================
-# _get_request
-# =============================================================================
-def _get_request(stream=sys.stdin) -> Any:
-    return json.load(stream)
-
-
-# =============================================================================
-# _write_payload
-# =============================================================================
-def _write_payload(payload: Any, stream=sys.stdout) -> None:
-    json.dump(payload, stream)
 
 
 # =============================================================================
@@ -98,208 +74,261 @@ def _copy_terraform_dir(
 
 
 # =============================================================================
+# _generate_backend_file_contents
+# =============================================================================
+def _generate_backend_file_contents(backend_type: str) -> str:
+    return f"""terraform {{
+    backend "{backend_type}" {{}}
+}}"""
+
+
+# =============================================================================
 # _create_backend_file
 # =============================================================================
-def _create_backend_file(request: dict) -> Optional[str]:
-    if 'source' in request:
-        return request['source'].get('backend_type')
+def _create_backend_file(
+        backend_type: str,
+        terraform_dir: str,
+        debug: bool = False) -> None:
+    backend_file_path = os.path.join(terraform_dir, BACKEND_FILE_NAME)
+    backend_file_contents = _generate_backend_file_contents(backend_type)
+    with open(backend_file_path, 'w') as backend_file:
+        backend_file.write(backend_file_contents)
+    if debug:
+        log('[debug] created backend file:')
+        with open(backend_file_path, 'r') as backend_file:
+            log(backend_file.read())
+
+
+# =============================================================================
+# _get_value_from_file
+# =============================================================================
+def _get_value_from_file(file_path: str) -> str:
+    with open(file_path, 'r') as file:
+        value = file.read()
+    return value
+
+
+# =============================================================================
+# _format_archive_version
+# =============================================================================
+def _format_archive_version(
+    timestamp: int,
+    source_ref: Optional[str] = None
+) -> str:
+    if source_ref:
+        return f"{timestamp}.{source_ref}"
     else:
-        return None
+        return str(timestamp)
+
+
+# =============================================================================
+# _get_archive_version
+# =============================================================================
+def _get_archive_version(
+        source_ref: Optional[str] = None,
+        source_ref_file: Optional[str] = None,
+        timestamp: Optional[int] = None) -> str:
+    if not timestamp:
+        # get current unix timestamp
+        timestamp = int(time.time())
+    if (not source_ref) and source_ref_file:
+        # get source ref from file
+        source_ref = _get_value_from_file(source_ref_file)
+    return _format_archive_version(timestamp, source_ref=source_ref)
+
+
+# =============================================================================
+# _create_terraform_dir_archive
+# =============================================================================
+def _create_terraform_dir_archive(
+        terraform_dir: str,
+        output_dir: str,
+        version: str,
+        debug: bool = False) -> str:
+    archive_file_name = f"terraform-{version}.tar.gz"
+    archive_file_path = os.path.join(output_dir, archive_file_name)
+    with tarfile.open(archive_file_path, 'x:gz') as archive_file:
+        if debug:
+            archive_file.debug = 3
+            log('[debug] creating terraform archive: '
+                f"{archive_file_path}")
+        archive_file.add(terraform_dir, TERRAFORM_DIR_NAME)
+    if debug:
+        with tarfile.open(archive_file_path, 'r:gz') as archive_file:
+            archive_file.debug = 3
+            log('[debug] terraform archive contents: '
+                f"{archive_file_path}")
+            archive_file.list()
+    return archive_file_path
+
+
+# =============================================================================
+# _get_archive_file_name
+# =============================================================================
+def _get_archive_file_name(archive_input_dir) -> str:
+    archive_files = [archive_file
+                     for archive_file in os.listdir(archive_input_dir)
+                     if archive_file.endswith('.tar.gz')]
+    if len(archive_files) == 0:
+        raise FileNotFoundError('no archive file found at path: '
+                                f"{archive_input_dir}")
+    elif len(archive_files) > 1:
+        raise FileExistsError('multiple archive files found at path: '
+                              '{}\n{}'.format(archive_input_dir,
+                                              '\n'.join(archive_files)))
+    else:
+        return archive_files[0]
+
+
+# =============================================================================
+# _print_directory_contents
+# =============================================================================
+def _print_directory_contents(directory: str) -> None:
+    for path, subdirs, files in os.walk(directory):
+        for name in files:
+            log(os.path.join(path, name))
+
+
+# =============================================================================
+# _restore_terraform_dir_archive
+# =============================================================================
+def _restore_terraform_dir_archive(
+        terraform_dir: str,
+        input_dir: str,
+        debug: bool = False) -> None:
+    # get the archive file name
+    archive_file_name = _get_archive_file_name(input_dir)
+    # get the archive file path
+    archive_file_path = os.path.join(input_dir, archive_file_name)
+    # get a temporary directory to extract to
+    with tempfile.TemporaryDirectory() as extract_scratch_dir:
+        # extract to the temporary directory
+        with tarfile.open(archive_file_path, 'r:gz') as archive_file:
+            if debug:
+                archive_file.debug = 3
+                log('[debug] extracting terraform archive: '
+                    f"{archive_file_path}")
+            archive_file.extractall(path=extract_scratch_dir)
+        # get the extracted terraform dir path
+        extracted_terraform_dir = _get_terraform_dir(extract_scratch_dir)
+        # copy the extracted terraform dir to the terraform dir
+        _copy_terraform_dir(extracted_terraform_dir, terraform_dir)
+    if debug:
+        log('[debug] extracted archive contents: ')
+        _print_directory_contents(terraform_dir)
 
 
 # =============================================================================
 #
-# private params functions
+# public functions
 #
 # =============================================================================
 
 # =============================================================================
-# _get_action
+# init_terraform_dir
 # =============================================================================
-def _get_action(request: dict) -> str:
-    action: str = request['params'].get('action', 'plan')
-    if action not in SUPPORTED_ACTIONS:
-        raise ValueError(
-            f"action '{action}' unsupported. "
-            f"supported actions are: {', '.join(SUPPORTED_ACTIONS)}")
-    return action
-
-
-# =============================================================================
-# _get_debug_enabled
-# =============================================================================
-def _get_debug_enabled(request: dict) -> bool:
-    return request['params'].get('debug', False)
-
-
-# =============================================================================
-# _get_plan_terraform_dir
-# =============================================================================
-def _get_plan_terraform_dir(request: dict) -> Optional[str]:
-    return request['params']['plan']['terraform_dir']
-
-
-# =============================================================================
-# _get_backend_type
-# =============================================================================
-def _get_backend_type(backend_type: str, terraform_dir_path: str) -> None:
-    backend_file_path = os.path.join(terraform_dir_path, BACKEND_FILE_NAME)
-    if os.path.isfile(backend_file_path):
-        raise FileExistsError('backend file already exists: '
-                              f"{backend_file_path}")
-
-
-# # =============================================================================
-# # _create_concourse_metadata_from_build_manifest_artifact
-# # =============================================================================
-# def _create_concourse_metadata_from_build_manifest_artifact(
-#         artifact_name: str,
-#         artifact_index: str,
-#         artifact: dict) -> List[dict]:
-#     metadata = []
-#     for key, value in artifact.items():
-#         metadata.append({
-#             'name': f"{artifact_name}::{artifact_index}::{key}",
-#             'value': value
-#         })
-#     return metadata
-
-
-# # =============================================================================
-# # _create_concourse_out_payload_from_packer_build_manifest
-# # =============================================================================
-# def _create_concourse_out_payload_from_packer_build_manifest(
-#         build_manifest: dict) -> dict:
-#     out_payload = {
-#         'version': None,
-#         'metadata': []
-#     }
-#     for artifact_name, artifacts in build_manifest['artifacts'].items():
-#         for artifact_index, artifact in artifacts.items():
-#             # use first artifact as version
-#             if (not out_payload['version']) and (artifact_index == '0'):
-#                 out_payload['version'] = {
-#                     'id': artifact['id']
-#                 }
-#             # add artifact details as metadata
-#             out_payload['metadata'].extend(
-#                 _create_concourse_metadata_from_build_manifest_artifact(
-#                     artifact_name, artifact_index, artifact))
-#     return out_payload
-
-
-# =============================================================================
-#
-# public lifecycle functions
-#
-# =============================================================================
-
-def do_check() -> None:
-    # not implemented
-    _write_payload([{'id': '0'}])
-
-
-def do_in() -> None:
-    # not implemented
-    _write_payload({
-        "version": {
-            'id': '0'
-        }
-    })
-
-
-def do_out(
-        request: dict = None,
-        concourse_work_dir: str = None,
-        terraform_work_dir: str = TERRAFORM_WORK_DIR) -> None:
-    # get the concourse request
-    if not request:
-        request = _get_request()
-    # get the concourse work dir
-    if not concourse_work_dir:
-        concourse_work_dir = _get_concourse_work_dir()
-    # change to the concourse working dir
-    _set_working_dir(concourse_work_dir)
-    # get debug setting from payload params
-    debug_enabled = _get_debug_enabled(request)
-    # get the backend type from payload params
-    backend_type = _get_backend_type(request)
-    # get the action
-    action = _get_action(request)
-    # prep the tfwork terraform dir
-    tfwork_terraform_dir = _prep_terraform_dir(terraform_work_dir)
-
-    # process action
-    if action == ACTION_PLAN:
-        # get terraform_dir
-        terraform_dir = _get_plan_terraform_dir(request)
-        # copy terrform dir contents to tfwork terraform dir
-        _copy_terraform_dir(
+def init_terraform_dir(
+        terraform_source_dir: str,
+        backend_type: Optional[str] = None,
+        backend_config_vars: Optional[dict] = None,
+        terraform_dir_path: str = None,
+        terraform_work_dir: str = TERRAFORM_WORK_DIR,
+        debug: bool = False) -> str:
+    # get path to terraform dir
+    terraform_dir = _get_terraform_dir(terraform_work_dir)
+    # prep the terraform dir
+    _prep_terraform_dir(terraform_dir)
+    # copy the terraform source dir into terraform dir
+    _copy_terraform_dir(terraform_source_dir, terraform_dir)
+    # optionally create a backend configuration
+    if backend_type:
+        _create_backend_file(
+            backend_type,
             terraform_dir,
-            terraform_work_dir)
-        lib.terraform.plan(
-            terraform_work_dir,
-            tfwork_terraform_dir
-        )
-        # create backend file
-        _create_backend_file(backend_type, tfwork_terraform_dir)
-    elif action == ACTION_APPLY:
-        raise NotImplementedError()
+            debug=debug)
+    # terraform init
+    lib.terraform.init(
+        terraform_dir,
+        terraform_dir_path=terraform_dir_path,
+        backend_config_vars=backend_config_vars,
+        debug=debug)
+    return terraform_dir
 
-    # then copy the contents of the terraform dir into it
-    # also be able to create an archive of the contents
 
-    # # get the template file path from the payload
-    # template_file_path: str = request['params']['template']
-    # # get the working dir path from the input
-    # working_dir_path = _get_working_dir_path()
-    # # instantiate the var file paths and vars lists
-    # var_file_paths: Optional[List[str]] = None
-    # vars: Optional[Dict] = None
-    # vars_from_files: Optional[Dict] = None
-    # # add var file paths, if provided
-    # if 'var_files' in request['params']:
-    #     var_file_paths = request['params']['var_files']
-    # # add vars, if provided
-    # if 'vars' in request['params']:
-    #     vars = request['params']['vars']
-    # # add vars from files, if provided
-    # if 'vars_from_files' in request['params']:
-    #     vars_from_files = request['params']['vars_from_files']
-    # # dump details, if debug enabled
-    # if debug_enabled:
-    #     log('var_file_paths:')
-    #     log_pretty(var_file_paths)
-    #     log('vars:')
-    #     log_pretty(vars)
-    # # dump the current packer version
-    # lib.packer.version()
-    # # validate the template
-    # lib.packer.validate(
-    #     working_dir_path,
-    #     template_file_path,
-    #     var_file_paths=var_file_paths,
-    #     vars=vars,
-    #     vars_from_files=vars_from_files,
-    #     debug=debug_enabled)
-    # # build the template, getting the build manifest back
-    # build_manifest = lib.packer.build(
-    #     working_dir_path,
-    #     template_file_path,
-    #     var_file_paths=var_file_paths,
-    #     vars=vars,
-    #     vars_from_files=vars_from_files,
-    #     debug=debug_enabled)
-    # # dump build manifest, if debug
-    # if debug_enabled:
-    #     log('build manifest:')
-    #     log_pretty(build_manifest)
-    # # convert the manifest into a concourse output payload
-    # output_payload = _create_concourse_out_payload_from_packer_build_manifest(
-    #     build_manifest)
-    # # dump output payload, if debug
-    # if debug_enabled:
-    #     log('output payload:')
-    #     log_pretty(output_payload)
-    # # write out the payload
-    # _write_payload(output_payload)
+# =============================================================================
+# archive_terraform_dir
+# =============================================================================
+def archive_terraform_dir(
+        terraform_dir: str,
+        archive_output_dir: str,
+        source_ref: str = None,
+        source_ref_file: str = None,
+        debug: bool = False) -> str:
+    # create archive of terraform dir
+    archive_version = _get_archive_version(
+        source_ref=source_ref,
+        source_ref_file=source_ref_file)
+    archive_file_path = _create_terraform_dir_archive(
+        terraform_dir,
+        archive_output_dir,
+        archive_version,
+        debug=debug
+    )
+    return archive_file_path
+
+
+# =============================================================================
+# restore_terraform_dir
+# =============================================================================
+def restore_terraform_dir(
+        archive_input_dir: str,
+        terraform_dir_path: str = None,
+        terraform_work_dir: str = TERRAFORM_WORK_DIR,
+        debug: bool = False) -> None:
+    # get path to terraform dir
+    terraform_dir = _get_terraform_dir(terraform_work_dir)
+    # prep the terraform dir
+    _prep_terraform_dir(terraform_dir)
+    # restore the terraform dir from archive
+    _restore_terraform_dir_archive(
+        terraform_dir,
+        archive_input_dir,
+        debug=debug)
+
+
+# =============================================================================
+# plan_terraform_dir
+# =============================================================================
+def plan_terraform_dir(
+        terraform_dir: str,
+        terraform_dir_path: str = None,
+        create_plan_file: bool = False,
+        plan_file_path: str = None,
+        debug: bool = False) -> Optional[str]:
+    if create_plan_file and (not plan_file_path):
+            plan_file_path = TERRAFORM_PLAN_FILE_NAME
+    lib.terraform.plan(
+        terraform_dir,
+        terraform_dir_path=terraform_dir_path,
+        create_plan_file=create_plan_file,
+        plan_file_path=plan_file_path,
+        debug=debug)
+    if create_plan_file:
+        if debug:
+            log(f'[debug] created plan file: {plan_file_path}')
+        return plan_file_path
+
+
+# =============================================================================
+# apply_terraform_dir
+# =============================================================================
+def apply_terraform_dir(
+        terraform_dir: str,
+        terraform_dir_path: str = None,
+        plan_file_path: str = None,
+        debug: bool = False) -> None:
+    lib.terraform.apply(
+        terraform_dir,
+        terraform_dir_path=terraform_dir_path,
+        plan_file_path=plan_file_path,
+        debug=debug)

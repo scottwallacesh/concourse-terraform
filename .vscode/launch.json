@@ -13,7 +13,7 @@
       "pathMappings": [
         {
             "localRoot": "${workspaceFolder}",
-            "remoteRoot": "/opt/resource"
+            "remoteRoot": "/app"
         }
       ]
     }
