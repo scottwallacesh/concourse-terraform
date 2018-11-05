@@ -1,17 +1,15 @@
 # stdlib
 import distutils.dir_util
-import json
 import os
 import shutil
-import sys
 import tarfile
 import tempfile
 import time
-from typing import Any, Dict, List, Optional
+from typing import Optional
 
 # local
 import lib.terraform
-from lib.log import log, log_pretty
+from lib.log import log
 
 
 # =============================================================================
@@ -331,4 +329,17 @@ def apply_terraform_dir(
         terraform_dir,
         terraform_dir_path=terraform_dir_path,
         plan_file_path=plan_file_path,
+        debug=debug)
+
+
+# =============================================================================
+# show_terraform_plan
+# =============================================================================
+def show_terraform_plan(
+        terraform_dir: str,
+        plan_file_path: str = None,
+        debug: bool = False) -> None:
+    lib.terraform.show(
+        terraform_dir,
+        plan_file_path,
         debug=debug)

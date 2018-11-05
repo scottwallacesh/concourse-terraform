@@ -14,22 +14,8 @@ import tests.concourse.common as common
 #
 # =============================================================================
 
-class ApplyTerraformDir(unittest.TestCase):
-    def test_apply_with_no_plan(self):
-        # create a new temp dir as the working dir
-        with common.create_test_working_dir() as test_working_dir:
-            # init the terraform dir
-            terraform_dir = lib.concourse.init_terraform_dir(
-                common.TEST_TERRAFORM_DIR,
-                terraform_work_dir=test_working_dir,
-                debug=True
-            )
-            # apply without plan
-            lib.concourse.apply_terraform_dir(
-                terraform_dir,
-                debug=True)
-
-    def test_apply_from_plan(self):
+class ShowTerraformPlan(unittest.TestCase):
+    def test_show_plan(self):
         # create a new temp dir as the working dir
         with common.create_test_working_dir() as test_working_dir:
             # init the terraform dir
@@ -43,10 +29,10 @@ class ApplyTerraformDir(unittest.TestCase):
                 terraform_dir,
                 create_plan_file=True,
                 debug=True)
-            # apply plan file
-            lib.concourse.apply_terraform_dir(
+            # show plan file
+            lib.concourse.show_terraform_plan(
                 terraform_dir,
-                plan_file_path=terraform_plan_file,
+                terraform_plan_file,
                 debug=True)
 
 

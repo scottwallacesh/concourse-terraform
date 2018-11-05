@@ -10,8 +10,8 @@ import lib.terraform
 #
 # =============================================================================
 
-TEST_TERRAFORM_DIR = '/opt/resource/testdata/terraform'
-TEST_PLAN_FILE_NAME = 'tfplan'
+TEST_TERRAFORM_DIR = '/app/testdata/terraform'
+TEST_PLAN_FILE_NAME = '.tfplan'
 
 
 # =============================================================================
@@ -33,7 +33,8 @@ def create_test_working_dir() -> tempfile.TemporaryDirectory:
 def init_test_working_dir(test_working_dir: str) -> None:
     lib.terraform.init(
         working_dir_path=test_working_dir,
-        terraform_dir_path=TEST_TERRAFORM_DIR)
+        terraform_dir_path=TEST_TERRAFORM_DIR,
+        debug=True)
 
 
 # =============================================================================
@@ -42,7 +43,8 @@ def init_test_working_dir(test_working_dir: str) -> None:
 def create_plan_with_no_output(test_working_dir: str) -> None:
     lib.terraform.plan(
         working_dir_path=test_working_dir,
-        terraform_dir_path=TEST_TERRAFORM_DIR)
+        terraform_dir_path=TEST_TERRAFORM_DIR,
+        debug=True)
 
 
 # =============================================================================
@@ -52,7 +54,8 @@ def create_plan_with_no_output_allow_no_changes(test_working_dir: str) -> None:
     lib.terraform.plan(
         working_dir_path=test_working_dir,
         terraform_dir_path=TEST_TERRAFORM_DIR,
-        error_on_no_changes=False)
+        error_on_no_changes=False,
+        debug=True)
 
 
 # =============================================================================
@@ -63,7 +66,18 @@ def create_plan_file(test_working_dir: str) -> None:
         working_dir_path=test_working_dir,
         terraform_dir_path=TEST_TERRAFORM_DIR,
         create_plan_file=True,
-        plan_file_path=TEST_PLAN_FILE_NAME)
+        plan_file_path=TEST_PLAN_FILE_NAME,
+        debug=True)
+
+
+# =============================================================================
+# show_plan_file
+# =============================================================================
+def show_plan_file(test_working_dir: str) -> None:
+    lib.terraform.show(
+        working_dir_path=test_working_dir,
+        plan_file_path=TEST_PLAN_FILE_NAME,
+        debug=True)
 
 
 # =============================================================================
@@ -73,7 +87,7 @@ def apply_with_no_plan(test_working_dir: str) -> None:
     lib.terraform.apply(
         working_dir_path=test_working_dir,
         terraform_dir_path=TEST_TERRAFORM_DIR,
-        args=['-auto-approve'])
+        debug=True)
 
 
 # =============================================================================
@@ -83,4 +97,5 @@ def apply_plan_file(test_working_dir: str) -> None:
     lib.terraform.apply(
         working_dir_path=test_working_dir,
         terraform_dir_path=TEST_TERRAFORM_DIR,
-        plan_file_path=TEST_PLAN_FILE_NAME)
+        plan_file_path=TEST_PLAN_FILE_NAME,
+        debug=True)

@@ -5,7 +5,7 @@ import subprocess
 from typing import Optional
 
 # local
-from lib.log import log, log_pretty
+from lib.log import log
 
 
 # =============================================================================
@@ -207,14 +207,31 @@ def apply(
     if args:
         terraform_command_args.extend(args)
     if plan_file_path:
-        # applying a plan file
+        # target plan file if using a plan file
         terraform_dir_path = plan_file_path
-    # execute plan args
+    else:
+        # auto approve if not using a plan file
+        terraform_command_args.append('-auto-approve')
+    # execute
     _terraform(
         'apply',
         '-input=false',
-        '-auto-approve',
         *terraform_command_args,
         terraform_dir_path,
+        working_dir=working_dir_path,
+        debug=debug)
+
+
+# =============================================================================
+# show
+# =============================================================================
+def show(
+        working_dir_path: str,
+        plan_file_path: str,
+        debug: bool = False) -> None:
+    # execute
+    _terraform(
+        'show',
+        plan_file_path,
         working_dir=working_dir_path,
         debug=debug)
