@@ -4,3 +4,8 @@ terraform_dir
 commands
 [X] create artifact after apply
 [X]   ensure artifact created on error
+[ ] create-plan command
+[ ] show-plan command
+[ ] apply-plan command
+
+[ ] add destroy support

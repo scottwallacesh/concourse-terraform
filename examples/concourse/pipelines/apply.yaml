@@ -44,15 +44,17 @@ jobs:
       SOURCE_REF_FILE: terraform-source-dir/.git/short_ref
       DEBUG: true
     ensure:
-    # this is an example task
-    # to show that even on failure,
-    # the output dir will contain
-    # the terraform dir archive
-    #
-    # do not use this example
-    # instead, put the artifact into remote storage
-    # using a concourse resource or script
-    - task: save-archive-to-remote-storage
+      # this is an example task
+      # to show that even on failure,
+      # the output dir will contain
+      # the terraform dir archive
+      #
+      # do not use this example
+      # instead, put the artifact into remote storage
+      # using a concourse resource
+      # or a script that extracts the local state
+      # from the archive and uploads it
+      task: save-archive-to-remote-storage
       image: concourse-terraform-image
       config:
         platform: linux

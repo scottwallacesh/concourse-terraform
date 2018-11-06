@@ -54,6 +54,7 @@ def apply(
             terraform_dir_path=terraform_dir_path,
             debug=debug)
     finally:
+        # ensure the archive is created
         archive_file_path = lib.terraform_dir.archive_terraform_dir(
             terraform_dir,
             archive_output_dir,
