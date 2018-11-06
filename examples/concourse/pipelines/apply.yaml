@@ -29,3 +29,38 @@ jobs:
       TF_WORKING_DIR: terraform-source-dir/testdata/terraform
       SOURCE_REF_FILE: terraform-source-dir/.git/short_ref
       DEBUG: true
+
+- name: terraform-apply-ensure-on-failure
+  plan:
+  - get: concourse-terraform
+  - get: concourse-terraform-image
+  - task: terraform-apply
+    image: concourse-terraform-image
+    file: concourse-terraform/tasks/apply.yaml
+    input_mapping:
+      terraform-source-dir: concourse-terraform
+    params:
+      TF_WORKING_DIR: terraform-source-dir/testdata/terraform-fail
+      SOURCE_REF_FILE: terraform-source-dir/.git/short_ref
+      DEBUG: true
+    ensure:
+    # this is an example task
+    # to show that even on failure,
+    # the output dir will contain
+    # the terraform dir archive
+    #
+    # do not use this example
+    # instead, put the artifact into remote storage
+    # using a concourse resource or script
+    - task: save-archive-to-remote-storage
+      image: concourse-terraform-image
+      config:
+        platform: linux
+        inputs:
+        - name: archive-output-dir
+        run:
+          path: /bin/sh
+          args:
+          - -c
+          - |
+            ls -la archive-output-dir

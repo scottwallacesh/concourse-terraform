@@ -255,7 +255,7 @@ with `terraform` being the target terraform directory
 
 **caution**: this task may result in orphaned resources if you do not properly manage the statefile. to be safe, use a remote backend
 
-if using a local backend, ensure that you are using `on_failure` commands to manage the resource
+**if using a local backend**, configure an [on_failure](https://concourse-ci.org/on-failure-step-hook.html) or [ensure](https://concourse-ci.org/ensure-step-hook.html) task step to `put` the terraform artifact to remote storage in case a failure results in state being changed
 
 ### inputs
 
