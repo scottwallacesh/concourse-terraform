@@ -16,6 +16,9 @@ DEBUG = 'DEBUG'
 ERROR_ON_NO_CHANGES = 'ERROR_ON_NO_CHANGES'
 TERRAFORM_SOURCE_DIR = 'TF_WORKING_DIR'
 TERRAFORM_DIR_PATH = 'TF_DIR_PATH'
+ARCHIVE_OUTPUT_DIR = 'ARCHIVE_OUTPUT_DIR'
+SOURCE_REF = 'SOURCE_REF'
+SOURCE_REF_FILE = 'SOURCE_REF_FILE'
 
 
 # =============================================================================
@@ -41,14 +44,20 @@ def process_args(args: list) -> None:
             debug=debug)
     elif args[0] == lib.commands.APPLY:
         terraform_source_dir = os.environ[TERRAFORM_SOURCE_DIR]
+        archive_output_dir = os.environ[ARCHIVE_OUTPUT_DIR]
         terraform_dir_path = os.environ.get(TERRAFORM_DIR_PATH)
+        source_ref = os.environ.get(SOURCE_REF)
+        source_ref_file = os.environ.get(SOURCE_REF_FILE)
         debug = os.environ.get(DEBUG)
         if debug:
             # convert to bool if specified
             debug = bool(strtobool(debug))
         lib.commands.apply(
             terraform_source_dir,
+            archive_output_dir,
             terraform_dir_path=terraform_dir_path,
+            source_ref=source_ref,
+            source_ref_file=source_ref_file,
             debug=debug)
     else:
         print(f'command not recognized: {command}')

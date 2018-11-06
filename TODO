@@ -1,0 +1,6 @@
+terraform_dir
+[X] add tests for empty values
+
+commands
+[X] create artifact after apply
+[X]   ensure artifact created on error

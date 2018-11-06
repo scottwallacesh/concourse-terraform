@@ -17,6 +17,24 @@ import tests.terraform_dir.common as common
 # =============================================================================
 
 class ArchiveTerraformDir(unittest.TestCase):
+    def test_requires_terraform_dir(self):
+        # create a new temp dir as the archive output dir
+        with common.create_test_working_dir() as archive_output_dir:
+            with self.assertRaises(ValueError):
+                # archive with empty string as the terraform dir
+                lib.terraform_dir.archive_terraform_dir(
+                    '',
+                    archive_output_dir,
+                    debug=True)
+
+    def test_requires_archive_output_dir(self):
+        with self.assertRaises(ValueError):
+            # archive with empty string as the archive output dir
+            lib.terraform_dir.archive_terraform_dir(
+                common.TEST_TERRAFORM_DIR,
+                '',
+                debug=True)
+
     def test_creates_archive_of_terraform_dir(self):
         # create a new temp dir as the working dir
         with common.create_test_working_dir() as test_working_dir:

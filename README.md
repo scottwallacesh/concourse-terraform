@@ -253,6 +253,10 @@ with `terraform` being the target terraform directory
 
 ## `apply.yaml`: apply with no plan
 
+**caution**: this task may result in orphaned resources if you do not properly manage the statefile. to be safe, use a remote backend
+
+if using a local backend, ensure that you are using `on_failure` commands to manage the resource
+
 ### inputs
 
 - `concourse-terraform`: _required_. the concourse terraform directory.
@@ -261,13 +265,17 @@ with `terraform` being the target terraform directory
 
 ### outputs
 
-- none
+- `archive-output-dir`: an artifact containing the terraform working directory will be placed here
 
 ### params
 
 - `TF_WORKING_DIR`: _required_. path to the terraform working directory. see [providing terraform source files](#providing-terraform-source-files).
 
 - `TF_DIR_PATH`: _optional_. path to the terraform files inside the working directory. see [providing terraform source files](#providing-terraform-source-files). default: `.`
+
+- `SOURCE_REF`: _optional_. a source ref (e.g. a git commit sha or short sha) to be appended to the output artifact filename. cannot be used with `SOURCE_REF_FILE`. default: none
+
+- `SOURCE_REF_FILE`: _optional_. path to file containing a source ref (e.g. a git commit sha or short sha) to be appended to the output artifact filename. cannot be used with `SOURCE_REF`. default: none
 
 - `DEBUG`: _optional_. prints command line arguments and increases log verbosity. set to `true` to enable. **may result in leaked credentials**. default: `false`
 

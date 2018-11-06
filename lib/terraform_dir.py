@@ -276,8 +276,8 @@ def init_terraform_dir(
 def archive_terraform_dir(
         terraform_dir: str,
         archive_output_dir: str,
-        source_ref: str = None,
-        source_ref_file: str = None,
+        source_ref: Optional[str] = None,
+        source_ref_file: Optional[str] = None,
         debug: bool = False) -> str:
     # check terraform dir
     if not terraform_dir:
@@ -371,11 +371,14 @@ def apply_terraform_dir(
 # =============================================================================
 def show_terraform_plan(
         terraform_dir: str,
-        plan_file_path: str = None,
+        plan_file_path: str,
         debug: bool = False) -> None:
     # check terraform dir
     if not terraform_dir:
         raise ValueError('terraform_dir cannot be empty')
+    # check plan file path
+    if not plan_file_path:
+        raise ValueError('plan_file_path cannot be empty')
     lib.terraform.show(
         terraform_dir,
         plan_file_path,

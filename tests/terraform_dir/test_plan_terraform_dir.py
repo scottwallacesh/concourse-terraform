@@ -16,6 +16,13 @@ import tests.terraform_dir.common as common
 # =============================================================================
 
 class PlanTerraformDir(unittest.TestCase):
+    def test_requires_terraform_dir(self):
+        with self.assertRaises(ValueError):
+            # plan with empty string as the terraform dir
+            lib.terraform_dir.plan_terraform_dir(
+                '',
+                debug=True)
+
     def test_plan_with_no_output(self):
         # create a new temp dir as the working dir
         with common.create_test_working_dir() as test_working_dir:

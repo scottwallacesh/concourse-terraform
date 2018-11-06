@@ -16,6 +16,17 @@ import tests.terraform_dir.common as common
 # =============================================================================
 
 class TestInitTerraformDir(unittest.TestCase):
+    def test_requires_terraform_source_dir(self):
+        # create a new temp dir as the working dir
+        with common.create_test_working_dir() as test_working_dir:
+            # test init with empty string as the terraform source dir
+            with self.assertRaises(ValueError):
+                lib.terraform_dir.init_terraform_dir(
+                    '',
+                    terraform_work_dir=test_working_dir,
+                    debug=True
+                )
+
     def test_destroys_existing_terraform_dir(self):
         # create a new temp dir as the working dir
         with common.create_test_working_dir() as test_working_dir:

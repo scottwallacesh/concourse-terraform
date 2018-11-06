@@ -37,13 +37,27 @@ def plan(
 # =============================================================================
 def apply(
         terraform_source_dir: str,
+        archive_output_dir: str,
         terraform_dir_path: Optional[str] = None,
+        source_ref: Optional[str] = None,
+        source_ref_file: Optional[str] = None,
         debug: bool = False) -> None:
+    # create artifact on error
     terraform_dir = lib.terraform_dir.init_terraform_dir(
         terraform_source_dir,
         terraform_dir_path=terraform_dir_path,
         debug=debug)
-    lib.terraform_dir.apply_terraform_dir(
-        terraform_dir,
-        terraform_dir_path=terraform_dir_path,
-        debug=debug)
+    # try to apply
+    try:
+        lib.terraform_dir.apply_terraform_dir(
+            terraform_dir,
+            terraform_dir_path=terraform_dir_path,
+            debug=debug)
+    finally:
+        archive_file_path = lib.terraform_dir.archive_terraform_dir(
+            terraform_dir,
+            archive_output_dir,
+            source_ref=source_ref,
+            source_ref_file=source_ref_file,
+            debug=debug)
+        print(f"wrote archive to: {archive_file_path}")

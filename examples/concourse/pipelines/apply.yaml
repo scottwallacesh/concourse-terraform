@@ -27,4 +27,5 @@ jobs:
       terraform-source-dir: concourse-terraform
     params:
       TF_WORKING_DIR: terraform-source-dir/testdata/terraform
+      SOURCE_REF_FILE: terraform-source-dir/.git/short_ref
       DEBUG: true
