@@ -20,10 +20,15 @@ EXPOSE 5678/tcp
 # copy library files
 COPY \
   lib/__init__.py \
-  lib/concourse.py \
-  lib/log.py \
+  lib/commands.py \
   lib/terraform.py \
+  lib/terraform_dir.py \
   /app/lib/
+
+# copy binary files
+COPY \
+  bin/concourse-terraform \
+  /app/bin/
 
 # TESTS
 

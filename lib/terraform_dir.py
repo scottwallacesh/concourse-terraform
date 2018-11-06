@@ -9,7 +9,6 @@ from typing import Optional
 
 # local
 import lib.terraform
-from lib.log import log
 
 
 # =============================================================================
@@ -20,16 +19,8 @@ from lib.log import log
 
 TERRAFORM_WORK_DIR = '/tmp/tfwork'
 TERRAFORM_DIR_NAME = 'terraform'
-TERRAFORM_PLAN_FILE_NAME='.tfplan'
-
-ACTION_PLAN = 'plan'
-ACTION_APPLY = 'apply'
-SUPPORTED_ACTIONS = [ACTION_PLAN, ACTION_APPLY]
-
-BACKEND_LOCAL = 'local'
-BACKEND_S3 = 's3'
-SUPPORTED_BACKEND_TYPES = [BACKEND_LOCAL, BACKEND_S3]
-BACKEND_FILE_NAME='backend.tf'
+TERRAFORM_PLAN_FILE_NAME = '.tfplan'
+BACKEND_FILE_NAME = 'backend.tf'
 
 
 # =============================================================================
@@ -92,9 +83,9 @@ def _create_backend_file(
     with open(backend_file_path, 'w') as backend_file:
         backend_file.write(backend_file_contents)
     if debug:
-        log('[debug] created backend file:')
+        print('[debug] created backend file:')
         with open(backend_file_path, 'r') as backend_file:
-            log(backend_file.read())
+            print(backend_file.read())
 
 
 # =============================================================================
@@ -148,13 +139,13 @@ def _create_terraform_dir_archive(
     with tarfile.open(archive_file_path, 'x:gz') as archive_file:
         if debug:
             archive_file.debug = 3
-            log('[debug] creating terraform archive: '
+            print('[debug] creating terraform archive: '
                 f"{archive_file_path}")
         archive_file.add(terraform_dir, TERRAFORM_DIR_NAME)
     if debug:
         with tarfile.open(archive_file_path, 'r:gz') as archive_file:
             archive_file.debug = 3
-            log('[debug] terraform archive contents: '
+            print('[debug] terraform archive contents: '
                 f"{archive_file_path}")
             archive_file.list()
     return archive_file_path
@@ -184,7 +175,7 @@ def _get_archive_file_name(archive_input_dir) -> str:
 def _print_directory_contents(directory: str) -> None:
     for path, subdirs, files in os.walk(directory):
         for name in files:
-            log(os.path.join(path, name))
+            print(os.path.join(path, name))
 
 
 # =============================================================================
@@ -204,7 +195,7 @@ def _restore_terraform_dir_archive(
         with tarfile.open(archive_file_path, 'r:gz') as archive_file:
             if debug:
                 archive_file.debug = 3
-                log('[debug] extracting terraform archive: '
+                print('[debug] extracting terraform archive: '
                     f"{archive_file_path}")
             archive_file.extractall(path=extract_scratch_dir)
         # get the extracted terraform dir path
@@ -212,7 +203,7 @@ def _restore_terraform_dir_archive(
         # copy the extracted terraform dir to the terraform dir
         _copy_terraform_dir(extracted_terraform_dir, terraform_dir)
     if debug:
-        log('[debug] extracted archive contents: ')
+        print('[debug] extracted archive contents: ')
         _print_directory_contents(terraform_dir)
 
 
@@ -229,7 +220,7 @@ def init_terraform_dir(
         terraform_source_dir: str,
         backend_type: Optional[str] = None,
         backend_config_vars: Optional[dict] = None,
-        terraform_dir_path: str = None,
+        terraform_dir_path: Optional[str] = None,
         terraform_work_dir: str = TERRAFORM_WORK_DIR,
         debug: bool = False) -> str:
     # get path to terraform dir
@@ -299,9 +290,10 @@ def restore_terraform_dir(
 # =============================================================================
 def plan_terraform_dir(
         terraform_dir: str,
-        terraform_dir_path: str = None,
+        terraform_dir_path: Optional[str] = None,
         create_plan_file: bool = False,
         plan_file_path: str = None,
+        error_on_no_changes: Optional[bool] = None,
         debug: bool = False) -> Optional[str]:
     if create_plan_file and (not plan_file_path):
             plan_file_path = TERRAFORM_PLAN_FILE_NAME
@@ -310,10 +302,11 @@ def plan_terraform_dir(
         terraform_dir_path=terraform_dir_path,
         create_plan_file=create_plan_file,
         plan_file_path=plan_file_path,
+        error_on_no_changes=error_on_no_changes,
         debug=debug)
     if create_plan_file:
         if debug:
-            log(f'[debug] created plan file: {plan_file_path}')
+            print(f'[debug] created plan file: {plan_file_path}')
         return plan_file_path
 
 

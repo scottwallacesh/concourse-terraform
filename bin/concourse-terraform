@@ -1,0 +1,73 @@
+#!/usr/bin/env python3
+
+# stdlib
+import argparse
+import sys
+
+# local
+import lib.commands
+
+
+# =============================================================================
+# _generate_parser
+# =============================================================================
+def _generate_parser() -> argparse.ArgumentParser:
+    # main parser
+    parser = argparse.ArgumentParser(add_help=True)
+
+    # shared common
+    shared_common_parser = argparse.ArgumentParser(add_help=False)
+    shared_common_parser.add_argument(
+        '--debug',
+        help='enable debug',
+        dest='debug',
+        default=False,
+        action='store_true')
+
+    # command parser
+    command_parsers: argparse._SubParsersAction = parser.add_subparsers(
+        metavar='COMMAND',
+        dest='command')
+    # workaround for python3.7 bug: https://bugs.python.org/issue9253#msg186387
+    command_parsers.required = True
+
+    # plan
+    plan_parser = command_parsers.add_parser(
+        'plan',
+        help='plan with no output',
+        parents=[shared_common_parser])
+    plan_parser.set_defaults(command=lib.commands.PLAN)
+    plan_parser.add_argument(
+        help='terraform source dir',
+        metavar='SOURCE_DIR',
+        dest='terraform_source_dir')
+
+    # return the parser
+    return parser
+
+
+# =============================================================================
+# parse_args
+# =============================================================================
+def parse_args(args: list) -> argparse.Namespace:
+    parser = _generate_parser()
+    return parser.parse_args(args)
+
+
+# =============================================================================
+# process_args
+# =============================================================================
+def process_args(args: argparse.Namespace) -> None:
+    pass
+
+
+# =============================================================================
+# main
+# =============================================================================
+def main(args: list) -> None:
+    parsed_args = parse_args(args)
+    process_args(parsed_args)
+
+
+if __name__ == "__main__":
+    main(sys.argv[1:])

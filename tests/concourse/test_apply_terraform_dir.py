@@ -4,7 +4,7 @@
 import unittest
 
 # local
-import lib.concourse
+import lib.terraform_dir
 import tests.concourse.common as common
 
 
@@ -19,13 +19,13 @@ class ApplyTerraformDir(unittest.TestCase):
         # create a new temp dir as the working dir
         with common.create_test_working_dir() as test_working_dir:
             # init the terraform dir
-            terraform_dir = lib.concourse.init_terraform_dir(
+            terraform_dir = lib.terraform_dir.init_terraform_dir(
                 common.TEST_TERRAFORM_DIR,
                 terraform_work_dir=test_working_dir,
                 debug=True
             )
             # apply without plan
-            lib.concourse.apply_terraform_dir(
+            lib.terraform_dir.apply_terraform_dir(
                 terraform_dir,
                 debug=True)
 
@@ -33,18 +33,18 @@ class ApplyTerraformDir(unittest.TestCase):
         # create a new temp dir as the working dir
         with common.create_test_working_dir() as test_working_dir:
             # init the terraform dir
-            terraform_dir = lib.concourse.init_terraform_dir(
+            terraform_dir = lib.terraform_dir.init_terraform_dir(
                 common.TEST_TERRAFORM_DIR,
                 terraform_work_dir=test_working_dir,
                 debug=True
             )
             # create plan file
-            terraform_plan_file = lib.concourse.plan_terraform_dir(
+            terraform_plan_file = lib.terraform_dir.plan_terraform_dir(
                 terraform_dir,
                 create_plan_file=True,
                 debug=True)
             # apply plan file
-            lib.concourse.apply_terraform_dir(
+            lib.terraform_dir.apply_terraform_dir(
                 terraform_dir,
                 plan_file_path=terraform_plan_file,
                 debug=True)

@@ -6,7 +6,7 @@ import tarfile
 import unittest
 
 # local
-import lib.concourse
+import lib.terraform_dir
 import tests.concourse.common as common
 
 
@@ -34,7 +34,7 @@ class RestoreTerraformDir(unittest.TestCase):
                 archive_file_b.close()
                 # restore the archive
                 with self.assertRaises(FileExistsError):
-                    lib.concourse.restore_terraform_dir(
+                    lib.terraform_dir.restore_terraform_dir(
                         archive_output_dir,
                         terraform_work_dir=test_working_dir,
                         debug=True)
@@ -46,7 +46,7 @@ class RestoreTerraformDir(unittest.TestCase):
             with common.create_test_working_dir() as archive_output_dir:
                 # restore the archive
                 with self.assertRaises(FileNotFoundError):
-                    lib.concourse.restore_terraform_dir(
+                    lib.terraform_dir.restore_terraform_dir(
                         archive_output_dir,
                         terraform_work_dir=test_working_dir,
                         debug=True)
@@ -58,7 +58,7 @@ class RestoreTerraformDir(unittest.TestCase):
             with open(common.TEST_TERRAFORM_FILE_PATH, 'r') as terraform_file:
                 terraform_file_contents = terraform_file.read()
             # init the terraform dir
-            terraform_dir = lib.concourse.init_terraform_dir(
+            terraform_dir = lib.terraform_dir.init_terraform_dir(
                 common.TEST_TERRAFORM_DIR,
                 terraform_work_dir=test_working_dir,
                 debug=True
@@ -66,12 +66,12 @@ class RestoreTerraformDir(unittest.TestCase):
             # create a new temp dir as the archive output dir
             with common.create_test_working_dir() as archive_output_dir:
                 # archive
-                lib.concourse.archive_terraform_dir(
+                lib.terraform_dir.archive_terraform_dir(
                     terraform_dir,
                     archive_output_dir,
                     debug=True)
                 # restore the archive
-                lib.concourse.restore_terraform_dir(
+                lib.terraform_dir.restore_terraform_dir(
                     archive_output_dir,
                     terraform_work_dir=test_working_dir,
                     debug=True)

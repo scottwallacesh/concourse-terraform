@@ -1,21 +1,15 @@
 ---
 platform: linux
 
-image_resource:
-  type: docker-image
-  source:
-    repository: snapkitchen/concourse-terraform
-    tag: latest
-
 inputs:
 - name: concourse-terraform
-- name: terraform-dir
+- name: terraform-source-dir
 
 outputs:
-- name: terraform-dir-init
+- name: terraform-init-dir
 
 params:
   TERRAFORM_DIR_PATH:
 
 run:
-  path: concourse-terraform/bin/init
+  path: concourse-terraform/bin/cli

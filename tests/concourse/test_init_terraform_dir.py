@@ -5,7 +5,7 @@ import os
 import unittest
 
 # local
-import lib.concourse
+import lib.terraform_dir
 import tests.concourse.common as common
 
 
@@ -21,7 +21,7 @@ class TestInitTerraformDir(unittest.TestCase):
         with common.create_test_working_dir() as test_working_dir:
             # create the terraform dir
             terraform_dir = os.path.join(
-                test_working_dir, lib.concourse.TERRAFORM_DIR_NAME)
+                test_working_dir, lib.terraform_dir.TERRAFORM_DIR_NAME)
             os.mkdir(terraform_dir)
             # create an existing file in it
             terraform_file_path = \
@@ -29,7 +29,7 @@ class TestInitTerraformDir(unittest.TestCase):
             with open(terraform_file_path, 'w') as terraform_file:
                 terraform_file.write('variable "test" {}')
             # test init
-            lib.concourse.init_terraform_dir(
+            lib.terraform_dir.init_terraform_dir(
                 common.TEST_TERRAFORM_DIR,
                 terraform_work_dir=test_working_dir,
                 debug=True
@@ -42,12 +42,12 @@ class TestInitTerraformDir(unittest.TestCase):
         with common.create_test_working_dir() as test_working_dir:
             # get the terraform dir path
             terraform_dir = os.path.join(
-                test_working_dir, lib.concourse.TERRAFORM_DIR_NAME)
+                test_working_dir, lib.terraform_dir.TERRAFORM_DIR_NAME)
             # get the expected backend file path
             backend_file_path = \
-                os.path.join(terraform_dir, lib.concourse.BACKEND_FILE_NAME)
+                os.path.join(terraform_dir, lib.terraform_dir.BACKEND_FILE_NAME)
             # test init
-            lib.concourse.init_terraform_dir(
+            lib.terraform_dir.init_terraform_dir(
                 common.TEST_TERRAFORM_DIR,
                 terraform_work_dir=test_working_dir,
                 debug=True,

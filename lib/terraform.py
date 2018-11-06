@@ -4,9 +4,6 @@ import os
 import subprocess
 from typing import Optional
 
-# local
-from lib.log import log
-
 
 # =============================================================================
 #
@@ -75,7 +72,7 @@ def _terraform(
     os.environ['TF_IN_AUTOMATION'] = '1'
     exit_status = None
     if debug:
-        log('[debug] executing: ' + f"{' '.join(process_args)}")
+        print('[debug] executing: ' + f"{' '.join(process_args)}")
     # use Popen so we can read lines as they come
     with subprocess.Popen(
             process_args,
@@ -87,7 +84,7 @@ def _terraform(
             cwd=working_dir) as pipe:
         for line in pipe.stdout:
             # log the output as it arrives
-            log(line, end="")
+            print(line, end="")
     raise_error = False
     # check if we're using detailed exit codes
     if '-detailed-exitcode' in [arg.lower() for arg in args]:
@@ -169,9 +166,11 @@ def plan(
         terraform_dir_path: Optional[str] = None,
         create_plan_file: bool = False,
         plan_file_path: Optional[str] = None,
-        error_on_no_changes: bool = True,
+        error_on_no_changes: Optional[bool] = None,
         args: Optional[list] = None,
         debug: bool = False) -> None:
+    if error_on_no_changes not in [True, False]:
+        error_on_no_changes = True
     if not terraform_dir_path:
         terraform_dir_path = '.'
     terraform_command_args = []
