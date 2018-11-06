@@ -6,7 +6,7 @@ import unittest
 
 # local
 import lib.terraform_dir
-import tests.concourse.common as common
+import tests.terraform_dir.common as common
 
 
 # =============================================================================
@@ -46,12 +46,13 @@ class TestInitTerraformDir(unittest.TestCase):
             # get the expected backend file path
             backend_file_path = \
                 os.path.join(terraform_dir, lib.terraform_dir.BACKEND_FILE_NAME)
+            # set the backend type in the environment
+            os.environ[lib.terraform_dir.BACKEND_TYPE_VAR] = 'local'
             # test init
             lib.terraform_dir.init_terraform_dir(
                 common.TEST_TERRAFORM_DIR,
                 terraform_work_dir=test_working_dir,
                 debug=True,
-                backend_type='local'
             )
             # assert the file was created
             self.assertTrue(os.path.exists(backend_file_path))

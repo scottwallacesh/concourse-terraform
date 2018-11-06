@@ -21,6 +21,8 @@ TERRAFORM_WORK_DIR = '/tmp/tfwork'
 TERRAFORM_DIR_NAME = 'terraform'
 TERRAFORM_PLAN_FILE_NAME = '.tfplan'
 BACKEND_FILE_NAME = 'backend.tf'
+BACKEND_TYPE_VAR = 'TF_BACKEND_TYPE'
+BACKEND_CONFIG_VAR_PREFIX = 'TF_BACKEND_CONFIG_'
 
 
 # =============================================================================
@@ -208,6 +210,25 @@ def _restore_terraform_dir_archive(
 
 
 # =============================================================================
+# _get_backend_type_from_environment
+# =============================================================================
+def _get_backend_type_from_environment() -> Optional[str]:
+    return os.environ.get(BACKEND_TYPE_VAR)
+
+
+# =============================================================================
+# _get_backend_config_from_environment
+# =============================================================================
+def _get_backend_config_from_environment() -> Optional[dict]:
+    backend_config: dict = {}
+    for key, value in os.environ.items():
+        if key.startswith(BACKEND_CONFIG_VAR_PREFIX):
+            # strip prefix and use the remainder as the key name
+            backend_config[key[len(BACKEND_CONFIG_VAR_PREFIX):]] = value
+    return backend_config or None
+
+
+# =============================================================================
 #
 # public functions
 #
@@ -218,8 +239,6 @@ def _restore_terraform_dir_archive(
 # =============================================================================
 def init_terraform_dir(
         terraform_source_dir: str,
-        backend_type: Optional[str] = None,
-        backend_config_vars: Optional[dict] = None,
         terraform_dir_path: Optional[str] = None,
         terraform_work_dir: str = TERRAFORM_WORK_DIR,
         debug: bool = False) -> str:
@@ -229,12 +248,16 @@ def init_terraform_dir(
     _prep_terraform_dir(terraform_dir)
     # copy the terraform source dir into terraform dir
     _copy_terraform_dir(terraform_source_dir, terraform_dir)
+    # get backend type from environment
+    backend_type = _get_backend_type_from_environment()
     # optionally create a backend configuration
     if backend_type:
         _create_backend_file(
             backend_type,
             terraform_dir,
             debug=debug)
+    # get any backend config values from environment
+    backend_config_vars = _get_backend_config_from_environment()
     # terraform init
     lib.terraform.init(
         terraform_dir,

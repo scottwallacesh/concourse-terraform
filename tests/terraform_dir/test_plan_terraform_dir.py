@@ -6,7 +6,7 @@ import unittest
 
 # local
 import lib.terraform_dir
-import tests.concourse.common as common
+import tests.terraform_dir.common as common
 
 
 # =============================================================================

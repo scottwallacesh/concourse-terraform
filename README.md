@@ -10,32 +10,253 @@
 
 	- [issues](#issues)
 
+	- [usage](#usage)
+
+		- [specifying the version](#specifying-the-version)
+
+		- [providing input variable values](#providing-input-variable-values)
+
+		- [configuring the backend](#configuring-the-backend)
+
+		- [providing terraform source files](#providing-terraform-source-files)
+
+- [tasks](#tasks)
+
+	- [plan](#plan)
+
+	- [apply](#apply)
+
+	- [create-plan](#create-plan)
+
+	- [show-plan](#show-plan)
+
+	- [apply-plan](#apply-plan)
+
 - [development](#development)
 
-- [building](#building)
+- [automated builds](#automated-builds)
 
-## overview
+# overview
 
-this project provides a [concourse-ci](concourse-ci.org) custom resource designed to wrap [terraform](https://www.terraform.io)
+this project provides a series of concourse-ci [tasks](https://concourse-ci.org/tasks.html) which are powered by a small python library that wraps and orchestrates terraform
 
-**requires using a remote state backend to persist state**
+## features
 
-### features
+- stays simple by avoiding management of remote and local state
 
-- docker hub tags correspond to the version of terraform
-- uses remote backends to persist state
-- uses the [plan and apply on different machines](https://www.terraform.io/guides/running-terraform-in-automation.html) automation strategy
-	- generates plan archives using an absolute working dir `/tmp/tfwork`
-	- the contents of `terraform_dir` will be copied into `/tmp/tfwork/terraform`
-	- this ensures paths will be consistent when using plan files in separate pipeline steps
+	- remote state can be managed entirely by terraform using [backends](https://www.terraform.io/docs/backends/)
 
-### issues
+	- local state can be produced as an output and saved with concourse resources
 
-- TODO
+- pre-built images for the terraform versions in `tf-versions` are available on docker hub, or you can build any version with the provided `Dockerfile`
 
-## behaviour
+- orchestrates the [plan and apply on different machines](https://www.terraform.io/guides/running-terraform-in-automation.html) automation strategy
 
-### source configuration
+	- generates plan archives using an absolute working dir `/tmp/tfwork/terraform`  
+	(this ensures paths will be consistent when using plan files in separate pipeline steps).
+
+	- plan archives can be persisted to remote storage using concourse resources (such as the [s3 resource](https://github.com/concourse/s3-resource))
+
+## issues
+
+- no current interface to `-var-file`, so var files must be provided via `.tfvars` files in the `terraform_dir_path`
+
+	- variables can easily be provided with [task params](#providing-input-variable-values)
+
+- [workspaces](https://www.terraform.io/docs/state/workspaces.html) are not supported
+
+- most terraform commands other than those needed to provide a `plan -> approve -> apply` lifecycle are not yet supported
+
+## usage
+
+### specifying the version
+
+the tasks require a pipeline to provide them with their docker image resource
+
+this ensures you provide a specific version of the terraform image when executing
+
+```yaml
+resources:
+# the terraform tasks
+- name: concourse-terraform
+  type: git
+  source:
+  	uri: https://github.com/Snapkitchen/concourse-terraform
+
+# the terraform image
+- name: concourse-terraform-image
+  type: docker-image
+  source:
+    repository: snapkitchen/concourse-terraform
+    tag: <VERSION>
+
+jobs:
+# a job using a terraform task with the terraform image
+- name: terraform-task
+  plan:
+  - get: concourse-terraform
+  - get: concourse-terraform-image
+  - task: do-terraform-task
+    image: concourse-terraform-image
+    file: concourse-terraform/tasks/<TASK>.yml
+```
+
+you can also build the docker image yourself using the [docker-image-resource](https://github.com/concourse/docker-image-resource) and the `Dockerfile` from the source
+
+### providing input variable values
+
+tfvars can be provided by including `terraform.tfvars` or `*.auto.tfvars` files in the terraform source dir, or by passing them as parameters into the task
+
+```
+jobs:
+# a terraform task with variables
+- name: terraform-task
+  plan:
+  - get: concourse-terraform
+  - get: concourse-terraform-image
+  - task: do-terraform-task
+    image: concourse-terraform-image
+    file: concourse-terraform/tasks/<TASK>.yml
+    params:
+      TF_VAR_my_var: 'my_value'
+```
+
+### configuring the backend
+
+the backend can be configured two ways:
+
+- by including a `.tf` file containing the backend configuration in the terraform source dir
+
+- by specifying the `TF_BACKEND_TYPE` parameter to automatically create a `backend.tf` file for you
+
+the backend configuration can be dynamically provided with additional params in the form of `TF_BACKEND_CONFIG_<var_name>: <var_value>`
+
+automatically create and configure an s3 backend:
+
+```
+jobs:
+# a terraform task with variables
+- name: terraform-task
+  plan:
+  - get: concourse-terraform
+  - get: concourse-terraform-image
+  - task: do-terraform-task
+    image: concourse-terraform-image
+    file: concourse-terraform/tasks/<TASK>.yml
+    params:
+      TF_BACKEND_TYPE: s3
+      TF_BACKEND_CONFIG_bucket: my-bucket
+      TF_BACKEND_CONFIG_region: us-east-1
+      TF_BACKEND_CONFIG_key: terraform
+```
+
+### providing terraform source files
+
+terraform source files are provided through the `terraform_source_dir` parameter
+
+typically this should point to the directory where your `.tf` files are
+
+by default, this directory is used as both the working directory and the target for terraform, meaning terraform expects that all `.tf` files are contained in this directory
+
+however, some terraform projects may reference other files relative to the working directory and the contents of the source tree
+
+e.g. given a source tree such as:
+
+```
+src/
+src/templates/example.tpl
+src/terraform/terraform.tf
+```
+
+with a terraform template that references a source tree path:
+
+```
+data "template_file" "example" {
+  template = "${file("templates/example.tpl")}"
+}
+```
+
+this path would become invalid if the `terraform_source_dir` was set to `src/terraform`, as only the contents of the `terraform_source_dir` are copied to the absolute path `/tmp/tfwork/terraform` and then used as the working directory
+
+thus, the working directory tree would contain
+
+```
+terraform.tf
+```
+
+where `../templates/example.tpl` does not exist
+
+thus, in that case, one should provide the base directory as the `terraform_source_dir`, and then specify the `terraform_dir_path` which will instruct terraform to target the specified dir inside the `terraform_source_dir`
+
+e.g. a task for the above example would be configured as:
+
+```yaml
+- task: terraform-plan
+  image: concourse-terraform-image
+  file: concourse-terraform/tasks/plan.yaml
+  params:
+    terraform_source_dir: src
+    terraform_dir_path terraform
+```
+
+which would result in the working directory tree:
+
+```
+templates/example.tpl
+terraform/terraform.tf
+```
+
+with `terraform` being the target terraform directory
+
+**see [examples](#examples) for more usage descriptions**
+
+# tasks
+
+## `plan.yaml`: plan with no output
+
+### inputs
+
+- `terraform_source_dir`: _required_. path to the terraform source directory.
+
+### outputs
+
+### params
+
+- `error_on_no_changes`: _optional_. raises an error if applying the plan would result in no changes. default: `true`
+
+## `apply.yaml`: apply with no plan
+
+### inputs
+
+### outputs
+
+### params
+
+## `create-plan.yaml`: create a plan
+
+### inputs
+
+### outputs
+
+### params
+
+## `show-plan.yaml`: show a plan
+
+### inputs
+
+### outputs
+
+### params
+
+## `apply-plan.yaml`: apply a plan
+
+### inputs
+
+### outputs
+
+### params
+
+# legacy
 
 - `backend_type`: _required_. backend type to use. example: `s3`.
 
@@ -113,13 +334,13 @@ see terraform [backend configuration](https://www.terraform.io/docs/backends/con
 
 - `debug`: _optional_. set to `true` to dump argument values on error. **may result in leaked credentials**. default: `false`
 
-## examples
+# examples
 
 ```yaml
 TODO
 ```
 
-## development
+# development
 
 install python 3.7.1 and requirements from `requirements-dev.txt`
 
@@ -129,7 +350,9 @@ install python 3.7.1 and requirements from `requirements-dev.txt`
 
 local builds can be tested and built with the `./build` and `./test` scripts, which will automatically build and test all versions listed in the `tf-versions` file
 
-**build script**
+## build
+
+builds base and test images
 
 `./build` supports two run modes:
 
@@ -143,7 +366,9 @@ local builds can be tested and built with the `./build` and `./test` scripts, wh
 
 note: to install `ptvsd` in the test image, set the environment variable `PTVSD_INSTALL=1` when running `./build`, e.g.: `PTVSD_INSTALL=1 ./build [VERSION]`
 
-**test script**
+## test
+
+runs `unittest discover` against a test image
 
 `./test` supports two run modes:
 
@@ -159,11 +384,21 @@ note: to install `ptvsd` in the test image, set the environment variable `PTVSD_
 		- `PTVSD_ENABLE=1` runs `-m ptvsd -host 0.0.0.0 --port 5678` as the entry point
 		- `PTVSD_WAIT=1` enables `--wait` causing the process to wait for the debugger to attach
 
-## building
+## run
 
-builds are handled automatically by [docker hub](https://hub.docker.com)
+runs arbitrary args against a test image
 
-custom build hooks are used to automatically build and test every version in the `tf-versions` file
+`./run` supports one mode:
+
+- `./run [VERSION] [ARGS]`
+
+	- runs `ARGS` against `VERSION`
+
+# automated builds
+
+automated builds are handled by [docker hub](https://hub.docker.com)
+
+custom build hooks are used to build and test every version in the `tf-versions` file
 
 # license
 
