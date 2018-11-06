@@ -1,0 +1,16 @@
+---
+platform: linux
+inputs:
+- name: concourse-terraform
+- name: terraform-source-dir
+params:
+  TF_WORKING_DIR:
+  TF_DIR_PATH:
+  DEBUG:
+run:
+  path: /bin/sh
+  args:
+  - -c
+  - |
+    export PYTHONPATH="$(pwd)/concourse-terraform:${PYTHONPATH}"
+    concourse-terraform/bin/concourse-terraform apply

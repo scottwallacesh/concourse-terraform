@@ -1,0 +1,30 @@
+resources:
+
+# source code
+# ===========
+- name: concourse-terraform
+  type: git
+  source:
+    uri: https://github.com/Snapkitchen/concourse-terraform.git
+
+# docker image
+# ============
+- name: concourse-terraform-image
+  type: docker-image
+  source:
+    repository: snapkitchen/concourse-terraform
+    tag: 0.11.10
+
+jobs:
+- name: terraform-apply
+  plan:
+  - get: concourse-terraform
+  - get: concourse-terraform-image
+  - task: terraform-apply
+    image: concourse-terraform-image
+    file: concourse-terraform/tasks/apply.yaml
+    input_mapping:
+      terraform-source-dir: concourse-terraform
+    params:
+      TF_WORKING_DIR: terraform-source-dir/testdata/terraform
+      DEBUG: true

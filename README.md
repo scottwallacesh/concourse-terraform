@@ -239,11 +239,13 @@ with `terraform` being the target terraform directory
 
 ### outputs
 
+- none
+
 ### params
 
 - `TF_WORKING_DIR`: _required_. path to the terraform working directory. see [providing terraform source files](#providing-terraform-source-files).
 
-- `TF_DIR_PATH`: _required_. path to the terraform files inside the working directory. see [providing terraform source files](#providing-terraform-source-files). default: `.`
+- `TF_DIR_PATH`: _optional_. path to the terraform files inside the working directory. see [providing terraform source files](#providing-terraform-source-files). default: `.`
 
 - `ERROR_ON_NO_CHANGES`: _optional_. raises an error if applying the plan would result in no changes. set to `false` to disable. default: `true`
 
@@ -253,9 +255,21 @@ with `terraform` being the target terraform directory
 
 ### inputs
 
+- `concourse-terraform`: _required_. the concourse terraform directory.
+
+- `terraform-source-dir`: _required_. the terraform source directory.
+
 ### outputs
 
+- none
+
 ### params
+
+- `TF_WORKING_DIR`: _required_. path to the terraform working directory. see [providing terraform source files](#providing-terraform-source-files).
+
+- `TF_DIR_PATH`: _optional_. path to the terraform files inside the working directory. see [providing terraform source files](#providing-terraform-source-files). default: `.`
+
+- `DEBUG`: _optional_. prints command line arguments and increases log verbosity. set to `true` to enable. **may result in leaked credentials**. default: `false`
 
 ## `create-plan.yaml`: create a plan
 

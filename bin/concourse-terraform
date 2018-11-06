@@ -22,7 +22,8 @@ TERRAFORM_DIR_PATH = 'TF_DIR_PATH'
 # process_args
 # =============================================================================
 def process_args(args: list) -> None:
-    if args[0] == lib.commands.PLAN:
+    command = args[0]
+    if command == lib.commands.PLAN:
         terraform_source_dir = os.environ[TERRAFORM_SOURCE_DIR]
         terraform_dir_path = os.environ.get(TERRAFORM_DIR_PATH)
         error_on_no_changes = os.environ.get(ERROR_ON_NO_CHANGES)
@@ -38,7 +39,20 @@ def process_args(args: list) -> None:
             terraform_dir_path=terraform_dir_path,
             error_on_no_changes=error_on_no_changes,
             debug=debug)
+    elif args[0] == lib.commands.APPLY:
+        terraform_source_dir = os.environ[TERRAFORM_SOURCE_DIR]
+        terraform_dir_path = os.environ.get(TERRAFORM_DIR_PATH)
+        debug = os.environ.get(DEBUG)
+        if debug:
+            # convert to bool if specified
+            debug = bool(strtobool(debug))
+        lib.commands.apply(
+            terraform_source_dir,
+            terraform_dir_path=terraform_dir_path,
+            debug=debug)
     else:
+        print(f'command not recognized: {command}')
+        print(f"available commands: {' '.join(lib.command.COMMANDS)}")
         raise NotImplementedError
 
 

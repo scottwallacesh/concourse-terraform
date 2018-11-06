@@ -9,7 +9,8 @@ import lib.terraform_dir
 # =============================================================================
 
 PLAN = 'plan'
-COMMANDS = [PLAN]
+APPLY = 'apply'
+COMMANDS = [PLAN, APPLY]
 
 
 # =============================================================================
@@ -28,4 +29,21 @@ def plan(
         terraform_dir,
         terraform_dir_path=terraform_dir_path,
         error_on_no_changes=error_on_no_changes,
+        debug=debug)
+
+
+# =============================================================================
+# apply
+# =============================================================================
+def apply(
+        terraform_source_dir: str,
+        terraform_dir_path: Optional[str] = None,
+        debug: bool = False) -> None:
+    terraform_dir = lib.terraform_dir.init_terraform_dir(
+        terraform_source_dir,
+        terraform_dir_path=terraform_dir_path,
+        debug=debug)
+    lib.terraform_dir.apply_terraform_dir(
+        terraform_dir,
+        terraform_dir_path=terraform_dir_path,
         debug=debug)
