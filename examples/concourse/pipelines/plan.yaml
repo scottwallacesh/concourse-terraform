@@ -22,22 +22,9 @@ jobs:
   - get: concourse-terraform-image
   - task: terraform-plan
     image: concourse-terraform-image
+    file: concourse-terraform/tasks/plan.yaml
     input_mapping:
       terraform-source-dir: concourse-terraform
-    config:
-      platform: linux
-      inputs:
-      - name: concourse-terraform
-      - name: terraform-source-dir
-      params:
-        TF_WORKING_DIR: terraform-source-dir
-        TF_DIR_PATH:
-        ERROR_ON_NO_CHANGES: false
-        DEBUG: 1
-      run:
-        path: /bin/sh
-        args:
-        - -c
-        - |
-          export PYTHONPATH="$(pwd)/concourse-terraform:${PYTHONPATH}"
-          concourse-terraform/bin/concourse-terraform plan
+    params:
+      TF_WORKING_DIR: terraform-source-dir/testdata/terraform
+      DEBUG: true
