@@ -1,0 +1,26 @@
+resources:
+
+# source code
+# ===========
+- name: concourse-terraform
+  type: git
+  source:
+    uri: git@github.com:Snapkitchen/concourse-terraform.git
+    branch: master
+
+# docker image
+# ============
+- name: concourse-terraform-image
+  type: docker-image
+  source:
+    repository: snapkitchen/concourse-terraform
+    tag: 0.11.10
+
+jobs:
+- name: terraform-plan
+  plan:
+  - get: concourse-terraform
+  - get: concourse-terraform-image
+  - task: terraform-plan
+    image: concourse-terraform-image
+    file: concourse-terraform/tasks/plan.yaml

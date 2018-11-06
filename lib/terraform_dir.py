@@ -52,7 +52,7 @@ def _get_terraform_dir(terraform_work_dir: str) -> str:
 def _prep_terraform_dir(terraform_dir: str) -> None:
     if os.path.isdir(terraform_dir):
         shutil.rmtree(terraform_dir)
-    os.mkdir(terraform_dir)
+    os.makedirs(terraform_dir)
 
 
 # =============================================================================

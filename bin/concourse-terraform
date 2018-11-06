@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # stdlib
-import argparse
+import os
 import sys
 
 # local
@@ -9,64 +9,40 @@ import lib.commands
 
 
 # =============================================================================
-# _generate_parser
+# constants
 # =============================================================================
-def _generate_parser() -> argparse.ArgumentParser:
-    # main parser
-    parser = argparse.ArgumentParser(add_help=True)
-
-    # shared common
-    shared_common_parser = argparse.ArgumentParser(add_help=False)
-    shared_common_parser.add_argument(
-        '--debug',
-        help='enable debug',
-        dest='debug',
-        default=False,
-        action='store_true')
-
-    # command parser
-    command_parsers: argparse._SubParsersAction = parser.add_subparsers(
-        metavar='COMMAND',
-        dest='command')
-    # workaround for python3.7 bug: https://bugs.python.org/issue9253#msg186387
-    command_parsers.required = True
-
-    # plan
-    plan_parser = command_parsers.add_parser(
-        'plan',
-        help='plan with no output',
-        parents=[shared_common_parser])
-    plan_parser.set_defaults(command=lib.commands.PLAN)
-    plan_parser.add_argument(
-        help='terraform source dir',
-        metavar='SOURCE_DIR',
-        dest='terraform_source_dir')
-
-    # return the parser
-    return parser
-
-
-# =============================================================================
-# parse_args
-# =============================================================================
-def parse_args(args: list) -> argparse.Namespace:
-    parser = _generate_parser()
-    return parser.parse_args(args)
+DEBUG = 'DEBUG'
+ERROR_ON_NO_CHANGES = 'ERROR_ON_NO_CHANGES'
+TERRAFORM_SOURCE_DIR = 'TF_WORKING_DIR'
+TERRAFORM_DIR_PATH = 'TF_DIR_PATH'
 
 
 # =============================================================================
 # process_args
 # =============================================================================
-def process_args(args: argparse.Namespace) -> None:
-    pass
+def process_args(args: list) -> None:
+    if args[0] == lib.commands.PLAN:
+        terraform_source_dir = os.environ[TERRAFORM_SOURCE_DIR]
+        terraform_dir_path = os.environ.get(TERRAFORM_DIR_PATH)
+        error_on_no_changes = os.environ.get(ERROR_ON_NO_CHANGES)
+        if error_on_no_changes:
+            # convert to bool if specified
+            error_on_no_changes = bool(error_on_no_changes)
+        debug = True if os.environ.get(DEBUG) else False
+        lib.commands.plan(
+            terraform_source_dir,
+            terraform_dir_path=terraform_dir_path,
+            error_on_no_changes=error_on_no_changes,
+            debug=debug)
+    else:
+        raise NotImplementedError
 
 
 # =============================================================================
 # main
 # =============================================================================
 def main(args: list) -> None:
-    parsed_args = parse_args(args)
-    process_args(parsed_args)
+    process_args(args)
 
 
 if __name__ == "__main__":

@@ -5,11 +5,12 @@ inputs:
 - name: concourse-terraform
 - name: terraform-source-dir
 
-outputs:
-- name: terraform-init-dir
-
 params:
-  TERRAFORM_DIR_PATH:
+  TF_WORKING_DIR:
+  TF_DIR_PATH:
+  ERROR_ON_NO_CHANGES:
+  DEBUG:
 
 run:
-  path: concourse-terraform/bin/cli
+  path: concourse-terraform/bin/concourse-terraform
+  args: plan

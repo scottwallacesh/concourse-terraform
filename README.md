@@ -22,17 +22,19 @@
 
 - [tasks](#tasks)
 
-	- [plan](#plan)
+	- [plan](#planyaml-plan-with-no-output)
 
-	- [apply](#apply)
+	- [apply](#applyyaml-apply-with-no-plan)
 
-	- [create-plan](#create-plan)
+	- [create-plan](#create-planyaml-create-a-plan)
 
-	- [show-plan](#show-plan)
+	- [show-plan](#show-planyaml-show-a-plan)
 
-	- [apply-plan](#apply-plan)
+	- [apply-plan](#apply-planyaml-apply-a-plan)
 
 - [development](#development)
+
+- [helper scripts](#helper-scripts)
 
 - [automated builds](#automated-builds)
 
@@ -118,7 +120,7 @@ jobs:
     image: concourse-terraform-image
     file: concourse-terraform/tasks/<TASK>.yml
     params:
-      TF_VAR_my_var: 'my_value'
+      TF_VAR_my_var: my_value
 ```
 
 ### configuring the backend
@@ -131,7 +133,7 @@ the backend can be configured two ways:
 
 the backend configuration can be dynamically provided with additional params in the form of `TF_BACKEND_CONFIG_<var_name>: <var_value>`
 
-automatically create and configure an s3 backend:
+e.g. to automatically create and configure an s3 backend:
 
 ```
 jobs:
@@ -146,19 +148,34 @@ jobs:
     params:
       TF_BACKEND_TYPE: s3
       TF_BACKEND_CONFIG_bucket: my-bucket
+      TF_BACKEND_CONFIG_key: path/to/my/key
       TF_BACKEND_CONFIG_region: us-east-1
-      TF_BACKEND_CONFIG_key: terraform
+```
+
+results in `backend.tf`:
+
+```hcl
+terraform {
+  backend "s3" {}
+}
+```
+
+with init parameters:
+
+```sh
+terraform init \
+	-backend-config="bucket=my-bucket" \
+	-backend-config="key=path/to/my/key" \
+	-backend-config="region=us-east-1"
 ```
 
 ### providing terraform source files
 
-terraform source files are provided through the `terraform_source_dir` parameter
+terraform source files are provided through the `terraform-source-dir` input and the `TF_WORKING_DIR` parameter
 
-typically this should point to the directory where your `.tf` files are
+by default, the `TF_WORKING_DIR` is used as both the working directory and the target for terraform, meaning terraform expects that all `.tf` files are contained in this directory
 
-by default, this directory is used as both the working directory and the target for terraform, meaning terraform expects that all `.tf` files are contained in this directory
-
-however, some terraform projects may reference other files relative to the working directory and the contents of the source tree
+however, some terraform projects may reference other files relative to the source tree
 
 e.g. given a source tree such as:
 
@@ -176,7 +193,7 @@ data "template_file" "example" {
 }
 ```
 
-this path would become invalid if the `terraform_source_dir` was set to `src/terraform`, as only the contents of the `terraform_source_dir` are copied to the absolute path `/tmp/tfwork/terraform` and then used as the working directory
+this path would become invalid if the `TF_WORKING_DIR` was set to `src/terraform`, as only the contents of `src/terraform` are copied to the absolute path `/tmp/tfwork/terraform` and then used as the working directory
 
 thus, the working directory tree would contain
 
@@ -184,9 +201,9 @@ thus, the working directory tree would contain
 terraform.tf
 ```
 
-where `../templates/example.tpl` does not exist
+where `templates/example.tpl` does not exist
 
-thus, in that case, one should provide the base directory as the `terraform_source_dir`, and then specify the `terraform_dir_path` which will instruct terraform to target the specified dir inside the `terraform_source_dir`
+in that case, provide the source directory as the `TF_WORKING_DIR`, and then set the `TF_DIR_PATH` to target the terraform dir inside the `TF_WORKING_DIR`
 
 e.g. a task for the above example would be configured as:
 
@@ -195,8 +212,8 @@ e.g. a task for the above example would be configured as:
   image: concourse-terraform-image
   file: concourse-terraform/tasks/plan.yaml
   params:
-    terraform_source_dir: src
-    terraform_dir_path terraform
+    TF_WORKING_DIR: src
+    TF_DIR_PATH: terraform
 ```
 
 which would result in the working directory tree:
@@ -216,13 +233,21 @@ with `terraform` being the target terraform directory
 
 ### inputs
 
-- `terraform_source_dir`: _required_. path to the terraform source directory.
+- `concourse-terraform`: _required_. the concourse terraform directory.
+
+- `terraform-source-dir`: _required_. the terraform source directory.
 
 ### outputs
 
 ### params
 
-- `error_on_no_changes`: _optional_. raises an error if applying the plan would result in no changes. default: `true`
+- `TF_WORKING_DIR`: _required_. path to the terraform working directory. see [providing terraform source files](#providing-terraform-source-files).
+
+- `TF_DIR_PATH`: _required_. path to the terraform files inside the working directory. see [providing terraform source files](#providing-terraform-source-files). default: `.`
+
+- `ERROR_ON_NO_CHANGES`: _optional_. raises an error if applying the plan would result in no changes. set to `false` to disable. default: `true`
+
+- `DEBUG`: _optional_. prints command line arguments and increases log verbosity. set to any non-empty value to enable. **may result in leaked credentials**. default: disabled
 
 ## `apply.yaml`: apply with no plan
 
@@ -256,84 +281,6 @@ with `terraform` being the target terraform directory
 
 ### params
 
-# legacy
-
-- `backend_type`: _required_. backend type to use. example: `s3`.
-
-	- this will automatically generate a `backend.tf` file to be used during `init`
-
-- `backend_config`: _optional_. a key-value mapping of the backend config parameters. default: `null`
-
-	- this will pass each parameter to `init` as a `-backend-config` value
-
-example:
-
-```yaml
-source:
-  backend_type: s3
-  backend:
-	  bucket: mybucket
-	  key: path/to/my/key
-	  region: us-east-1
-```
-
-creates `backend.tf`:
-
-```hcl
-terraform {
-  backend "s3" {}
-}
-```
-
-with init parameters:
-
-```sh
-terraform init \
-	-backend-config="bucket=mybucket" \
-	-backend-config="key=path/to/my/key" \
-	-backend-config="region=us-east-1"
-```
-
-see terraform [backend configuration](https://www.terraform.io/docs/backends/config.html) for more information
-
-### `check`: not implemented
-
-### `in`: not implemented
-
-### `out`: run terraform plan or apply
-
-**common parameters**
-
-- `action`: _required_. action to perform. supported values:
-
-	- `create_plan`
-
-	- `show_plan`
-
-	- `apply_plan`
-
-**create-plan parameters**
-
-- `create_plan`: parameters for the `create_plan` action.
-
-	- `terraform_dir`: _required_. path to terraform directory. can be relative to the concourse working directory.
-
-	- `terraform_dir_path`: _optional_. path to terraform files relative to `terraform_dir`. default: `.`
-
-**show-plan parameters**
-
-- `show_plan`: parameters for the `show_plan` action.
-
-**apply-plan parameters**
-
-- `apply_plan`: parameters for the `apply_plan` action.
-
-	- `plan_archive`: _required_. path to terraform plan archive. can be relative to the concourse working directory.
-
-	- `terraform_dir_path`: _optional_. path to terraform files relative to the `terraform_dir` used during plan. default: `.`
-
-- `debug`: _optional_. set to `true` to dump argument values on error. **may result in leaked credentials**. default: `false`
-
 # examples
 
 ```yaml
@@ -348,35 +295,39 @@ install python 3.7.1 and requirements from `requirements-dev.txt`
 
 `.vscode/launch.json` contains the vscode launch configuration for `ptvsd`
 
-local builds can be tested and built with the `./build` and `./test` scripts, which will automatically build and test all versions listed in the `tf-versions` file
+local builds can be tested and built with the `./scripts/build` and `./scripts/test` scripts, which will automatically build and test all versions listed in the `tf-versions` file
+
+# helper scripts
+
+helper scripts are available in the `./scripts` directory, and expect a working directory of the source code root
 
 ## build
 
 builds base and test images
 
-`./build` supports two run modes:
+`./scripts/build` supports two run modes:
 
-- `./build`
+- `./scripts/build`
 
 	- builds an image for each version in `tf-versions`
 
-- `./build [VERSION]`
+- `./scripts/build [VERSION]`
 
 	- builds an image for the specified version
 
-note: to install `ptvsd` in the test image, set the environment variable `PTVSD_INSTALL=1` when running `./build`, e.g.: `PTVSD_INSTALL=1 ./build [VERSION]`
+note: to install `ptvsd` in the test image, set the environment variable `PTVSD_INSTALL=1` when running `./scripts/build`, e.g.: `PTVSD_INSTALL=1 ./scripts/build [VERSION]`
 
 ## test
 
 runs `unittest discover` against a test image
 
-`./test` supports two run modes:
+`./scripts/test` supports two run modes:
 
-- `./test`
+- `./scripts/test`
 
 	- runs `unittest discover` against all versions in `tf-versions`
 
-- `./test [VERSION] [ARGS]`
+- `./scripts/test [VERSION] [ARGS]`
 
 	- runs `unittest discover ARGS` against `VERSION`
 	- supports `ptvsd` (if installed) by setting environment variables:
@@ -388,11 +339,27 @@ runs `unittest discover` against a test image
 
 runs arbitrary args against a test image
 
-`./run` supports one mode:
+`./scripts/run` supports one mode:
 
-- `./run [VERSION] [ARGS]`
+- `./scripts/run [VERSION] [ARGS]`
 
 	- runs `ARGS` against `VERSION`
+
+## run_command
+
+runs a `concourse-terraform` command against a test image
+
+also exports relevant variables
+
+`./scripts/run_command ` supports one mode:
+
+- `./scripts/run_command [VERSION] [COMMAND]`
+
+	- runs `COMMAND` against `VERSION`
+	- supports `ptvsd` (if installed) by setting environment variables:
+
+		- `PTVSD_ENABLE=1` runs `-m ptvsd -host 0.0.0.0 --port 5678` as the entry point
+		- `PTVSD_WAIT=1` enables `--wait` causing the process to wait for the debugger to attach
 
 # automated builds
 

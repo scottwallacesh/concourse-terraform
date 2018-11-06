@@ -1,0 +1,42 @@
+#!/usr/bin/env bash
+
+set -xeo pipefail
+
+DOCKER_IMAGE_NAME="snapkitchen/concourse-terraform-resource"
+
+# main
+
+: "${1:?"image version"}"
+
+# run specific version
+test_image="${DOCKER_IMAGE_NAME}-tests:${1}"
+run_command_args=()
+# optionally enable ptvsd
+if [[ -n "${PTVSD_ENABLE}" ]]
+then
+  run_command_args+=(
+    'python'
+    '-m'
+    'ptvsd'
+    '--host'
+    '0.0.0.0'
+    '--port'
+    '5678'
+  )
+  # optionally wait for ptvsd to attach
+  if [[ -n "${PTVSD_WAIT}" ]]
+  then
+    run_command_args+=('--wait')
+  fi
+fi
+run_command_args+=('/app/bin/concourse-terraform')
+run_command_args+=("${@:2}")
+docker \
+  run \
+    -it \
+    --rm \
+    ${PTVSD_ENABLE:+-p 5678:5678} \
+    ${TF_WORKING_DIR:+-e TF_WORKING_DIR="${TF_WORKING_DIR}"} \
+    ${TF_DIR_PATH:+-e TF_DIR_PATH="${TF_DIR_PATH}"} \
+    ${DEBUG:+-e DEBUG="${DEBUG}"} \
+    "${test_image}" ${run_command_args[@]+"${run_command_args[@]}"}
