@@ -30,10 +30,10 @@ jobs:
       - name: concourse-terraform
       - name: terraform-source-dir
       params:
-        TF_WORKING_DIR:
+        TF_WORKING_DIR: terraform-source-dir
         TF_DIR_PATH:
-        ERROR_ON_NO_CHANGES:
-        DEBUG:
+        ERROR_ON_NO_CHANGES: false
+        DEBUG: 1
       run:
         path: /bin/sh
         args:
@@ -41,7 +41,3 @@ jobs:
         - |
           export PYTHONPATH="$(pwd)/concourse-terraform:${PYTHONPATH}"
           concourse-terraform/bin/concourse-terraform plan
-        # path: concourse-terraform/bin/concourse-terraform
-        # args:
-        # - plan
-    # file: concourse-terraform/tasks/plan.yaml

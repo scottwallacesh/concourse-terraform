@@ -247,7 +247,7 @@ with `terraform` being the target terraform directory
 
 - `ERROR_ON_NO_CHANGES`: _optional_. raises an error if applying the plan would result in no changes. set to `false` to disable. default: `true`
 
-- `DEBUG`: _optional_. prints command line arguments and increases log verbosity. set to any non-empty value to enable. **may result in leaked credentials**. default: disabled
+- `DEBUG`: _optional_. prints command line arguments and increases log verbosity. set to `true` to enable. **may result in leaked credentials**. default: `false`
 
 ## `apply.yaml`: apply with no plan
 
