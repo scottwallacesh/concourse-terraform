@@ -5,8 +5,7 @@ resources:
 - name: concourse-terraform
   type: git
   source:
-    uri: git@github.com:Snapkitchen/concourse-terraform.git
-    branch: master
+    uri: https://github.com/Snapkitchen/concourse-terraform.git
 
 # docker image
 # ============
@@ -23,4 +22,26 @@ jobs:
   - get: concourse-terraform-image
   - task: terraform-plan
     image: concourse-terraform-image
-    file: concourse-terraform/tasks/plan.yaml
+    input_mapping:
+      terraform-source-dir: concourse-terraform
+    config:
+      platform: linux
+      inputs:
+      - name: concourse-terraform
+      - name: terraform-source-dir
+      params:
+        TF_WORKING_DIR:
+        TF_DIR_PATH:
+        ERROR_ON_NO_CHANGES:
+        DEBUG:
+      run:
+        path: /bin/sh
+        args:
+        - -c
+        - |
+          export PYTHONPATH="$(pwd)/concourse-terraform:${PYTHONPATH}"
+          concourse-terraform/bin/concourse-terraform plan
+        # path: concourse-terraform/bin/concourse-terraform
+        # args:
+        # - plan
+    # file: concourse-terraform/tasks/plan.yaml

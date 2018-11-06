@@ -242,6 +242,9 @@ def init_terraform_dir(
         terraform_dir_path: Optional[str] = None,
         terraform_work_dir: str = TERRAFORM_WORK_DIR,
         debug: bool = False) -> str:
+    # check source dir
+    if not terraform_source_dir:
+        raise ValueError('terraform_source_dir cannot be empty')
     # get path to terraform dir
     terraform_dir = _get_terraform_dir(terraform_work_dir)
     # prep the terraform dir
@@ -276,6 +279,12 @@ def archive_terraform_dir(
         source_ref: str = None,
         source_ref_file: str = None,
         debug: bool = False) -> str:
+    # check terraform dir
+    if not terraform_dir:
+        raise ValueError('terraform_dir cannot be empty')
+    # check archive output dir
+    if not archive_output_dir:
+        raise ValueError('archive_output_dir cannot be empty')
     # create archive of terraform dir
     archive_version = _get_archive_version(
         source_ref=source_ref,
@@ -297,6 +306,9 @@ def restore_terraform_dir(
         terraform_dir_path: str = None,
         terraform_work_dir: str = TERRAFORM_WORK_DIR,
         debug: bool = False) -> None:
+    # check archive input dir
+    if not archive_input_dir:
+        raise ValueError('archive_input_dir cannot be empty')
     # get path to terraform dir
     terraform_dir = _get_terraform_dir(terraform_work_dir)
     # prep the terraform dir
@@ -318,6 +330,9 @@ def plan_terraform_dir(
         plan_file_path: str = None,
         error_on_no_changes: Optional[bool] = None,
         debug: bool = False) -> Optional[str]:
+    # check terraform dir
+    if not terraform_dir:
+        raise ValueError('terraform_dir cannot be empty')
     if create_plan_file and (not plan_file_path):
             plan_file_path = TERRAFORM_PLAN_FILE_NAME
     lib.terraform.plan(
@@ -341,6 +356,9 @@ def apply_terraform_dir(
         terraform_dir_path: str = None,
         plan_file_path: str = None,
         debug: bool = False) -> None:
+    # check terraform dir
+    if not terraform_dir:
+        raise ValueError('terraform_dir cannot be empty')
     lib.terraform.apply(
         terraform_dir,
         terraform_dir_path=terraform_dir_path,
@@ -355,6 +373,9 @@ def show_terraform_plan(
         terraform_dir: str,
         plan_file_path: str = None,
         debug: bool = False) -> None:
+    # check terraform dir
+    if not terraform_dir:
+        raise ValueError('terraform_dir cannot be empty')
     lib.terraform.show(
         terraform_dir,
         plan_file_path,

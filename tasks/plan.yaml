@@ -13,4 +13,5 @@ params:
 
 run:
   path: concourse-terraform/bin/concourse-terraform
-  args: plan
+  args:
+  - plan
