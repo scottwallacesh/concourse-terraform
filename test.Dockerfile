@@ -1,4 +1,4 @@
-ARG APP_IMAGE=snapkitchen/concourse-terraform-resource:latest
+ARG APP_IMAGE=snapkitchen/concourse-terraform:latest
 FROM $APP_IMAGE
 
 ENV PYTHONPATH=$PYTHONPATH:/app

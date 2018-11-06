@@ -2,7 +2,7 @@
 
 set -xeo pipefail
 
-DOCKER_IMAGE_NAME="snapkitchen/concourse-terraform-resource"
+DOCKER_IMAGE_NAME="snapkitchen/concourse-terraform"
 
 # main
 
