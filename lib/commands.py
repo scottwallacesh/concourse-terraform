@@ -11,10 +11,12 @@ import lib.terraform_dir
 PLAN = 'plan'
 APPLY = 'apply'
 CREATE_PLAN = 'create-plan'
+SHOW_PLAN = 'show-plan'
 COMMANDS = [
     PLAN,
     APPLY,
-    CREATE_PLAN
+    CREATE_PLAN,
+    SHOW_PLAN
 ]
 
 
@@ -98,3 +100,20 @@ def create_plan(
         source_ref_file=source_ref_file,
         debug=debug)
     print(f"wrote archive to: {archive_file_path}")
+
+
+# =============================================================================
+# show_plan
+# =============================================================================
+def show_plan(
+        archive_input_dir: str,
+        plan_file_path: Optional[str] = None,
+        debug: bool = False) -> None:
+    terraform_dir = lib.terraform_dir.restore_terraform_dir(
+        archive_input_dir,
+        debug=debug)
+    print(f"restored archive to: {terraform_dir}")
+    lib.terraform_dir.show_terraform_plan(
+        terraform_dir,
+        plan_file_path=plan_file_path,
+        debug=debug)

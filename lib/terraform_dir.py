@@ -198,7 +198,7 @@ def _restore_terraform_dir_archive(
             if debug:
                 archive_file.debug = 3
                 print('[debug] extracting terraform archive: '
-                    f"{archive_file_path}")
+                      f"{archive_file_path}")
             archive_file.extractall(path=extract_scratch_dir)
         # get the extracted terraform dir path
         extracted_terraform_dir = _get_terraform_dir(extract_scratch_dir)
@@ -303,9 +303,8 @@ def archive_terraform_dir(
 # =============================================================================
 def restore_terraform_dir(
         archive_input_dir: str,
-        terraform_dir_path: str = None,
         terraform_work_dir: str = TERRAFORM_WORK_DIR,
-        debug: bool = False) -> None:
+        debug: bool = False) -> str:
     # check archive input dir
     if not archive_input_dir:
         raise ValueError('archive_input_dir cannot be empty')
@@ -318,6 +317,7 @@ def restore_terraform_dir(
         terraform_dir,
         archive_input_dir,
         debug=debug)
+    return terraform_dir
 
 
 # =============================================================================

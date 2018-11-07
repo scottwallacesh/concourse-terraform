@@ -81,10 +81,13 @@ class RestoreTerraformDir(unittest.TestCase):
                     archive_output_dir,
                     debug=True)
                 # restore the archive
-                lib.terraform_dir.restore_terraform_dir(
-                    archive_output_dir,
-                    terraform_work_dir=test_working_dir,
-                    debug=True)
+                restored_terraform_dir = \
+                    lib.terraform_dir.restore_terraform_dir(
+                        archive_output_dir,
+                        terraform_work_dir=test_working_dir,
+                        debug=True)
+                # assert that it returned a directory path
+                self.assertTrue(os.path.isdir(restored_terraform_dir))
                 # get the extracted terraform file contents
                 extracted_terraform_file_path = \
                     os.path.join(
