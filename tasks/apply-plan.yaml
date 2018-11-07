@@ -2,16 +2,16 @@
 platform: linux
 inputs:
 - name: concourse-terraform
-- name: archive-input-dir
+- name: plan-output-archive
 outputs:
-- name: archive-output-dir
+- name: apply-output-archive
 params:
   PLAN_FILE_PATH:
   SOURCE_REF:
   SOURCE_REF_FILE:
   DEBUG:
-  ARCHIVE_INPUT_DIR: archive-input-dir
-  ARCHIVE_OUTPUT_DIR: archive-output-dir
+  ARCHIVE_INPUT_DIR: plan-output-archive
+  ARCHIVE_OUTPUT_DIR: apply-output-archive
 run:
   path: /bin/sh
   args:

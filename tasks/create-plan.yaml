@@ -4,7 +4,7 @@ inputs:
 - name: concourse-terraform
 - name: terraform-source-dir
 outputs:
-- name: archive-output-dir
+- name: plan-output-archive
 params:
   TF_WORKING_DIR:
   TF_DIR_PATH:
@@ -13,7 +13,7 @@ params:
   SOURCE_REF_FILE:
   ERROR_ON_NO_CHANGES:
   DEBUG:
-  ARCHIVE_OUTPUT_DIR: archive-output-dir
+  ARCHIVE_OUTPUT_DIR: plan-output-archive
 run:
   path: /bin/sh
   args:

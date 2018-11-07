@@ -6,6 +6,6 @@ commands
 [X]   ensure artifact created on error
 [X] create-plan command
 [X] show-plan command
-[ ] apply-plan command
+[X] apply-plan command
 
 [ ] add destroy support

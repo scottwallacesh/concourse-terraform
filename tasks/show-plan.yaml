@@ -2,11 +2,11 @@
 platform: linux
 inputs:
 - name: concourse-terraform
-- name: archive-input-dir
+- name: plan-output-archive
 params:
   PLAN_FILE_PATH:
   DEBUG:
-  ARCHIVE_INPUT_DIR: archive-input-dir
+  ARCHIVE_INPUT_DIR: plan-output-archive
 run:
   path: /bin/sh
   args:

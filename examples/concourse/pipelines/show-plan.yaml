@@ -32,7 +32,5 @@ jobs:
   - task: show-plan
     image: concourse-terraform-image
     file: concourse-terraform/tasks/show-plan.yaml
-    input_mapping:
-      archive-input-dir: archive-output-dir
     params:
       DEBUG: true

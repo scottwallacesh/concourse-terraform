@@ -4,14 +4,14 @@ inputs:
 - name: concourse-terraform
 - name: terraform-source-dir
 outputs:
-- name: archive-output-dir
+- name: apply-output-archive
 params:
   TF_WORKING_DIR:
   TF_DIR_PATH:
   SOURCE_REF:
   SOURCE_REF_FILE:
   DEBUG:
-  ARCHIVE_OUTPUT_DIR: archive-output-dir
+  ARCHIVE_OUTPUT_DIR: apply-output-archive
 run:
   path: /bin/sh
   args:
