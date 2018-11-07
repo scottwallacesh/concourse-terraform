@@ -96,6 +96,7 @@ def process_args(args: list) -> None:
             terraform_dir_path=terraform_dir_path,
             source_ref=source_ref,
             source_ref_file=source_ref_file,
+            error_on_no_changes=error_on_no_changes,
             destroy=destroy,
             debug=debug)
     elif command == lib.commands.SHOW_PLAN:
