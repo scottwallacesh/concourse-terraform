@@ -1,0 +1,21 @@
+---
+platform: linux
+inputs:
+- name: concourse-terraform
+- name: archive-input-dir
+outputs:
+- name: archive-output-dir
+params:
+  PLAN_FILE_PATH:
+  SOURCE_REF:
+  SOURCE_REF_FILE:
+  DEBUG:
+  ARCHIVE_INPUT_DIR: archive-input-dir
+  ARCHIVE_OUTPUT_DIR: archive-output-dir
+run:
+  path: /bin/sh
+  args:
+  - -c
+  - |
+    export PYTHONPATH="$(pwd)/concourse-terraform:${PYTHONPATH}"
+    concourse-terraform/bin/concourse-terraform apply-plan

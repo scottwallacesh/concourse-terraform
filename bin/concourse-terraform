@@ -99,6 +99,24 @@ def process_args(args: list) -> None:
             archive_input_dir,
             plan_file_path=plan_file_path,
             debug=debug)
+    elif command == lib.commands.APPLY_PLAN:
+        # get parameters from environment
+        archive_input_dir = os.environ[ARCHIVE_INPUT_DIR]
+        archive_output_dir = os.environ[ARCHIVE_OUTPUT_DIR]
+        plan_file_path = os.environ.get(PLAN_FILE_PATH)
+        source_ref = os.environ.get(SOURCE_REF)
+        source_ref_file = os.environ.get(SOURCE_REF_FILE)
+        debug = os.environ.get(DEBUG)
+        if debug:
+            # convert to bool if specified
+            debug = bool(strtobool(debug))
+        lib.commands.apply_plan(
+            archive_input_dir,
+            archive_output_dir,
+            plan_file_path=plan_file_path,
+            source_ref=source_ref,
+            source_ref_file=source_ref_file,
+            debug=debug)
     else:
         print(f'command not recognized: {command}')
         print(f"available commands: {' '.join(lib.command.COMMANDS)}")
