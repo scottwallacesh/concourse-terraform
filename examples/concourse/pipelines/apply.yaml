@@ -16,11 +16,11 @@ resources:
     tag: 0.11.10
 
 jobs:
-- name: terraform-apply
+- name: apply
   plan:
   - get: concourse-terraform
   - get: concourse-terraform-image
-  - task: terraform-apply
+  - task: apply
     image: concourse-terraform-image
     file: concourse-terraform/tasks/apply.yaml
     input_mapping:
@@ -30,11 +30,11 @@ jobs:
       SOURCE_REF_FILE: terraform-source-dir/.git/short_ref
       DEBUG: true
 
-- name: terraform-apply-ensure-on-failure
+- name: apply-with-ensure-task
   plan:
   - get: concourse-terraform
   - get: concourse-terraform-image
-  - task: terraform-apply
+  - task: apply
     image: concourse-terraform-image
     file: concourse-terraform/tasks/apply.yaml
     input_mapping:

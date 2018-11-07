@@ -327,7 +327,7 @@ def plan_terraform_dir(
         terraform_dir: str,
         terraform_dir_path: Optional[str] = None,
         create_plan_file: bool = False,
-        plan_file_path: str = None,
+        plan_file_path: Optional[str] = None,
         error_on_no_changes: Optional[bool] = None,
         debug: bool = False) -> Optional[str]:
     # check terraform dir
@@ -354,7 +354,7 @@ def plan_terraform_dir(
 def apply_terraform_dir(
         terraform_dir: str,
         terraform_dir_path: str = None,
-        plan_file_path: str = None,
+        plan_file_path: Optional[str] = None,
         debug: bool = False) -> None:
     # check terraform dir
     if not terraform_dir:

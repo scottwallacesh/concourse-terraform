@@ -19,6 +19,7 @@ TERRAFORM_DIR_PATH = 'TF_DIR_PATH'
 ARCHIVE_OUTPUT_DIR = 'ARCHIVE_OUTPUT_DIR'
 SOURCE_REF = 'SOURCE_REF'
 SOURCE_REF_FILE = 'SOURCE_REF_FILE'
+PLAN_FILE_PATH = 'PLAN_FILE_PATH'
 
 
 # =============================================================================
@@ -55,6 +56,29 @@ def process_args(args: list) -> None:
         lib.commands.apply(
             terraform_source_dir,
             archive_output_dir,
+            terraform_dir_path=terraform_dir_path,
+            source_ref=source_ref,
+            source_ref_file=source_ref_file,
+            debug=debug)
+    elif args[0] == lib.commands.CREATE_PLAN:
+        terraform_source_dir = os.environ[TERRAFORM_SOURCE_DIR]
+        archive_output_dir = os.environ[ARCHIVE_OUTPUT_DIR]
+        plan_file_path = os.environ.get(PLAN_FILE_PATH)
+        terraform_dir_path = os.environ.get(TERRAFORM_DIR_PATH)
+        source_ref = os.environ.get(SOURCE_REF)
+        source_ref_file = os.environ.get(SOURCE_REF_FILE)
+        error_on_no_changes = os.environ.get(ERROR_ON_NO_CHANGES)
+        if error_on_no_changes:
+            # convert to bool if specified
+            error_on_no_changes = bool(strtobool(error_on_no_changes))
+        debug = os.environ.get(DEBUG)
+        if debug:
+            # convert to bool if specified
+            debug = bool(strtobool(debug))
+        lib.commands.create_plan(
+            terraform_source_dir,
+            archive_output_dir,
+            plan_file_path=plan_file_path,
             terraform_dir_path=terraform_dir_path,
             source_ref=source_ref,
             source_ref_file=source_ref_file,

@@ -111,7 +111,7 @@ you can also build the docker image yourself using the [docker-image-resource](h
 
 tfvars can be provided by including `terraform.tfvars` or `*.auto.tfvars` files in the terraform source dir, or by passing them as parameters into the task
 
-```
+```yaml
 jobs:
 # a terraform task with variables
 - name: terraform-task
@@ -137,7 +137,7 @@ the backend configuration can be dynamically provided with additional params in 
 
 e.g. to automatically create and configure an s3 backend:
 
-```
+```yaml
 jobs:
 # a terraform task with variables
 - name: terraform-task
@@ -189,7 +189,7 @@ src/terraform/terraform.tf
 
 with a terraform template that references a source tree path:
 
-```
+```hcl
 data "template_file" "example" {
   template = "${file("templates/example.tpl")}"
 }
@@ -325,11 +325,33 @@ thus one method to manage local state would be to use a script or resource that:
 
 ## `create-plan.yaml`: create a plan
 
+**note**: since running plan does not update state, `create-plan.yaml` does not output an archive on failure
+
 ### inputs
+
+- `concourse-terraform`: _required_. the concourse terraform directory.
+
+- `terraform-source-dir`: _required_. the terraform source directory.
 
 ### outputs
 
+- `archive-output-dir`: an artifact containing the terraform working directory will be placed here
+
 ### params
+
+- `TF_WORKING_DIR`: _required_. path to the terraform working directory. see [providing terraform source files](#providing-terraform-source-files).
+
+- `TF_DIR_PATH`: _optional_. path to the terraform files inside the working directory. see [providing terraform source files](#providing-terraform-source-files). default: `.`
+
+- `PLAN_FILE_PATH`: _optional_. path to the terraform plan file inside the working directory. default: `.tfplan`
+
+- `SOURCE_REF`: _optional_. a source ref (e.g. a git commit sha or short sha) to be appended to the output artifact filename. cannot be used with `SOURCE_REF_FILE`. default: none
+
+- `SOURCE_REF_FILE`: _optional_. path to file containing a source ref (e.g. a git commit sha or short sha) to be appended to the output artifact filename. cannot be used with `SOURCE_REF`. default: none
+
+- `ERROR_ON_NO_CHANGES`: _optional_. raises an error if applying the plan would result in no changes. set to `false` to disable. default: `true`
+
+- `DEBUG`: _optional_. prints command line arguments and increases log verbosity. set to `true` to enable. **may result in leaked credentials**. default: `false`
 
 ## `show-plan.yaml`: show a plan
 

@@ -10,7 +10,12 @@ import lib.terraform_dir
 
 PLAN = 'plan'
 APPLY = 'apply'
-COMMANDS = [PLAN, APPLY]
+CREATE_PLAN = 'create-plan'
+COMMANDS = [
+    PLAN,
+    APPLY,
+    CREATE_PLAN
+]
 
 
 # =============================================================================
@@ -42,7 +47,6 @@ def apply(
         source_ref: Optional[str] = None,
         source_ref_file: Optional[str] = None,
         debug: bool = False) -> None:
-    # create artifact on error
     terraform_dir = lib.terraform_dir.init_terraform_dir(
         terraform_source_dir,
         terraform_dir_path=terraform_dir_path,
@@ -62,3 +66,35 @@ def apply(
             source_ref_file=source_ref_file,
             debug=debug)
         print(f"wrote archive to: {archive_file_path}")
+
+
+# =============================================================================
+# create_plan
+# =============================================================================
+def create_plan(
+        terraform_source_dir: str,
+        archive_output_dir: str,
+        plan_file_path: Optional[str] = None,
+        terraform_dir_path: Optional[str] = None,
+        source_ref: Optional[str] = None,
+        source_ref_file: Optional[str] = None,
+        error_on_no_changes: Optional[bool] = None,
+        debug: bool = False) -> None:
+    terraform_dir = lib.terraform_dir.init_terraform_dir(
+        terraform_source_dir,
+        terraform_dir_path=terraform_dir_path,
+        debug=debug)
+    lib.terraform_dir.plan_terraform_dir(
+        terraform_dir,
+        terraform_dir_path=terraform_dir_path,
+        create_plan_file=True,
+        plan_file_path=plan_file_path,
+        error_on_no_changes=error_on_no_changes,
+        debug=debug)
+    archive_file_path = lib.terraform_dir.archive_terraform_dir(
+        terraform_dir,
+        archive_output_dir,
+        source_ref=source_ref,
+        source_ref_file=source_ref_file,
+        debug=debug)
+    print(f"wrote archive to: {archive_file_path}")

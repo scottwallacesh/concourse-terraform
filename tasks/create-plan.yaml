@@ -1,0 +1,23 @@
+---
+platform: linux
+inputs:
+- name: concourse-terraform
+- name: terraform-source-dir
+outputs:
+- name: archive-output-dir
+params:
+  TF_WORKING_DIR:
+  TF_DIR_PATH:
+  PLAN_FILE_PATH:
+  SOURCE_REF:
+  SOURCE_REF_FILE:
+  ERROR_ON_NO_CHANGES:
+  DEBUG:
+  ARCHIVE_OUTPUT_DIR: archive-output-dir
+run:
+  path: /bin/sh
+  args:
+  - -c
+  - |
+    export PYTHONPATH="$(pwd)/concourse-terraform:${PYTHONPATH}"
+    concourse-terraform/bin/concourse-terraform create-plan

@@ -16,15 +16,16 @@ resources:
     tag: 0.11.10
 
 jobs:
-- name: plan
+- name: create-plan
   plan:
   - get: concourse-terraform
   - get: concourse-terraform-image
-  - task: plan
+  - task: create-plan
     image: concourse-terraform-image
-    file: concourse-terraform/tasks/plan.yaml
+    file: concourse-terraform/tasks/create-plan.yaml
     input_mapping:
       terraform-source-dir: concourse-terraform
     params:
       TF_WORKING_DIR: terraform-source-dir/testdata/terraform
+      SOURCE_REF_FILE: terraform-source-dir/.git/short_ref
       DEBUG: true
