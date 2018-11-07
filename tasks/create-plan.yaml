@@ -12,6 +12,7 @@ params:
   SOURCE_REF:
   SOURCE_REF_FILE:
   ERROR_ON_NO_CHANGES:
+  DESTROY:
   DEBUG:
   ARCHIVE_OUTPUT_DIR: plan-output-archive
 run:

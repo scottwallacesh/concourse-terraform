@@ -81,6 +81,10 @@ def process_args(args: list) -> None:
         if error_on_no_changes:
             # convert to bool if specified
             error_on_no_changes = bool(strtobool(error_on_no_changes))
+        destroy = os.environ.get(DESTROY)
+        if destroy:
+            # convert to bool if specified
+            destroy = bool(strtobool(destroy))
         debug = os.environ.get(DEBUG)
         if debug:
             # convert to bool if specified
@@ -92,6 +96,7 @@ def process_args(args: list) -> None:
             terraform_dir_path=terraform_dir_path,
             source_ref=source_ref,
             source_ref_file=source_ref_file,
+            destroy=destroy,
             debug=debug)
     elif command == lib.commands.SHOW_PLAN:
         # get parameters from environment
@@ -112,10 +117,6 @@ def process_args(args: list) -> None:
         plan_file_path = os.environ.get(PLAN_FILE_PATH)
         source_ref = os.environ.get(SOURCE_REF)
         source_ref_file = os.environ.get(SOURCE_REF_FILE)
-        destroy = os.environ.get(DESTROY)
-        if destroy:
-            # convert to bool if specified
-            destroy = bool(strtobool(destroy))
         debug = os.environ.get(DEBUG)
         if debug:
             # convert to bool if specified
@@ -126,7 +127,6 @@ def process_args(args: list) -> None:
             plan_file_path=plan_file_path,
             source_ref=source_ref,
             source_ref_file=source_ref_file,
-            destroy=destroy,
             debug=debug)
     else:
         print(f'command not recognized: {command}')

@@ -29,3 +29,19 @@ jobs:
       TF_WORKING_DIR: terraform-source-dir/testdata/terraform
       SOURCE_REF_FILE: terraform-source-dir/.git/short_ref
       DEBUG: true
+
+- name: create-destroy-plan
+  plan:
+  - get: concourse-terraform
+  - get: concourse-terraform-image
+  - task: create-destroy-plan
+    image: concourse-terraform-image
+    file: concourse-terraform/tasks/create-plan.yaml
+    input_mapping:
+      terraform-source-dir: concourse-terraform
+    params:
+      TF_WORKING_DIR: terraform-source-dir/testdata/terraform
+      SOURCE_REF_FILE: terraform-source-dir/.git/short_ref
+      ERROR_ON_NO_CHANGES: false
+      DESTROY: true
+      DEBUG: true

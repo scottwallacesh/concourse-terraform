@@ -39,27 +39,3 @@ jobs:
     file: concourse-terraform/tasks/apply-plan.yaml
     params:
       DEBUG: true
-
-- name: create-show-apply-plan-and-destroy
-  plan:
-  - get: concourse-terraform
-  - get: concourse-terraform-image
-  - task: create-plan
-    image: concourse-terraform-image
-    file: concourse-terraform/tasks/create-plan.yaml
-    input_mapping:
-      terraform-source-dir: concourse-terraform
-    params:
-      TF_WORKING_DIR: terraform-source-dir/testdata/terraform
-      SOURCE_REF_FILE: terraform-source-dir/.git/short_ref
-      DEBUG: true
-  - task: show-plan
-    image: concourse-terraform-image
-    file: concourse-terraform/tasks/show-plan.yaml
-    params:
-      DEBUG: true
-  - task: apply-plan
-    image: concourse-terraform-image
-    file: concourse-terraform/tasks/apply-plan.yaml
-    params:
-      DEBUG: true

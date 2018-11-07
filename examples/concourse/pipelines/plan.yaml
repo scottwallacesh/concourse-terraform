@@ -28,3 +28,18 @@ jobs:
     params:
       TF_WORKING_DIR: terraform-source-dir/testdata/terraform
       DEBUG: true
+
+- name: plan-destroy
+  plan:
+  - get: concourse-terraform
+  - get: concourse-terraform-image
+  - task: plan-destroy
+    image: concourse-terraform-image
+    file: concourse-terraform/tasks/plan.yaml
+    input_mapping:
+      terraform-source-dir: concourse-terraform
+    params:
+      TF_WORKING_DIR: terraform-source-dir/testdata/terraform
+      ERROR_ON_NO_CHANGES: false
+      DESTROY: true
+      DEBUG: true

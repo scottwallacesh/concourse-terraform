@@ -7,6 +7,7 @@ params:
   TF_WORKING_DIR:
   TF_DIR_PATH:
   ERROR_ON_NO_CHANGES:
+  DESTROY:
   DEBUG:
 run:
   path: /bin/sh
