@@ -43,6 +43,28 @@ class ShowTerraformPlan(unittest.TestCase):
                 terraform_plan_file,
                 debug=True)
 
+    def test_show_destroy_plan(self):
+        # create a new temp dir as the working dir
+        with common.create_test_working_dir() as test_working_dir:
+            # init the terraform dir
+            terraform_dir = lib.terraform_dir.init_terraform_dir(
+                common.TEST_TERRAFORM_DIR,
+                terraform_work_dir=test_working_dir,
+                debug=True
+            )
+            # create plan file
+            terraform_plan_file = lib.terraform_dir.plan_terraform_dir(
+                terraform_dir,
+                create_plan_file=True,
+                destroy=True,
+                error_on_no_changes=False,
+                debug=True)
+            # show plan file
+            lib.terraform_dir.show_terraform_plan(
+                terraform_dir,
+                terraform_plan_file,
+                debug=True)
+
 
 # =============================================================================
 #

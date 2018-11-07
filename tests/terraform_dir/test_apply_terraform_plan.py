@@ -62,6 +62,35 @@ class ApplyTerraformPlan(unittest.TestCase):
                 plan_file_path='test.tfplan',
                 debug=True)
 
+    def test_apply_with_destroy_plan_file(self):
+        # create a new temp dir as the working dir
+        with common.create_test_working_dir() as test_working_dir:
+            # init the terraform dir
+            terraform_dir = lib.terraform_dir.init_terraform_dir(
+                common.TEST_TERRAFORM_DIR,
+                terraform_work_dir=test_working_dir,
+                debug=True
+            )
+            # create plan file
+            lib.terraform_dir.plan_terraform_dir(
+                terraform_dir,
+                create_plan_file=True,
+                debug=True)
+            # apply plan file
+            lib.terraform_dir.apply_terraform_plan(
+                terraform_dir,
+                debug=True)
+            # create destroy plan file
+            lib.terraform_dir.plan_terraform_dir(
+                terraform_dir,
+                create_plan_file=True,
+                destroy=True,
+                debug=True)
+            # apply plan file
+            lib.terraform_dir.apply_terraform_plan(
+                terraform_dir,
+                debug=True)
+
 
 # =============================================================================
 #

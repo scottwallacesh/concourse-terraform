@@ -289,7 +289,15 @@ thus one method to manage local state would be to use a script or resource that:
 
 - `ERROR_ON_NO_CHANGES`: _optional_. raises an error if applying the plan would result in no changes. set to `false` to disable. default: `true`
 
+- `DESTROY`: _optional_. executes a `-destroy` plan. set to `true` to enable. default: `false`
+
 - `DEBUG`: _optional_. prints command line arguments and increases log verbosity. set to `true` to enable. **may result in leaked credentials**. default: `false`
+
+- `TF_BACKEND_TYPE`: _optional_. generate a terraform `backend.tf` file for this backend type. see [configuring the backend](#configuring-the-backend)
+
+- `TF_BACKEND_CONFIG_<key>`: _optional_. sets `-backend-config` value for `<key>`. see [configuring the backend](#configuring-the-backend)
+
+- `TF_VAR_<key>`: _optional_. terraform input variables in the format described in [providing input variable values](#providing-input-variable-values)
 
 ## `apply.yaml`: apply with no plan
 
@@ -323,6 +331,12 @@ thus one method to manage local state would be to use a script or resource that:
 
 - `DEBUG`: _optional_. prints command line arguments and increases log verbosity. set to `true` to enable. **may result in leaked credentials**. default: `false`
 
+- `TF_BACKEND_TYPE`: _optional_. generate a terraform `backend.tf` file for this backend type. see [configuring the backend](#configuring-the-backend)
+
+- `TF_BACKEND_CONFIG_<key>`: _optional_. sets `-backend-config` value for `<key>`. see [configuring the backend](#configuring-the-backend)
+
+- `TF_VAR_<key>`: _optional_. terraform input variables in the format described in [providing input variable values](#providing-input-variable-values)
+
 ## `create-plan.yaml`: create a plan
 
 **note**: since running plan does not update state, `create-plan.yaml` does not output an archive on failure
@@ -351,7 +365,15 @@ thus one method to manage local state would be to use a script or resource that:
 
 - `ERROR_ON_NO_CHANGES`: _optional_. raises an error if applying the plan would result in no changes. set to `false` to disable. default: `true`
 
+- `DESTROY`: _optional_. creates a `-destroy` plan. set to `true` to enable. default: `false`
+
 - `DEBUG`: _optional_. prints command line arguments and increases log verbosity. set to `true` to enable. **may result in leaked credentials**. default: `false`
+
+- `TF_BACKEND_TYPE`: _optional_. generate a terraform `backend.tf` file for this backend type. see [configuring the backend](#configuring-the-backend)
+
+- `TF_BACKEND_CONFIG_<key>`: _optional_. sets `-backend-config` value for `<key>`. see [configuring the backend](#configuring-the-backend)
+
+- `TF_VAR_<key>`: _optional_. terraform input variables in the format described in [providing input variable values](#providing-input-variable-values)
 
 ## `show-plan.yaml`: show a plan
 

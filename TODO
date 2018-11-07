@@ -8,4 +8,19 @@ commands
 [X] show-plan command
 [X] apply-plan command
 
-[ ] add destroy support
+[X] add destroy support
+[X]   [terraform_dir] destroy flag for create plan
+[X]   [terraform] add destroy or use args?
+[X]   [readme] update docs
+[X] move destroy into terraform
+[X] add destroy test for terraform plan
+[X] remove 'args' from terraform commands
+
+[ ] add terraform state (optional) inputs
+[ ]   terraform state input dir (containing terraform.tfstate and terraform.tfstate.backup)
+[ ]   terraform state dir param (pointing to terraform.tfstate location, default to terraform.tfstate)
+[ ]   terraform backup state dir param (pointing to terraform.tfstate.backup location, default to terraform.tfstate.backup)
+[ ]     if provided, the files will be automatically copied to (and overwrite) them in the work dir
+
+[ ] add terraform state outputs
+[ ]   copy the terraform.tfstate and terraform.tfstate.backup files to the terraform state output dir

@@ -29,6 +29,7 @@ def plan(
         terraform_source_dir: str,
         terraform_dir_path: Optional[str] = None,
         error_on_no_changes: Optional[bool] = None,
+        destroy: Optional[bool] = None,
         debug: bool = False) -> None:
     terraform_dir = lib.terraform_dir.init_terraform_dir(
         terraform_source_dir,
@@ -38,6 +39,7 @@ def plan(
         terraform_dir,
         terraform_dir_path=terraform_dir_path,
         error_on_no_changes=error_on_no_changes,
+        destroy=destroy,
         debug=debug)
 
 
@@ -83,6 +85,7 @@ def create_plan(
         source_ref: Optional[str] = None,
         source_ref_file: Optional[str] = None,
         error_on_no_changes: Optional[bool] = None,
+        destroy: Optional[bool] = None,
         debug: bool = False) -> None:
     terraform_dir = lib.terraform_dir.init_terraform_dir(
         terraform_source_dir,
@@ -94,6 +97,7 @@ def create_plan(
         create_plan_file=True,
         plan_file_path=plan_file_path,
         error_on_no_changes=error_on_no_changes,
+        destroy=destroy,
         debug=debug)
     print(f"wrote plan file to: {plan_file_path}")
     archive_file_path = lib.terraform_dir.archive_terraform_dir(

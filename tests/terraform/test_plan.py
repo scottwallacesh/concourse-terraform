@@ -39,6 +39,13 @@ class TestPlan(unittest.TestCase):
             common.create_plan_with_no_output_allow_no_changes(
                 test_working_dir)
 
+    def test_plan_destroy_with_no_changes_no_error(self):
+        with common.create_test_working_dir() as test_working_dir:
+            common.init_test_working_dir(test_working_dir)
+            common.apply_with_no_plan(test_working_dir)
+            common.create_plan_destroy_with_no_output_allow_no_changes(
+                test_working_dir)
+
 
 # =============================================================================
 #

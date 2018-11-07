@@ -134,7 +134,6 @@ def init(
         working_dir_path: str,
         terraform_dir_path: Optional[str] = None,
         backend_config_vars: Optional[dict] = None,
-        args: Optional[list] = None,
         debug: bool = False) -> None:
     # default terraform dir path
     if not terraform_dir_path:
@@ -145,9 +144,6 @@ def init(
         for k, v in backend_config_vars.items():
             terraform_command_args.append(
                 f"-backend-config=\"{k}={v}\"")
-    # add arbitrary args
-    if args:
-        terraform_command_args.extend(args)
     # execute
     _terraform(
         'init',
@@ -167,18 +163,21 @@ def plan(
         create_plan_file: bool = False,
         plan_file_path: Optional[str] = None,
         error_on_no_changes: Optional[bool] = None,
-        args: Optional[list] = None,
+        destroy: Optional[bool] = None,
         debug: bool = False) -> None:
     if error_on_no_changes not in [True, False]:
         error_on_no_changes = True
+    if destroy not in [True, False]:
+        destroy = False
     if not terraform_dir_path:
         terraform_dir_path = '.'
     terraform_command_args = []
-    if args:
-        terraform_command_args.extend(args)
     if create_plan_file:
         # creating a plan file
         terraform_command_args.append(f"-out={plan_file_path}")
+    if destroy:
+        # creating a destroy plan
+        terraform_command_args.append('-destroy')
     # execute
     _terraform(
         'plan',
@@ -198,13 +197,10 @@ def apply(
         working_dir_path: str,
         terraform_dir_path: Optional[str] = None,
         plan_file_path: Optional[str] = None,
-        args: Optional[list] = None,
         debug: bool = False) -> None:
     if not terraform_dir_path:
         terraform_dir_path = '.'
     terraform_command_args = []
-    if args:
-        terraform_command_args.extend(args)
     if plan_file_path:
         # target plan file if using a plan file
         terraform_dir_path = plan_file_path
