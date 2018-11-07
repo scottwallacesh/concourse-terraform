@@ -23,14 +23,6 @@ class ShowTerraformPlan(unittest.TestCase):
                 'tfplan',
                 debug=True)
 
-    def test_requires_plan_file_path(self):
-        with self.assertRaises(ValueError):
-            # apply with empty string as the plan file path
-            lib.terraform_dir.show_terraform_plan(
-                common.TEST_TERRAFORM_DIR,
-                '',
-                debug=True)
-
     def test_show_plan(self):
         # create a new temp dir as the working dir
         with common.create_test_working_dir() as test_working_dir:

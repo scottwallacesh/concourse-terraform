@@ -371,14 +371,14 @@ def apply_terraform_dir(
 # =============================================================================
 def show_terraform_plan(
         terraform_dir: str,
-        plan_file_path: str,
+        plan_file_path: Optional[str] = None,
         debug: bool = False) -> None:
     # check terraform dir
     if not terraform_dir:
         raise ValueError('terraform_dir cannot be empty')
     # check plan file path
     if not plan_file_path:
-        raise ValueError('plan_file_path cannot be empty')
+        plan_file_path = TERRAFORM_PLAN_FILE_NAME
     lib.terraform.show(
         terraform_dir,
         plan_file_path,
