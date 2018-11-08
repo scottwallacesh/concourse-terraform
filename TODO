@@ -17,10 +17,13 @@ commands
 [X] remove 'args' from terraform commands
 
 [ ] add terraform state (optional) inputs
+[ ]   [terraform] add args for state to relevant commands
+[X]     terraform plan + tests
+[ ]     terraform apply + tests
 [ ]   terraform state input dir (containing terraform.tfstate and terraform.tfstate.backup)
 [ ]   terraform state dir param (pointing to terraform.tfstate location, default to terraform.tfstate)
 [ ]   terraform backup state dir param (pointing to terraform.tfstate.backup location, default to terraform.tfstate.backup)
-[ ]     if provided, the files will be automatically copied to (and overwrite) them in the work dir
+[-]     if provided, the files will be automatically copied to (and overwrite) them in the work dir
 
 [ ] add terraform state outputs
 [ ]   copy the terraform.tfstate and terraform.tfstate.backup files to the terraform state output dir

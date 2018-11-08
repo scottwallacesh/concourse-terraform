@@ -3,9 +3,12 @@ platform: linux
 inputs:
 - name: concourse-terraform
 - name: terraform-source-dir
+- name: input-state-dir
+  optional: true
 params:
   TF_WORKING_DIR:
   TF_DIR_PATH:
+  INPUT_STATE_FILE_PATH:
   ERROR_ON_NO_CHANGES:
   DESTROY:
   DEBUG:

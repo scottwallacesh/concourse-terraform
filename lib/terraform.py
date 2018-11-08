@@ -160,6 +160,7 @@ def init(
 def plan(
         working_dir_path: str,
         terraform_dir_path: Optional[str] = None,
+        state_file_path: Optional[str] = None,
         create_plan_file: bool = False,
         plan_file_path: Optional[str] = None,
         error_on_no_changes: Optional[bool] = None,
@@ -172,6 +173,9 @@ def plan(
     if not terraform_dir_path:
         terraform_dir_path = '.'
     terraform_command_args = []
+    if state_file_path:
+        # specify state file
+        terraform_command_args.append(f"-state={state_file_path}")
     if create_plan_file:
         # creating a plan file
         terraform_command_args.append(f"-out={plan_file_path}")
@@ -196,6 +200,9 @@ def plan(
 def apply(
         working_dir_path: str,
         terraform_dir_path: Optional[str] = None,
+        input_state_file_path: Optional[str] = None,
+        backup_state_file_path: Optional[str] = None,
+        output_state_file_path: Optional[str] = None,
         plan_file_path: Optional[str] = None,
         debug: bool = False) -> None:
     if not terraform_dir_path:
@@ -207,6 +214,15 @@ def apply(
     else:
         # auto approve if not using a plan file
         terraform_command_args.append('-auto-approve')
+    if input_state_file_path:
+        # specify input state file
+        terraform_command_args.append(f"-state={input_state_file_path}")
+    if backup_state_file_path:
+        # specify backup state file
+        terraform_command_args.append(f"-backup={backup_state_file_path}")
+    if output_state_file_path:
+        # specify output state file
+        terraform_command_args.append(f"-state-out={output_state_file_path}")
     # execute
     _terraform(
         'apply',

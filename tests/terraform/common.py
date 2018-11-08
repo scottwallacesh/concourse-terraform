@@ -1,4 +1,5 @@
 # stdlib
+import os
 import tempfile
 
 # local
@@ -11,6 +12,11 @@ import lib.terraform
 # =============================================================================
 
 TEST_TERRAFORM_DIR = '/app/testdata/terraform'
+TEST_STATE_DIR = '/app/testdata/terraform-state'
+TEST_STATE_FILE_WITH_KEY = \
+    os.path.join(TEST_STATE_DIR, 'with-key.tfstate')
+TEST_STATE_FILE_WITHOUT_KEY = \
+    os.path.join(TEST_STATE_DIR, 'without-key.tfstate')
 TEST_PLAN_FILE_NAME = '.tfplan'
 
 
@@ -44,6 +50,54 @@ def create_plan_with_no_output(test_working_dir: str) -> None:
     lib.terraform.plan(
         test_working_dir,
         terraform_dir_path=TEST_TERRAFORM_DIR,
+        debug=True)
+
+
+# =============================================================================
+# create_plan_with_existing_state
+# =============================================================================
+def create_plan_with_existing_state(test_working_dir: str) -> None:
+    lib.terraform.plan(
+        test_working_dir,
+        terraform_dir_path=TEST_TERRAFORM_DIR,
+        state_file_path=TEST_STATE_FILE_WITH_KEY,
+        debug=True)
+
+
+# =============================================================================
+# create_plan_with_existing_empty_state
+# =============================================================================
+def create_plan_with_existing_empty_state(test_working_dir: str) -> None:
+    lib.terraform.plan(
+        test_working_dir,
+        terraform_dir_path=TEST_TERRAFORM_DIR,
+        state_file_path=TEST_STATE_FILE_WITHOUT_KEY,
+        debug=True)
+
+
+# =============================================================================
+# create_plan_destroy_with_existing_state
+# =============================================================================
+def create_plan_destroy_with_existing_state(
+        test_working_dir: str) -> None:
+    lib.terraform.plan(
+        test_working_dir,
+        terraform_dir_path=TEST_TERRAFORM_DIR,
+        state_file_path=TEST_STATE_FILE_WITH_KEY,
+        destroy=True,
+        debug=True)
+
+
+# =============================================================================
+# create_plan_destroy_with_existing_empty_state
+# =============================================================================
+def create_plan_destroy_with_existing_empty_state(
+        test_working_dir: str) -> None:
+    lib.terraform.plan(
+        test_working_dir,
+        terraform_dir_path=TEST_TERRAFORM_DIR,
+        state_file_path=TEST_STATE_FILE_WITHOUT_KEY,
+        destroy=True,
         debug=True)
 
 
@@ -100,6 +154,29 @@ def apply_with_no_plan(test_working_dir: str) -> None:
     lib.terraform.apply(
         test_working_dir,
         terraform_dir_path=TEST_TERRAFORM_DIR,
+        debug=True)
+
+
+# =============================================================================
+# apply_with_no_plan_with_existing_state
+# =============================================================================
+def apply_with_no_plan_with_existing_state(test_working_dir: str) -> None:
+    lib.terraform.apply(
+        test_working_dir,
+        terraform_dir_path=TEST_TERRAFORM_DIR,
+        input_state_file_path=TEST_STATE_FILE_WITH_KEY,
+        debug=True)
+
+
+# =============================================================================
+# apply_with_no_plan_with_existing_empty_state
+# =============================================================================
+def apply_with_no_plan_with_existing_empty_state(
+        test_working_dir: str) -> None:
+    lib.terraform.apply(
+        test_working_dir,
+        terraform_dir_path=TEST_TERRAFORM_DIR,
+        input_state_file_path=TEST_STATE_FILE_WITHOUT_KEY,
         debug=True)
 
 

@@ -43,3 +43,17 @@ jobs:
       ERROR_ON_NO_CHANGES: false
       DESTROY: true
       DEBUG: true
+
+- name: plan-existing-state
+  plan:
+  - get: concourse-terraform
+  - get: concourse-terraform-image
+  - task: plan
+    image: concourse-terraform-image
+    file: concourse-terraform/tasks/plan.yaml
+    input_mapping:
+      terraform-source-dir: concourse-terraform
+    params:
+      TF_WORKING_DIR: terraform-source-dir/testdata/terraform
+      INPUT_STATE_FILE_PATH: terraform-source-dir/testdata/terraform-state/with-key.tfstate
+      DEBUG: true

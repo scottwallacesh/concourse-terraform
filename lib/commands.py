@@ -28,6 +28,7 @@ COMMANDS = [
 def plan(
         terraform_source_dir: str,
         terraform_dir_path: Optional[str] = None,
+        state_file_path: Optional[str] = None,
         error_on_no_changes: Optional[bool] = None,
         destroy: Optional[bool] = None,
         debug: bool = False) -> None:
@@ -38,6 +39,7 @@ def plan(
     lib.terraform_dir.plan_terraform_dir(
         terraform_dir,
         terraform_dir_path=terraform_dir_path,
+        state_file_path=state_file_path,
         error_on_no_changes=error_on_no_changes,
         destroy=destroy,
         debug=debug)
@@ -82,6 +84,7 @@ def create_plan(
         archive_output_dir: str,
         plan_file_path: Optional[str] = None,
         terraform_dir_path: Optional[str] = None,
+        state_file_path: Optional[str] = None,
         source_ref: Optional[str] = None,
         source_ref_file: Optional[str] = None,
         error_on_no_changes: Optional[bool] = None,
@@ -96,6 +99,7 @@ def create_plan(
         terraform_dir_path=terraform_dir_path,
         create_plan_file=True,
         plan_file_path=plan_file_path,
+        state_file_path=state_file_path,
         error_on_no_changes=error_on_no_changes,
         destroy=destroy,
         debug=debug)

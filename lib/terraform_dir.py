@@ -326,6 +326,7 @@ def restore_terraform_dir(
 def plan_terraform_dir(
         terraform_dir: str,
         terraform_dir_path: Optional[str] = None,
+        state_file_path: Optional[str] = None,
         create_plan_file: bool = False,
         plan_file_path: Optional[str] = None,
         error_on_no_changes: Optional[bool] = None,
@@ -336,12 +337,10 @@ def plan_terraform_dir(
         raise ValueError('terraform_dir cannot be empty')
     if create_plan_file and (not plan_file_path):
             plan_file_path = TERRAFORM_PLAN_FILE_NAME
-    terraform_args = []
-    if destroy:
-        terraform_args.append('-destroy')
     lib.terraform.plan(
         terraform_dir,
         terraform_dir_path=terraform_dir_path,
+        state_file_path=state_file_path,
         create_plan_file=create_plan_file,
         plan_file_path=plan_file_path,
         error_on_no_changes=error_on_no_changes,
