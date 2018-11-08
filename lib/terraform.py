@@ -174,6 +174,10 @@ def plan(
         terraform_dir_path = '.'
     terraform_command_args = []
     if state_file_path:
+        # ensure state file exists
+        if not os.path.isfile(state_file_path):
+            raise(FileNotFoundError(
+                f'state_file_path not found at: {state_file_path}'))
         # specify state file
         terraform_command_args.append(f"-state={state_file_path}")
     if create_plan_file:

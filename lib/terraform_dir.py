@@ -337,11 +337,6 @@ def plan_terraform_dir(
         raise ValueError('terraform_dir cannot be empty')
     if create_plan_file and (not plan_file_path):
             plan_file_path = TERRAFORM_PLAN_FILE_NAME
-    if state_file_path:
-        # ensure state file exists
-        if not os.path.isfile(state_file_path):
-            raise(FileNotFoundError(
-                f'state_file_path not found at: {state_file_path}'))
     lib.terraform.plan(
         terraform_dir,
         terraform_dir_path=terraform_dir_path,
