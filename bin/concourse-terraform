@@ -22,7 +22,8 @@ SOURCE_REF = 'SOURCE_REF'
 SOURCE_REF_FILE = 'SOURCE_REF_FILE'
 PLAN_FILE_PATH = 'PLAN_FILE_PATH'
 DESTROY = 'DESTROY'
-INPUT_STATE_FILE_PATH = 'INPUT_STATE_FILE_PATH'
+STATE_FILE_PATH = 'STATE_FILE_PATH'
+STATE_OUTPUT_DIR = 'STATE_OUTPUT_DIR'
 
 
 # =============================================================================
@@ -34,7 +35,7 @@ def process_args(args: list) -> None:
         # get parameters from environment
         terraform_source_dir = os.environ[TERRAFORM_SOURCE_DIR]
         terraform_dir_path = os.environ.get(TERRAFORM_DIR_PATH)
-        input_state_file_path = os.environ.get(INPUT_STATE_FILE_PATH)
+        state_file_path = os.environ.get(STATE_FILE_PATH)
         error_on_no_changes = os.environ.get(ERROR_ON_NO_CHANGES)
         if error_on_no_changes:
             # convert to bool if specified
@@ -50,7 +51,7 @@ def process_args(args: list) -> None:
         lib.commands.plan(
             terraform_source_dir,
             terraform_dir_path=terraform_dir_path,
-            state_file_path=input_state_file_path,
+            state_file_path=state_file_path,
             error_on_no_changes=error_on_no_changes,
             destroy=destroy,
             debug=debug)
@@ -59,6 +60,8 @@ def process_args(args: list) -> None:
         terraform_source_dir = os.environ[TERRAFORM_SOURCE_DIR]
         archive_output_dir = os.environ[ARCHIVE_OUTPUT_DIR]
         terraform_dir_path = os.environ.get(TERRAFORM_DIR_PATH)
+        state_file_path = os.environ.get(STATE_FILE_PATH)
+        state_output_dir = os.environ.get(STATE_OUTPUT_DIR)
         source_ref = os.environ.get(SOURCE_REF)
         source_ref_file = os.environ.get(SOURCE_REF_FILE)
         debug = os.environ.get(DEBUG)
@@ -69,6 +72,8 @@ def process_args(args: list) -> None:
             terraform_source_dir,
             archive_output_dir,
             terraform_dir_path=terraform_dir_path,
+            state_file_path=state_file_path,
+            state_output_dir=state_output_dir,
             source_ref=source_ref,
             source_ref_file=source_ref_file,
             debug=debug)
@@ -78,7 +83,7 @@ def process_args(args: list) -> None:
         archive_output_dir = os.environ[ARCHIVE_OUTPUT_DIR]
         plan_file_path = os.environ.get(PLAN_FILE_PATH)
         terraform_dir_path = os.environ.get(TERRAFORM_DIR_PATH)
-        input_state_file_path = os.environ.get(INPUT_STATE_FILE_PATH)
+        state_file_path = os.environ.get(STATE_FILE_PATH)
         source_ref = os.environ.get(SOURCE_REF)
         source_ref_file = os.environ.get(SOURCE_REF_FILE)
         error_on_no_changes = os.environ.get(ERROR_ON_NO_CHANGES)
@@ -98,7 +103,7 @@ def process_args(args: list) -> None:
             archive_output_dir,
             plan_file_path=plan_file_path,
             terraform_dir_path=terraform_dir_path,
-            state_file_path=input_state_file_path,
+            state_file_path=state_file_path,
             source_ref=source_ref,
             source_ref_file=source_ref_file,
             error_on_no_changes=error_on_no_changes,

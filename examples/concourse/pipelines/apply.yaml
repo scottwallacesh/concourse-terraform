@@ -46,23 +46,22 @@ jobs:
     ensure:
       # this is an example task
       # to show that even on failure,
-      # the output dir will contain
-      # the terraform dir archive
+      # the output state dir will contain
+      # the terraform state files
       #
       # do not use this example
-      # instead, put the artifact into remote storage
+      # instead, put the state files into remote storage
       # using a concourse resource
-      # or a script that extracts the local state
-      # from the archive and uploads it
-      task: save-archive-to-remote-storage
+      # or a script that uploads them
+      task: save-state-to-remote-storage
       image: concourse-terraform-image
       config:
         platform: linux
         inputs:
-        - name: archive-output-dir
+        - name: apply-output-state
         run:
           path: /bin/sh
           args:
           - -c
           - |
-            ls -la archive-output-dir
+            ls -la apply-output-state

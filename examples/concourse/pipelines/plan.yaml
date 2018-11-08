@@ -55,5 +55,6 @@ jobs:
       terraform-source-dir: concourse-terraform
     params:
       TF_WORKING_DIR: terraform-source-dir/testdata/terraform
-      INPUT_STATE_FILE_PATH: terraform-source-dir/testdata/terraform-state/with-key.tfstate
+      STATE_FILE_PATH: terraform-source-dir/testdata/terraform-state/with-key.tfstate
+      ERROR_ON_NO_CHANGES: false
       DEBUG: true

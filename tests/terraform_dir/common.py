@@ -19,6 +19,8 @@ TEST_STATE_FILE_WITH_KEY = \
     os.path.join(TEST_STATE_DIR, 'with-key.tfstate')
 TEST_STATE_FILE_WITHOUT_KEY = \
     os.path.join(TEST_STATE_DIR, 'without-key.tfstate')
+TEST_INVALID_TERRAFORM_DIR = \
+    os.path.join(TEST_ROOT_DIR, 'testdata/terraform-fail')
 
 
 # =============================================================================

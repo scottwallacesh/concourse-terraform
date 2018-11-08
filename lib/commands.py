@@ -52,6 +52,8 @@ def apply(
         terraform_source_dir: str,
         archive_output_dir: str,
         terraform_dir_path: Optional[str] = None,
+        state_file_path: Optional[str] = None,
+        state_output_dir: Optional[str] = None,
         source_ref: Optional[str] = None,
         source_ref_file: Optional[str] = None,
         debug: bool = False) -> None:
@@ -64,6 +66,8 @@ def apply(
         lib.terraform_dir.apply_terraform_dir(
             terraform_dir,
             terraform_dir_path=terraform_dir_path,
+            state_file_path=state_file_path,
+            state_output_dir=state_output_dir,
             debug=debug)
     finally:
         # ensure the archive is created

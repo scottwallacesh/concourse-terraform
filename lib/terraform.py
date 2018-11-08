@@ -20,33 +20,11 @@ TERRAFORM_BIN_FILE_PATH = 'terraform'
 #
 # =============================================================================
 
-class TERRAFORM_EXIT_STATUS(enum.Enum):
-    SUCCESS = 0
-    SUCCESS_NO_CHANGES = 1
-    SUCCESS_WITH_CHANGES = 2
-
-
 # =============================================================================
-#
-# private utility functions
-#
+# TerraformNoChangesError
 # =============================================================================
-
-# def _read_value_from_var_file(file_path: str, working_dir=None) -> str:
-#     # get original working directory
-#     original_working_dir = os.getcwd()
-#     # change to specified working dir
-#     if working_dir:
-#         os.chdir(working_dir)
-#     # read the contents of the var file
-#     with open(file_path) as var_file:
-#         var_value = var_file.read()
-#     # trim any trailing newline
-#     var_value = var_value.rstrip('\n')
-#     # change back to original working dir
-#     if os.getcwd() != original_working_dir:
-#         os.chdir(original_working_dir)
-#     return var_value
+class TerraformNoChangesError(subprocess.CalledProcessError):
+    pass
 
 
 # =============================================================================
@@ -63,14 +41,13 @@ def _terraform(
         input=None,
         working_dir: str = None,
         error_on_no_changes: bool = True,
-        debug: bool = False) -> TERRAFORM_EXIT_STATUS:
+        debug: bool = False) -> None:
     process_args = [
         TERRAFORM_BIN_FILE_PATH,
         *args
     ]
     # force 'TF_IN_AUTOMATION'
     os.environ['TF_IN_AUTOMATION'] = '1'
-    exit_status = None
     if debug:
         print('[debug] executing: ' + f"{' '.join(process_args)}")
     # use Popen so we can read lines as they come
@@ -85,32 +62,29 @@ def _terraform(
         for line in pipe.stdout:
             # log the output as it arrives
             print(line, end="")
-    raise_error = False
+    # mask args if we're not in debug
+    masked_args = pipe.args if debug else [TERRAFORM_BIN_FILE_PATH]
     # check if we're using detailed exit codes
     if '-detailed-exitcode' in [arg.lower() for arg in args]:
-        if pipe.returncode == 0:
-            if error_on_no_changes:
-                raise_error = True
-            exit_status = TERRAFORM_EXIT_STATUS.SUCCESS_NO_CHANGES
-        elif pipe.returncode == 2:
-            exit_status = TERRAFORM_EXIT_STATUS.SUCCESS_WITH_CHANGES
-        else:
-            raise_error = True
+        # 2 == success, with changes
+        if pipe.returncode != 2:
+            # 0 == success, no changes
+            if pipe.returncode == 0:
+                if error_on_no_changes:
+                    # raise a custom exception
+                    raise TerraformNoChangesError(pipe.returncode, masked_args)
+            else:
+                # raise a standard exception
+                raise subprocess.CalledProcessError(
+                    pipe.returncode,
+                    masked_args)
+
     else:
         if pipe.returncode != 0:
-            raise_error = True
-        else:
-            exit_status = TERRAFORM_EXIT_STATUS.SUCCESS
-    # check if we need to raise an error
-    if raise_error:
-        if debug:
+            # raise a standard exception
             raise subprocess.CalledProcessError(
-                pipe.returncode, pipe.args)
-        else:
-            # args are masked to prevent credentials leaking
-            raise subprocess.CalledProcessError(
-                pipe.returncode, [TERRAFORM_BIN_FILE_PATH])
-    return exit_status
+                pipe.returncode,
+                masked_args)
 
 
 # =============================================================================
@@ -200,8 +174,7 @@ def plan(
 def apply(
         working_dir_path: str,
         terraform_dir_path: Optional[str] = None,
-        input_state_file_path: Optional[str] = None,
-        backup_state_file_path: Optional[str] = None,
+        state_file_path: Optional[str] = None,
         output_state_file_path: Optional[str] = None,
         plan_file_path: Optional[str] = None,
         debug: bool = False) -> None:
@@ -214,15 +187,9 @@ def apply(
     else:
         # auto approve if not using a plan file
         terraform_command_args.append('-auto-approve')
-    if input_state_file_path:
-        # specify input state file
-        terraform_command_args.append(f"-state={input_state_file_path}")
-    if backup_state_file_path:
-        # specify backup state file
-        terraform_command_args.append(f"-backup={backup_state_file_path}")
-    if output_state_file_path:
-        # specify output state file
-        terraform_command_args.append(f"-state-out={output_state_file_path}")
+    if state_file_path:
+        # specify state file
+        terraform_command_args.append(f"-state={state_file_path}")
     # execute
     _terraform(
         'apply',

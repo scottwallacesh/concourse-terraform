@@ -1,5 +1,6 @@
 # stdlib
 import os
+import shutil
 import tempfile
 
 # local
@@ -34,6 +35,13 @@ def create_test_working_dir() -> tempfile.TemporaryDirectory:
 
 
 # =============================================================================
+# copy_state_file
+# =============================================================================
+def copy_state_file(source: str, dest: str) -> str:
+    return shutil.copy2(source, dest)
+
+
+# =============================================================================
 # init_test_working_dir
 # =============================================================================
 def init_test_working_dir(test_working_dir: str) -> None:
@@ -56,22 +64,30 @@ def create_plan_with_no_output(test_working_dir: str) -> None:
 # =============================================================================
 # create_plan_with_existing_state
 # =============================================================================
-def create_plan_with_existing_state(test_working_dir: str) -> None:
+def create_plan_with_existing_state(
+        test_working_dir: str,
+        test_state_dir: str) -> None:
+    test_state_file_path = \
+        copy_state_file(TEST_STATE_FILE_WITH_KEY, test_state_dir)
     lib.terraform.plan(
         test_working_dir,
         terraform_dir_path=TEST_TERRAFORM_DIR,
-        state_file_path=TEST_STATE_FILE_WITH_KEY,
+        state_file_path=test_state_file_path,
         debug=True)
 
 
 # =============================================================================
 # create_plan_with_existing_empty_state
 # =============================================================================
-def create_plan_with_existing_empty_state(test_working_dir: str) -> None:
+def create_plan_with_existing_empty_state(
+        test_working_dir: str,
+        test_state_dir: str) -> None:
+    test_state_file_path = \
+        copy_state_file(TEST_STATE_FILE_WITHOUT_KEY, test_state_dir)
     lib.terraform.plan(
         test_working_dir,
         terraform_dir_path=TEST_TERRAFORM_DIR,
-        state_file_path=TEST_STATE_FILE_WITHOUT_KEY,
+        state_file_path=test_state_file_path,
         debug=True)
 
 
@@ -79,11 +95,14 @@ def create_plan_with_existing_empty_state(test_working_dir: str) -> None:
 # create_plan_destroy_with_existing_state
 # =============================================================================
 def create_plan_destroy_with_existing_state(
-        test_working_dir: str) -> None:
+        test_working_dir: str,
+        test_state_dir: str) -> None:
+    test_state_file_path = \
+        copy_state_file(TEST_STATE_FILE_WITH_KEY, test_state_dir)
     lib.terraform.plan(
         test_working_dir,
         terraform_dir_path=TEST_TERRAFORM_DIR,
-        state_file_path=TEST_STATE_FILE_WITH_KEY,
+        state_file_path=test_state_file_path,
         destroy=True,
         debug=True)
 
@@ -92,11 +111,14 @@ def create_plan_destroy_with_existing_state(
 # create_plan_destroy_with_existing_empty_state
 # =============================================================================
 def create_plan_destroy_with_existing_empty_state(
-        test_working_dir: str) -> None:
+        test_working_dir: str,
+        test_state_dir: str) -> None:
+    test_state_file_path = \
+        copy_state_file(TEST_STATE_FILE_WITHOUT_KEY, test_state_dir)
     lib.terraform.plan(
         test_working_dir,
         terraform_dir_path=TEST_TERRAFORM_DIR,
-        state_file_path=TEST_STATE_FILE_WITHOUT_KEY,
+        state_file_path=test_state_file_path,
         destroy=True,
         debug=True)
 
@@ -160,11 +182,15 @@ def apply_with_no_plan(test_working_dir: str) -> None:
 # =============================================================================
 # apply_with_no_plan_with_existing_state
 # =============================================================================
-def apply_with_no_plan_with_existing_state(test_working_dir: str) -> None:
+def apply_with_no_plan_with_existing_state(
+        test_working_dir: str,
+        test_state_dir: str) -> None:
+    test_state_file_path = \
+        copy_state_file(TEST_STATE_FILE_WITH_KEY, test_state_dir)
     lib.terraform.apply(
         test_working_dir,
         terraform_dir_path=TEST_TERRAFORM_DIR,
-        input_state_file_path=TEST_STATE_FILE_WITH_KEY,
+        state_file_path=test_state_file_path,
         debug=True)
 
 
@@ -172,11 +198,14 @@ def apply_with_no_plan_with_existing_state(test_working_dir: str) -> None:
 # apply_with_no_plan_with_existing_empty_state
 # =============================================================================
 def apply_with_no_plan_with_existing_empty_state(
-        test_working_dir: str) -> None:
+        test_working_dir: str,
+        test_state_dir: str) -> None:
+    test_state_file_path = \
+        copy_state_file(TEST_STATE_FILE_WITHOUT_KEY, test_state_dir)
     lib.terraform.apply(
         test_working_dir,
         terraform_dir_path=TEST_TERRAFORM_DIR,
-        input_state_file_path=TEST_STATE_FILE_WITHOUT_KEY,
+        state_file_path=test_state_file_path,
         debug=True)
 
 

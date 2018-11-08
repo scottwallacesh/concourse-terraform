@@ -241,11 +241,11 @@ with `terraform` being the target terraform directory
 
 #### loading local state
 
-- when providing existing state to a task, you should configure the `INPUT_STATE_FILE_PATH` parameter to point to the `.tfstate` file
+- when providing existing state to a task, you should configure the `STATE_FILE_PATH` parameter to point to the `.tfstate` file
 
  this file will be copied to the `TF_WORKING_DIR` as `terraform.tfstate`
 
-- if you need to provide the state from a resource, you can use the optional input `input-state-dir`
+- if you need to provide the state from an input, you can use the optional input `input-state-dir`
 
 	e.g. for a resource named `terraform-state`:
 
@@ -257,7 +257,7 @@ with `terraform` being the target terraform directory
 	    input-state-dir: terraform-state
 	  params:
 	    TF_WORKING_DIR: src/terraform
-	    INPUT_STATE_FILE_PATH: terraform-state/terraform.tfstate
+	    STATE_FILE_PATH: terraform-state/terraform.tfstate
 	```
 
 # tasks
@@ -270,7 +270,7 @@ with `terraform` being the target terraform directory
 
 - `terraform-source-dir`: _required_. the terraform source directory.
 
-- `input-state-dir`: _optional_. when using local state, the directory containing state files. you must also configure `INPUT_STATE_FILE_PATH`. see [managing local state files](#managing-local-state-files)
+- `input-state-dir`: _optional_. when using local state, the directory containing the state file. you must also configure `STATE_FILE_PATH`. see [managing local state files](#managing-local-state-files)
 
 ### outputs
 
@@ -282,7 +282,7 @@ with `terraform` being the target terraform directory
 
 - `TF_DIR_PATH`: _optional_. path to the terraform files inside the working directory. see [providing terraform source files](#providing-terraform-source-files). default: `.`
 
-- `INPUT_STATE_FILE_PATH`: _optional_. when using local state, the path to the input state file. can be relative to the concourse working directory. see [managing local state files](#managing-local-state-files). default: none
+- `STATE_FILE_PATH`: _optional_. when using local state, the path to the input state file. can be relative to the concourse working directory. see [managing local state files](#managing-local-state-files). default: none
 
 - `ERROR_ON_NO_CHANGES`: _optional_. raises an error if applying the plan would result in no changes. set to `false` to disable. default: `true`
 
@@ -300,7 +300,7 @@ with `terraform` being the target terraform directory
 
 **caution**:
 
-- this task may result in orphaned resources if you do not properly manage the statefile. to be safe, use a remote backend
+- this task may result in orphaned resources if you do not properly manage the state files. to be safe, prefer using a remote backend when possible
 
 - if using a local backend, see [managing local state files](#managing-local-state-files)
 
@@ -312,15 +312,21 @@ with `terraform` being the target terraform directory
 
 - `terraform-source-dir`: _required_. the terraform source directory.
 
+- `input-state-dir`: _optional_. when using local state, the directory containing the state file. you must also configure `STATE_FILE_PATH`. see [managing local state files](#managing-local-state-files)
+
 ### outputs
 
 - `apply-output-archive`: an artifact containing the terraform working directory will be placed here
+
+- `apply-output-state`: if local state files are present after the apply, they will be placed here as `terraform.tfstate` and `terraform.tfstate.backup`
 
 ### params
 
 - `TF_WORKING_DIR`: _required_. path to the terraform working directory. see [providing terraform source files](#providing-terraform-source-files).
 
 - `TF_DIR_PATH`: _optional_. path to the terraform files inside the working directory. see [providing terraform source files](#providing-terraform-source-files). default: `.`
+
+- `STATE_FILE_PATH`: _optional_. when using local state, the path to the input state file. can be relative to the concourse working directory. see [managing local state files](#managing-local-state-files). default: none
 
 - `SOURCE_REF`: _optional_. a source ref (e.g. a git commit sha or short sha) to be appended to the output artifact filename. cannot be used with `SOURCE_REF_FILE`. default: none
 

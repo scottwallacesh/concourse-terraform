@@ -24,6 +24,7 @@ BACKEND_FILE_NAME = 'backend.tf'
 BACKEND_TYPE_VAR = 'TF_BACKEND_TYPE'
 BACKEND_CONFIG_VAR_PREFIX = 'TF_BACKEND_CONFIG_'
 TERRAFORM_STATE_FILE_NAME = 'terraform.tfstate'
+TERRAFORM_BACKUP_STATE_FILE_NAME = f'{TERRAFORM_STATE_FILE_NAME}.backup'
 
 
 # =============================================================================
@@ -31,13 +32,6 @@ TERRAFORM_STATE_FILE_NAME = 'terraform.tfstate'
 # private functions
 #
 # =============================================================================
-
-# =============================================================================
-# _get_working_dir_file_path
-# =============================================================================
-def _get_working_dir_file_path(
-        working_dir_path: str, file_name: str) -> str:
-    return os.path.join(working_dir_path, file_name)
 
 
 # =============================================================================
@@ -76,6 +70,39 @@ def _import_state_file_to_terraform_dir(
         TERRAFORM_STATE_FILE_NAME)
     shutil.copyfile(state_file_path, destination_file_path)
     return TERRAFORM_STATE_FILE_NAME
+
+
+# =============================================================================
+# _export_state_files_from_terraform_dir
+# =============================================================================
+def _export_state_files_from_terraform_dir(
+        terraform_dir: str,
+        state_output_dir: str) -> None:
+    # create output dir, if needed
+    if not os.path.isdir(state_output_dir):
+        os.makedirs(state_output_dir)
+    # format paths to state files
+    source_state_file_path = os.path.join(
+        terraform_dir,
+        TERRAFORM_STATE_FILE_NAME)
+    source_backup_state_file_path = os.path.join(
+        terraform_dir,
+        TERRAFORM_BACKUP_STATE_FILE_NAME)
+    destination_state_file_path = os.path.join(
+        state_output_dir,
+        TERRAFORM_STATE_FILE_NAME)
+    destination_backup_state_file_path = os.path.join(
+        state_output_dir,
+        TERRAFORM_BACKUP_STATE_FILE_NAME)
+    # copy state files, if found
+    if os.path.isfile(source_state_file_path):
+        shutil.copyfile(
+            source_state_file_path,
+            destination_state_file_path)
+    if os.path.isfile(source_backup_state_file_path):
+        shutil.copyfile(
+            source_backup_state_file_path,
+            destination_backup_state_file_path)
 
 
 # =============================================================================
@@ -378,14 +405,29 @@ def plan_terraform_dir(
 def apply_terraform_dir(
         terraform_dir: str,
         terraform_dir_path: str = None,
+        state_file_path: Optional[str] = None,
+        state_output_dir: Optional[str] = None,
         debug: bool = False) -> None:
     # check terraform dir
     if not terraform_dir:
         raise ValueError('terraform_dir cannot be empty')
-    lib.terraform.apply(
-        terraform_dir,
-        terraform_dir_path=terraform_dir_path,
-        debug=debug)
+    if state_file_path:
+        # import the state file and update the path
+        state_file_path = \
+            _import_state_file_to_terraform_dir(
+                state_file_path,
+                terraform_dir)
+    try:
+        lib.terraform.apply(
+            terraform_dir,
+            terraform_dir_path=terraform_dir_path,
+            state_file_path=state_file_path,
+            debug=debug)
+    finally:
+        if state_output_dir:
+            _export_state_files_from_terraform_dir(
+                terraform_dir,
+                state_output_dir)
 
 
 # =============================================================================
@@ -393,6 +435,7 @@ def apply_terraform_dir(
 # =============================================================================
 def apply_terraform_plan(
         terraform_dir: str,
+        state_output_dir: Optional[str] = None,
         plan_file_path: Optional[str] = None,
         debug: bool = False) -> None:
     # check terraform dir
@@ -401,10 +444,16 @@ def apply_terraform_plan(
     # check plan file path
     if not plan_file_path:
         plan_file_path = TERRAFORM_PLAN_FILE_NAME
-    lib.terraform.apply(
-        terraform_dir,
-        plan_file_path=plan_file_path,
-        debug=debug)
+    try:
+        lib.terraform.apply(
+            terraform_dir,
+            plan_file_path=plan_file_path,
+            debug=debug)
+    finally:
+        if state_output_dir:
+            _export_state_files_from_terraform_dir(
+                terraform_dir,
+                state_output_dir)
 
 
 # =============================================================================
