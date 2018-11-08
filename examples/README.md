@@ -10,6 +10,9 @@
 
 - generates a plan archive for each commit
 
-- requires showing the plan to "approve" it before it can be applied
+- requires reviewing and approving the plan archive before it can be applied
 
 - uses serial groups to prevent concurrent state modifications
+
+- supports creating and destroying using plans
+
