@@ -23,6 +23,7 @@ TERRAFORM_PLAN_FILE_NAME = '.tfplan'
 BACKEND_FILE_NAME = 'backend.tf'
 BACKEND_TYPE_VAR = 'TF_BACKEND_TYPE'
 BACKEND_CONFIG_VAR_PREFIX = 'TF_BACKEND_CONFIG_'
+TERRAFORM_STATE_FILE_NAME = 'terraform.tfstate'
 
 
 # =============================================================================
@@ -62,6 +63,19 @@ def _copy_terraform_dir(
         source: str,
         destination: str) -> None:
     distutils.dir_util.copy_tree(source, destination)
+
+
+# =============================================================================
+# _import_state_file_to_terraform_dir
+# =============================================================================
+def _import_state_file_to_terraform_dir(
+        state_file_path: str,
+        terraform_dir: str) -> str:
+    destination_file_path = os.path.join(
+        terraform_dir,
+        TERRAFORM_STATE_FILE_NAME)
+    shutil.copyfile(state_file_path, destination_file_path)
+    return TERRAFORM_STATE_FILE_NAME
 
 
 # =============================================================================
@@ -337,6 +351,12 @@ def plan_terraform_dir(
         raise ValueError('terraform_dir cannot be empty')
     if create_plan_file and (not plan_file_path):
             plan_file_path = TERRAFORM_PLAN_FILE_NAME
+    if state_file_path:
+        # import the state file and update the path
+        state_file_path = \
+            _import_state_file_to_terraform_dir(
+                state_file_path,
+                terraform_dir)
     lib.terraform.plan(
         terraform_dir,
         terraform_dir_path=terraform_dir_path,

@@ -46,12 +46,6 @@ class TestPlan(unittest.TestCase):
             common.create_plan_destroy_with_no_output_allow_no_changes(
                 test_working_dir)
 
-    def test_plan_with_non_existant_state(self):
-        with common.create_test_working_dir() as test_working_dir:
-            common.init_test_working_dir(test_working_dir)
-            with self.assertRaises(FileNotFoundError):
-                common.create_plan_with_non_existant_state(test_working_dir)
-
     def test_plan_with_existing_state(self):
         with common.create_test_working_dir() as test_working_dir:
             common.init_test_working_dir(test_working_dir)

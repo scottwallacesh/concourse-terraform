@@ -14,6 +14,11 @@ TEST_TERRAFORM_DIR = os.path.join(TEST_ROOT_DIR, RELATIVE_TEST_TERRAFORM_DIR)
 TEST_TERRAFORM_FILE_NAME = 'terraform.tf'
 TEST_TERRAFORM_FILE_PATH = \
     os.path.join(TEST_TERRAFORM_DIR, TEST_TERRAFORM_FILE_NAME)
+TEST_STATE_DIR = '/app/testdata/terraform-state'
+TEST_STATE_FILE_WITH_KEY = \
+    os.path.join(TEST_STATE_DIR, 'with-key.tfstate')
+TEST_STATE_FILE_WITHOUT_KEY = \
+    os.path.join(TEST_STATE_DIR, 'without-key.tfstate')
 
 
 # =============================================================================

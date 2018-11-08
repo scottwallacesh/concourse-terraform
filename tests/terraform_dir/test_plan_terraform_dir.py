@@ -15,7 +15,7 @@ import tests.terraform_dir.common as common
 #
 # =============================================================================
 
-class PlanTerraformDir(unittest.TestCase):
+class TestPlanTerraformDir(unittest.TestCase):
     def test_requires_terraform_dir(self):
         with self.assertRaises(ValueError):
             # plan with empty string as the terraform dir
@@ -73,6 +73,27 @@ class PlanTerraformDir(unittest.TestCase):
                     terraform_dir,
                     terraform_plan_file)
             self.assertTrue(os.path.isfile(expected_plan_file_path))
+
+    def test_plan_imports_state_file(self):
+        # create a new temp dir as the working dir
+        with common.create_test_working_dir() as test_working_dir:
+            # init the terraform dir
+            terraform_dir = lib.terraform_dir.init_terraform_dir(
+                common.TEST_TERRAFORM_DIR,
+                terraform_work_dir=test_working_dir,
+                debug=True
+            )
+            # plan the terraform dir
+            lib.terraform_dir.plan_terraform_dir(
+                terraform_dir,
+                state_file_path=common.TEST_STATE_FILE_WITHOUT_KEY,
+                debug=True)
+            # check for expected state file
+            expected_state_file_path = \
+                os.path.join(
+                    terraform_dir,
+                    lib.terraform_dir.TERRAFORM_STATE_FILE_NAME)
+            self.assertTrue(os.path.isfile(expected_state_file_path))
 
 
 # =============================================================================

@@ -16,7 +16,7 @@ import tests.terraform_dir.common as common
 #
 # =============================================================================
 
-class RestoreTerraformDir(unittest.TestCase):
+class TestRestoreTerraformDir(unittest.TestCase):
     def test_requires_archive_input_dir(self):
         # create a new temp dir as the working dir
         with common.create_test_working_dir() as test_working_dir:

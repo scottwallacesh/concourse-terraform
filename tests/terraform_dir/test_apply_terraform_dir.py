@@ -14,7 +14,7 @@ import tests.terraform_dir.common as common
 #
 # =============================================================================
 
-class ApplyTerraformDir(unittest.TestCase):
+class TestApplyTerraformDir(unittest.TestCase):
     def test_requires_terraform_dir(self):
         with self.assertRaises(ValueError):
             # apply with empty string as the terraform dir

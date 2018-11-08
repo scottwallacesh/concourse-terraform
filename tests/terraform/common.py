@@ -54,17 +54,6 @@ def create_plan_with_no_output(test_working_dir: str) -> None:
 
 
 # =============================================================================
-# create_plan_with_non_existant_state
-# =============================================================================
-def create_plan_with_non_existant_state(test_working_dir: str) -> None:
-    lib.terraform.plan(
-        test_working_dir,
-        terraform_dir_path=TEST_TERRAFORM_DIR,
-        state_file_path='/tmp/invalid/state.tfstate',
-        debug=True)
-
-
-# =============================================================================
 # create_plan_with_existing_state
 # =============================================================================
 def create_plan_with_existing_state(test_working_dir: str) -> None:
