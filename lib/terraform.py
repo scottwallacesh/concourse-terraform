@@ -117,7 +117,7 @@ def init(
     if backend_config_vars:
         for k, v in backend_config_vars.items():
             terraform_command_args.append(
-                f"-backend-config=\"{k}={v}\"")
+                f"-backend-config={k}={v}")
     # execute
     _terraform(
         'init',

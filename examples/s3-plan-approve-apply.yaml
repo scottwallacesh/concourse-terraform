@@ -36,15 +36,15 @@ resources:
     secret_access_key: ((aws_secret_access_key))
     server_side_encryption: AES256
 
-- name: terraform-destroy-plan
-  type: s3
-  source:
-    bucket: ((aws_bucket_name))
-    regexp: ((aws_bucket_prefix))/terraform/plans/destroy/terraform-(\d{10}\.[0-9A-Fa-f]{7}).tar.gz
-    region_name: ((aws_region))
-    access_key_id: ((aws_access_key_id))
-    secret_access_key: ((aws_secret_access_key))
-    server_side_encryption: AES256
+# - name: terraform-destroy-plan
+#   type: s3
+#   source:
+#     bucket: ((aws_bucket_name))
+#     regexp: ((aws_bucket_prefix))/terraform/plans/destroy/terraform-(\d{10}\.[0-9A-Fa-f]{7}).tar.gz
+#     region_name: ((aws_region))
+#     access_key_id: ((aws_access_key_id))
+#     secret_access_key: ((aws_secret_access_key))
+#     server_side_encryption: AES256
 
 jobs:
 
@@ -71,7 +71,7 @@ jobs:
       TF_BACKEND_CONFIG_region: ((aws_region))
       TF_BACKEND_CONFIG_encrypt: true
       TF_BACKEND_CONFIG_acl: bucket-owner-full-control
-  - put: upload-plan
+  - put: terraform-apply-plan
     params:
       file: plan-output-archive/terraform-*.tar.gz
       acl: bucket-owner-full-control
