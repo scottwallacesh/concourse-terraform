@@ -7,8 +7,6 @@ outputs:
 - name: state-output-dir
 params:
   PLAN_FILE_PATH:
-  SOURCE_REF:
-  SOURCE_REF_FILE:
   DEBUG:
   ARCHIVE_INPUT_DIR: plan-output-archive
   STATE_OUTPUT_DIR: state-output-dir

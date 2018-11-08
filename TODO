@@ -16,8 +16,8 @@ commands
 [X] add destroy test for terraform plan
 [X] remove 'args' from terraform commands
 
-[ ] add terraform state (optional) inputs to tasks
-[ ]   [terraform] add args for state to relevant commands
+[X] add terraform state (optional) inputs to tasks
+[X]   [terraform] add args for state to relevant commands
 [X]     terraform plan + tests
 [X]     terraform apply + tests
 [X]       helper function to copy state file to temp file so it doesn't get changed during testing
@@ -26,5 +26,5 @@ commands
 [X] terraform_dir -> apply
 [X] terraform_dir -> apply-plan
 [X]   export state files from terraform dir
-[ ] add terraform state outputs to tasks
-[ ] update pipeline examples
+[X] add terraform state outputs to tasks
+[X] update pipeline examples

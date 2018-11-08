@@ -61,8 +61,6 @@ def process_args(args: list) -> None:
         terraform_dir_path = os.environ.get(TERRAFORM_DIR_PATH)
         state_file_path = os.environ.get(STATE_FILE_PATH)
         state_output_dir = os.environ.get(STATE_OUTPUT_DIR)
-        source_ref = os.environ.get(SOURCE_REF)
-        source_ref_file = os.environ.get(SOURCE_REF_FILE)
         debug = os.environ.get(DEBUG)
         if debug:
             # convert to bool if specified
@@ -72,8 +70,6 @@ def process_args(args: list) -> None:
             terraform_dir_path=terraform_dir_path,
             state_file_path=state_file_path,
             state_output_dir=state_output_dir,
-            source_ref=source_ref,
-            source_ref_file=source_ref_file,
             debug=debug)
     elif command == lib.commands.CREATE_PLAN:
         # get parameters from environment
@@ -124,8 +120,6 @@ def process_args(args: list) -> None:
         archive_input_dir = os.environ[ARCHIVE_INPUT_DIR]
         state_output_dir = os.environ.get(STATE_OUTPUT_DIR)
         plan_file_path = os.environ.get(PLAN_FILE_PATH)
-        source_ref = os.environ.get(SOURCE_REF)
-        source_ref_file = os.environ.get(SOURCE_REF_FILE)
         debug = os.environ.get(DEBUG)
         if debug:
             # convert to bool if specified
@@ -134,8 +128,6 @@ def process_args(args: list) -> None:
             archive_input_dir,
             state_output_dir=state_output_dir,
             plan_file_path=plan_file_path,
-            source_ref=source_ref,
-            source_ref_file=source_ref_file,
             debug=debug)
     else:
         print(f'command not recognized: {command}')

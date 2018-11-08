@@ -53,8 +53,6 @@ def apply(
         terraform_dir_path: Optional[str] = None,
         state_file_path: Optional[str] = None,
         state_output_dir: Optional[str] = None,
-        source_ref: Optional[str] = None,
-        source_ref_file: Optional[str] = None,
         debug: bool = False) -> None:
     terraform_dir = lib.terraform_dir.init_terraform_dir(
         terraform_source_dir,
@@ -126,8 +124,6 @@ def apply_plan(
         archive_input_dir: str,
         state_output_dir: Optional[str] = None,
         plan_file_path: Optional[str] = None,
-        source_ref: Optional[str] = None,
-        source_ref_file: Optional[str] = None,
         debug: bool = False) -> None:
     terraform_dir = lib.terraform_dir.restore_terraform_dir(
         archive_input_dir,
