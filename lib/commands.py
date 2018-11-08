@@ -50,7 +50,6 @@ def plan(
 # =============================================================================
 def apply(
         terraform_source_dir: str,
-        archive_output_dir: str,
         terraform_dir_path: Optional[str] = None,
         state_file_path: Optional[str] = None,
         state_output_dir: Optional[str] = None,
@@ -61,22 +60,12 @@ def apply(
         terraform_source_dir,
         terraform_dir_path=terraform_dir_path,
         debug=debug)
-    # try to apply
-    try:
-        lib.terraform_dir.apply_terraform_dir(
-            terraform_dir,
-            terraform_dir_path=terraform_dir_path,
-            state_file_path=state_file_path,
-            state_output_dir=state_output_dir,
-            debug=debug)
-    finally:
-        # ensure the archive is created
-        lib.terraform_dir.archive_terraform_dir(
-            terraform_dir,
-            archive_output_dir,
-            source_ref=source_ref,
-            source_ref_file=source_ref_file,
-            debug=debug)
+    lib.terraform_dir.apply_terraform_dir(
+        terraform_dir,
+        terraform_dir_path=terraform_dir_path,
+        state_file_path=state_file_path,
+        state_output_dir=state_output_dir,
+        debug=debug)
 
 
 # =============================================================================
@@ -135,7 +124,7 @@ def show_plan(
 # =============================================================================
 def apply_plan(
         archive_input_dir: str,
-        archive_output_dir: str,
+        state_output_dir: Optional[str] = None,
         plan_file_path: Optional[str] = None,
         source_ref: Optional[str] = None,
         source_ref_file: Optional[str] = None,
@@ -143,17 +132,8 @@ def apply_plan(
     terraform_dir = lib.terraform_dir.restore_terraform_dir(
         archive_input_dir,
         debug=debug)
-    # try to apply
-    try:
-        lib.terraform_dir.apply_terraform_plan(
-            terraform_dir,
-            plan_file_path=plan_file_path,
-            debug=debug)
-    finally:
-        # ensure the archive is created
-        lib.terraform_dir.archive_terraform_dir(
-            terraform_dir,
-            archive_output_dir,
-            source_ref=source_ref,
-            source_ref_file=source_ref_file,
-            debug=debug)
+    lib.terraform_dir.apply_terraform_plan(
+        terraform_dir,
+        state_output_dir=state_output_dir,
+        plan_file_path=plan_file_path,
+        debug=debug)

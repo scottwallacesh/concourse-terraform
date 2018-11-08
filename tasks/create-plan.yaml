@@ -3,11 +3,10 @@ platform: linux
 inputs:
 - name: concourse-terraform
 - name: terraform-source-dir
-- name: input-state-dir
+- name: state-input-dir
   optional: true
 outputs:
 - name: plan-output-archive
-- name: output-state-dir
 params:
   TF_WORKING_DIR:
   TF_DIR_PATH:

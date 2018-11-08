@@ -44,6 +44,10 @@
 
 this project provides a series of concourse-ci [tasks](https://concourse-ci.org/tasks.html) which are powered by a small python library that wraps and orchestrates terraform
 
+## examples
+
+see [examples](examples/README.md)
+
 ## features
 
 - stays simple by minimizing management of remote or local state
@@ -63,11 +67,15 @@ this project provides a series of concourse-ci [tasks](https://concourse-ci.org/
 
 ## issues
 
-- no current interface to `-var-file`, so var files must be provided via `.tfvars` files in the `terraform_dir_path`
+- no explicit interface to `-var-file`, so var files can be provided via:
 
-	- variables can easily be provided with [task params](#providing-input-variable-values)
+	- `.tfvars` files in the `terraform-source-dir`
 
-- [workspaces](https://www.terraform.io/docs/state/workspaces.html) are not supported
+	- with `TF_CLI_ARGS_<command>` parameters (see [environment variables](https://www.terraform.io/docs/configuration/environment-variables.html#tf_cli_args-and-tf_cli_args_name))
+
+	- variables can still easily be provided with [task params](#providing-input-variable-values)
+
+- [workspaces](https://www.terraform.io/docs/state/workspaces.html) are not yet supported
 
 - most terraform commands other than those needed to provide a `plan -> approve -> apply` lifecycle are not yet supported
 
@@ -229,23 +237,25 @@ with `terraform` being the target terraform directory
 
 ### managing local state files
 
-**note**: this does not apply if not using remote state backends
+**note**: this does not apply if using remote state backends
+
+**warning**: if you configure the backend type as `local`, do not override the `path` [backend config](https://www.terraform.io/docs/backends/types/local.html), as changing the expected `terraform.tfstate` location may break orchestration and result in lost state files
 
 #### saving local state
 
-- the `terraform.tfstate` and `terraform.tfstate.backup` files will be made available in the `output-state-dir` after running `apply.yaml` or `apply-plan.yaml`
+- the `terraform.tfstate` and `terraform.tfstate.backup` files will be made available in the `state-output-dir` after running `apply.yaml` or `apply-plan.yaml`
 
-- you should configure an [ensure](https://concourse-ci.org/ensure-step-hook.html) task step hook to `put` the state files back to remote storage, which guarantees the state is persisted even if the apply fails
+- you should configure an [ensure](https://concourse-ci.org/ensure-step-hook.html) task step hook to upload the state files to remote storage, which guarantees the state is persisted even if the apply fails
 
 - **failure to do this may result in state files being lost when the container they were generated on is automatically destroyed**
 
 #### loading local state
 
-- when providing existing state to a task, you should configure the `STATE_FILE_PATH` parameter to point to the `.tfstate` file
+- when providing existing state to a task, you should configure the `STATE_FILE_PATH` parameter with the path to the input `terraform.tfstate` file
 
  this file will be copied to the `TF_WORKING_DIR` as `terraform.tfstate`
 
-- if you need to provide the state from an input, you can use the optional input `input-state-dir`
+- if you need to provide the state from a concourse input, you can use the optional input `state-input-dir`
 
 	e.g. for a resource named `terraform-state`:
 
@@ -254,7 +264,7 @@ with `terraform` being the target terraform directory
 	  image: concourse-terraform-image
 	  file: concourse-terraform/tasks/plan.yaml
 	  input_mapping:
-	    input-state-dir: terraform-state
+	    state-input-dir: terraform-state
 	  params:
 	    TF_WORKING_DIR: src/terraform
 	    STATE_FILE_PATH: terraform-state/terraform.tfstate
@@ -270,7 +280,7 @@ with `terraform` being the target terraform directory
 
 - `terraform-source-dir`: _required_. the terraform source directory.
 
-- `input-state-dir`: _optional_. when using local state, the directory containing the state file. you must also configure `STATE_FILE_PATH`. see [managing local state files](#managing-local-state-files)
+- `state-input-dir`: _optional_. when using local state, the directory containing the state file. you must also configure `STATE_FILE_PATH`. see [managing local state files](#managing-local-state-files)
 
 ### outputs
 
@@ -312,13 +322,11 @@ with `terraform` being the target terraform directory
 
 - `terraform-source-dir`: _required_. the terraform source directory.
 
-- `input-state-dir`: _optional_. when using local state, the directory containing the state file. you must also configure `STATE_FILE_PATH`. see [managing local state files](#managing-local-state-files)
+- `state-input-dir`: _optional_. when using local state, the directory containing the state file. you must also configure `STATE_FILE_PATH`. see [managing local state files](#managing-local-state-files)
 
 ### outputs
 
-- `apply-output-archive`: an artifact containing the terraform working directory will be placed here
-
-- `apply-output-state`: if local state files are present after the apply, they will be placed here as `terraform.tfstate` and `terraform.tfstate.backup`
+- `state-output-dir`: if local state files are present after the apply, they will be placed here as `terraform.tfstate` and `terraform.tfstate.backup`
 
 ### params
 
@@ -342,13 +350,13 @@ with `terraform` being the target terraform directory
 
 ## `create-plan.yaml`: create a plan
 
-**note**: since running plan does not update state, `create-plan.yaml` does not output an archive on failure
-
 ### inputs
 
 - `concourse-terraform`: _required_. the concourse terraform directory.
 
 - `terraform-source-dir`: _required_. the terraform source directory.
+
+- `state-input-dir`: _optional_. when using local state, the directory containing the state file. you must also configure `STATE_FILE_PATH`. see [managing local state files](#managing-local-state-files)
 
 ### outputs
 
@@ -359,6 +367,8 @@ with `terraform` being the target terraform directory
 - `TF_WORKING_DIR`: _required_. path to the terraform working directory. see [providing terraform source files](#providing-terraform-source-files).
 
 - `TF_DIR_PATH`: _optional_. path to the terraform files inside the working directory. see [providing terraform source files](#providing-terraform-source-files). default: `.`
+
+- `STATE_FILE_PATH`: _optional_. when using local state, the path to the input state file. can be relative to the concourse working directory. see [managing local state files](#managing-local-state-files). default: none
 
 - `PLAN_FILE_PATH`: _optional_. path to the terraform plan file inside the working directory. default: `.tfplan`
 
@@ -416,7 +426,7 @@ with `terraform` being the target terraform directory
 
 ### outputs
 
-- `apply-output-archive`: an artifact containing the terraform working directory will be placed here
+- `state-output-dir`: if local state files are present after the apply, they will be placed here as `terraform.tfstate` and `terraform.tfstate.backup`
 
 ### params
 
@@ -460,7 +470,7 @@ note: to install `ptvsd` in the test image, set the environment variable `PTVSD_
 
 ## test
 
-runs `unittest discover` against a test image
+runs `unittest` against a test image
 
 `./scripts/test` supports two run modes:
 
@@ -468,9 +478,9 @@ runs `unittest discover` against a test image
 
 	- runs `unittest discover` against all versions in `tf-versions`
 
-- `./scripts/test [VERSION] [ARGS]`
+- `./scripts/test [VERSION] [discover|ARGS]`
 
-	- runs `unittest discover ARGS` against `VERSION`
+	- runs `unittest discover` or `unittest ARGS` against `VERSION`
 	- supports `ptvsd` (if installed) by setting environment variables:
 
 		- `PTVSD_ENABLE=1` runs `-m ptvsd -host 0.0.0.0 --port 5678` as the entry point

@@ -4,14 +4,14 @@ inputs:
 - name: concourse-terraform
 - name: plan-output-archive
 outputs:
-- name: apply-output-archive
+- name: state-output-dir
 params:
   PLAN_FILE_PATH:
   SOURCE_REF:
   SOURCE_REF_FILE:
   DEBUG:
   ARCHIVE_INPUT_DIR: plan-output-archive
-  ARCHIVE_OUTPUT_DIR: apply-output-archive
+  STATE_OUTPUT_DIR: state-output-dir
 run:
   path: /bin/sh
   args:

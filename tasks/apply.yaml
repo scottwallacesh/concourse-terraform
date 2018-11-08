@@ -3,11 +3,10 @@ platform: linux
 inputs:
 - name: concourse-terraform
 - name: terraform-source-dir
-- name: input-state-dir
+- name: state-input-dir
   optional: true
 outputs:
-- name: apply-output-archive
-- name: apply-output-state
+- name: state-output-dir
 params:
   TF_WORKING_DIR:
   TF_DIR_PATH:
@@ -15,8 +14,7 @@ params:
   SOURCE_REF:
   SOURCE_REF_FILE:
   DEBUG:
-  ARCHIVE_OUTPUT_DIR: apply-output-archive
-  STATE_OUTPUT_DIR: apply-output-state
+  STATE_OUTPUT_DIR: state-output-dir
 run:
   path: /bin/sh
   args:
