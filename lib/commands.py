@@ -71,13 +71,12 @@ def apply(
             debug=debug)
     finally:
         # ensure the archive is created
-        archive_file_path = lib.terraform_dir.archive_terraform_dir(
+        lib.terraform_dir.archive_terraform_dir(
             terraform_dir,
             archive_output_dir,
             source_ref=source_ref,
             source_ref_file=source_ref_file,
             debug=debug)
-        print(f"wrote archive to: {archive_file_path}")
 
 
 # =============================================================================
@@ -98,7 +97,7 @@ def create_plan(
         terraform_source_dir,
         terraform_dir_path=terraform_dir_path,
         debug=debug)
-    plan_file_path = lib.terraform_dir.plan_terraform_dir(
+    lib.terraform_dir.plan_terraform_dir(
         terraform_dir,
         terraform_dir_path=terraform_dir_path,
         create_plan_file=True,
@@ -107,14 +106,12 @@ def create_plan(
         error_on_no_changes=error_on_no_changes,
         destroy=destroy,
         debug=debug)
-    print(f"wrote plan file to: {plan_file_path}")
-    archive_file_path = lib.terraform_dir.archive_terraform_dir(
+    lib.terraform_dir.archive_terraform_dir(
         terraform_dir,
         archive_output_dir,
         source_ref=source_ref,
         source_ref_file=source_ref_file,
         debug=debug)
-    print(f"wrote archive to: {archive_file_path}")
 
 
 # =============================================================================
@@ -127,7 +124,6 @@ def show_plan(
     terraform_dir = lib.terraform_dir.restore_terraform_dir(
         archive_input_dir,
         debug=debug)
-    print(f"restored archive to: {terraform_dir}")
     lib.terraform_dir.show_terraform_plan(
         terraform_dir,
         plan_file_path=plan_file_path,
@@ -147,7 +143,6 @@ def apply_plan(
     terraform_dir = lib.terraform_dir.restore_terraform_dir(
         archive_input_dir,
         debug=debug)
-    print(f"restored archive to: {terraform_dir}")
     # try to apply
     try:
         lib.terraform_dir.apply_terraform_plan(
@@ -156,10 +151,9 @@ def apply_plan(
             debug=debug)
     finally:
         # ensure the archive is created
-        archive_file_path = lib.terraform_dir.archive_terraform_dir(
+        lib.terraform_dir.archive_terraform_dir(
             terraform_dir,
             archive_output_dir,
             source_ref=source_ref,
             source_ref_file=source_ref_file,
             debug=debug)
-        print(f"wrote archive to: {archive_file_path}")

@@ -30,6 +30,21 @@ jobs:
       SOURCE_REF_FILE: terraform-source-dir/.git/short_ref
       DEBUG: true
 
+- name: apply-existing-state
+  plan:
+  - get: concourse-terraform
+  - get: concourse-terraform-image
+  - task: apply
+    image: concourse-terraform-image
+    file: concourse-terraform/tasks/apply.yaml
+    input_mapping:
+      terraform-source-dir: concourse-terraform
+    params:
+      TF_WORKING_DIR: terraform-source-dir/testdata/terraform
+      STATE_FILE_PATH: terraform-source-dir/testdata/terraform-state/with-key.tfstate
+      SOURCE_REF_FILE: terraform-source-dir/.git/short_ref
+      DEBUG: true
+
 - name: apply-with-ensure-task
   plan:
   - get: concourse-terraform

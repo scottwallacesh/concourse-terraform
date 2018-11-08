@@ -69,6 +69,7 @@ def _import_state_file_to_terraform_dir(
         terraform_dir,
         TERRAFORM_STATE_FILE_NAME)
     shutil.copyfile(state_file_path, destination_file_path)
+    print(f"imported state file {state_file_path} to: {destination_file_path}")
     return TERRAFORM_STATE_FILE_NAME
 
 
@@ -99,10 +100,13 @@ def _export_state_files_from_terraform_dir(
         shutil.copyfile(
             source_state_file_path,
             destination_state_file_path)
+        print(f"exported state file to: {destination_state_file_path}")
     if os.path.isfile(source_backup_state_file_path):
         shutil.copyfile(
             source_backup_state_file_path,
             destination_backup_state_file_path)
+        print('exported backup state file to: '
+              f'{destination_backup_state_file_path}')
 
 
 # =============================================================================
@@ -183,14 +187,15 @@ def _create_terraform_dir_archive(
         if debug:
             archive_file.debug = 3
             print('[debug] creating terraform archive: '
-                f"{archive_file_path}")
+                  f"{archive_file_path}")
         archive_file.add(terraform_dir, TERRAFORM_DIR_NAME)
     if debug:
         with tarfile.open(archive_file_path, 'r:gz') as archive_file:
             archive_file.debug = 3
             print('[debug] terraform archive contents: '
-                f"{archive_file_path}")
+                  f"{archive_file_path}")
             archive_file.list()
+    print(f"wrote archive to: {archive_file_path}")
     return archive_file_path
 
 
@@ -248,6 +253,7 @@ def _restore_terraform_dir_archive(
     if debug:
         print('[debug] extracted archive contents: ')
         _print_directory_contents(terraform_dir)
+    print(f"restored archive {archive_file_path} to: {terraform_dir}")
 
 
 # =============================================================================
@@ -394,8 +400,7 @@ def plan_terraform_dir(
         destroy=destroy,
         debug=debug)
     if create_plan_file:
-        if debug:
-            print(f'[debug] created plan file: {plan_file_path}')
+        print(f"wrote plan file to: {plan_file_path}")
         return plan_file_path
 
 
