@@ -23,6 +23,22 @@ class PlanTerraformDir(unittest.TestCase):
                 '',
                 debug=True)
 
+    def test_requires_state_file_path_to_exist(self):
+        # create a new temp dir as the working dir
+        with common.create_test_working_dir() as test_working_dir:
+            # init the terraform dir
+            terraform_dir = lib.terraform_dir.init_terraform_dir(
+                common.TEST_TERRAFORM_DIR,
+                terraform_work_dir=test_working_dir,
+                debug=True
+            )
+            # plan the terraform dir with non-existant state file
+            with self.assertRaises(FileNotFoundError):
+                lib.terraform_dir.plan_terraform_dir(
+                    terraform_dir,
+                    state_file_path='/tmp/invalid/state.tfstate',
+                    debug=True)
+
     def test_plan_with_no_output(self):
         # create a new temp dir as the working dir
         with common.create_test_working_dir() as test_working_dir:
