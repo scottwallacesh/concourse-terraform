@@ -181,59 +181,82 @@ terraform init \
 
 ### providing terraform source files
 
-terraform source files are provided through the `terraform-source-dir` input and the `TF_WORKING_DIR` parameter
+terraform source files are provided through the `terraform-source-dir` input and the `TF_WORKING_DIR` and `TF_DIR_PATH` parameters
 
 by default, the `TF_WORKING_DIR` is used as both the working directory and the target for terraform, meaning terraform expects that all `.tf` files are contained in this directory
 
-however, some terraform projects may reference other files relative to the source tree
+there are two ways to specify the terraform directory:
 
-e.g. given a source tree such as:
+1. set `TF_WORKING_DIR` to the `terraform` dir path
 
-```
-src/
-src/templates/example.tpl
-src/terraform/terraform.tf
-```
+	e.g. a resource `src` with the source tree containing:
+	
+	```
+	src/terraform/terraform.tf
+	```
+	
+	might configure the following task:
+	
+	```yaml
+	- task: terraform-plan
+	  image: concourse-terraform-image
+	  file: concourse-terraform/tasks/plan.yaml
+	  input_mapping:
+	  	terraform-source-dir: src
+	  params:
+	  	TF_WORKING_DIR: terraform-source-dir/terraform
+	```
 
-with a terraform template that references a source tree path:
+	the advantage to the this method is that only the contents of the `src/terraform` are copied to the working directory. this may reduce the size of the plan artifact if you have a lot of extra files in your source tree.
 
-```hcl
-data "template_file" "example" {
-  template = "${file("templates/example.tpl")}"
-}
-```
+2. set the `TF_DIR_PATH` to the `terraform` dir path relative to `TF_WORKING_DIR`
 
-this path would become invalid if the `TF_WORKING_DIR` was set to `src/terraform`, as only the contents of `src/terraform` are copied to the absolute path `/tmp/tfwork/terraform` and then used as the working directory
+	e.g. a resource `src` with a source tree containing:
+	
+	```
+	src/
+	src/templates/example.tpl
+	src/terraform/terraform.tf
+	```
 
-thus, the working directory tree would contain
+	with a terraform template that references a source tree path:
+	
+	```hcl
+	data "template_file" "example" {
+	  template = "${file("templates/example.tpl")}"
+	}
+	```
+	
+	might configure the following task:
+	
+	```yaml
+	- task: terraform-plan
+	  image: concourse-terraform-image
+	  file: concourse-terraform/tasks/plan.yaml
+	  input_mapping:
+	  	terraform-source-dir: src
+	  params:
+	  	TF_DIR_PATH: terraform
+	```
 
-```
-terraform.tf
-```
+	the advantage to this method is that you can reference additional relative files outside of the terraform directory.
 
-where `templates/example.tpl` does not exist
+	this path would become invalid if the `TF_WORKING_DIR` was set to `terraform-source-dir/terraform`, since the working directory tree would contain
+	
+	```
+	terraform.tf
+	```
 
-in that case, provide the source directory as the `TF_WORKING_DIR`, and then set the `TF_DIR_PATH` to target the terraform dir inside the `TF_WORKING_DIR`
+	where `templates/example.tpl` does not exist
 
-e.g. a task for the above example would be configured as:
+	in that case setting `TF_DIR_PATH` to target the terraform dir inside the `TF_WORKING_DIR` would result in the working directory tree:
 
-```yaml
-- task: terraform-plan
-  image: concourse-terraform-image
-  file: concourse-terraform/tasks/plan.yaml
-  params:
-    TF_WORKING_DIR: src
-    TF_DIR_PATH: terraform
-```
-
-which would result in the working directory tree:
-
-```
-templates/example.tpl
-terraform/terraform.tf
-```
-
-with `terraform` being the target terraform directory
+	```
+	templates/example.tpl
+	terraform/terraform.tf
+	```
+	
+	with `terraform` being the target terraform directory
 
 ### managing local state files
 
@@ -257,7 +280,7 @@ with `terraform` being the target terraform directory
 
 - if you need to provide the state from a concourse input, you can use the optional input `state-input-dir`
 
-	e.g. for a resource named `terraform-state`:
+	e.g. for a state resource named `terraform-state`:
 
 	```yaml
 	- task: terraform-plan
@@ -266,7 +289,6 @@ with `terraform` being the target terraform directory
 	  input_mapping:
 	    state-input-dir: terraform-state
 	  params:
-	    TF_WORKING_DIR: src/terraform
 	    STATE_FILE_PATH: terraform-state/terraform.tfstate
 	```
 
@@ -288,7 +310,7 @@ with `terraform` being the target terraform directory
 
 ### params
 
-- `TF_WORKING_DIR`: _required_. path to the terraform working directory. see [providing terraform source files](#providing-terraform-source-files).
+- `TF_WORKING_DIR`: _optional_. path to the terraform working directory. see [providing terraform source files](#providing-terraform-source-files). default: `terraform-source-dir`
 
 - `TF_DIR_PATH`: _optional_. path to the terraform files inside the working directory. see [providing terraform source files](#providing-terraform-source-files). default: `.`
 
@@ -330,7 +352,7 @@ with `terraform` being the target terraform directory
 
 ### params
 
-- `TF_WORKING_DIR`: _required_. path to the terraform working directory. see [providing terraform source files](#providing-terraform-source-files).
+- `TF_WORKING_DIR`: _optional_. path to the terraform working directory. see [providing terraform source files](#providing-terraform-source-files). default: `terraform-source-dir`
 
 - `TF_DIR_PATH`: _optional_. path to the terraform files inside the working directory. see [providing terraform source files](#providing-terraform-source-files). default: `.`
 
@@ -360,7 +382,7 @@ with `terraform` being the target terraform directory
 
 ### params
 
-- `TF_WORKING_DIR`: _required_. path to the terraform working directory. see [providing terraform source files](#providing-terraform-source-files).
+- `TF_WORKING_DIR`: _optional_. path to the terraform working directory. see [providing terraform source files](#providing-terraform-source-files). default: `terraform-source-dir`
 
 - `TF_DIR_PATH`: _optional_. path to the terraform files inside the working directory. see [providing terraform source files](#providing-terraform-source-files). default: `.`
 

@@ -6,7 +6,7 @@ inputs:
 - name: state-input-dir
   optional: true
 params:
-  TF_WORKING_DIR:
+  TF_WORKING_DIR: terraform-source-dir
   TF_DIR_PATH:
   STATE_FILE_PATH:
   ERROR_ON_NO_CHANGES:
