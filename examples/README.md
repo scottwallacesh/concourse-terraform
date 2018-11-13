@@ -8,11 +8,14 @@
 
 - uses an s3 backend to persist state and an s3 bucket to persist the plan archives
 
-- generates a plan archive for each commit
+- triggered `auto-plan` runs a no-output plan for every commit
 
-- requires reviewing and approving the plan archive before it can be applied
+- manually triggered `plan` generates a plan archive for the latest commit
+
+- requires `review` and `approve` jobs before the plan archive can be applied
 
 - uses serial groups to prevent concurrent state modifications
 
-- supports creating and destroying using plans
+- also creates destroy plans
 
+- uses yaml anchors and aliases to DRY up the template

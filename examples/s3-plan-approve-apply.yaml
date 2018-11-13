@@ -7,6 +7,30 @@
 # aws_access_key_id: # access key id for plan and state file access
 # aws_secret_access_key: # secret access key
 
+templates:
+- name: terraform
+  aws_credentials_params: &terraform-aws-credentials-params
+    AWS_ACCESS_KEY_ID: ((aws_access_key_id))
+    AWS_SECRET_ACCESS_KEY: ((aws_secret_access_key))
+    AWS_DEFAULT_REGION: ((aws_region))
+  plan_archive_credentials: &terraform-plan-archive-credentials
+    bucket: ((aws_bucket_name))
+    region_name: ((aws_region))
+    access_key_id: ((aws_access_key_id))
+    secret_access_key: ((aws_secret_access_key))
+    server_side_encryption: AES256
+  plan_params: &terraform-plan-params
+    TF_WORKING_DIR: terraform-source-dir/testdata/terraform
+    SOURCE_REF_FILE: terraform-source-dir/.git/short_ref
+    TF_BACKEND_TYPE: s3
+    TF_BACKEND_CONFIG_access_key: ((aws_access_key_id))
+    TF_BACKEND_CONFIG_secret_key: ((aws_secret_access_key))
+    TF_BACKEND_CONFIG_bucket: ((aws_bucket_name))
+    TF_BACKEND_CONFIG_key: ((aws_bucket_prefix))/terraform/state/terraform.tfstate
+    TF_BACKEND_CONFIG_region: ((aws_region))
+    TF_BACKEND_CONFIG_encrypt: true
+    TF_BACKEND_CONFIG_acl: bucket-owner-full-control
+
 resources:
 
 # source code
@@ -29,22 +53,14 @@ resources:
 - name: terraform-apply-plan
   type: s3
   source:
-    bucket: ((aws_bucket_name))
+    <<: *terraform-plan-archive-credentials
     regexp: ((aws_bucket_prefix))/terraform/plans/apply/terraform-(\d{10}\.[0-9A-Fa-f]{7}).tar.gz
-    region_name: ((aws_region))
-    access_key_id: ((aws_access_key_id))
-    secret_access_key: ((aws_secret_access_key))
-    server_side_encryption: AES256
 
 - name: terraform-destroy-plan
   type: s3
   source:
-    bucket: ((aws_bucket_name))
+    <<: *terraform-plan-archive-credentials
     regexp: ((aws_bucket_prefix))/terraform/plans/destroy/terraform-(\d{10}\.[0-9A-Fa-f]{7}).tar.gz
-    region_name: ((aws_region))
-    access_key_id: ((aws_access_key_id))
-    secret_access_key: ((aws_secret_access_key))
-    server_side_encryption: AES256
 
 groups:
 - name: create
@@ -62,29 +78,41 @@ groups:
 
 jobs:
 
+# auto-plan
+# =========
+- name: auto-plan
+  serial_groups: [terraform]
+  plan:
+  - aggregate:
+    - get: concourse-terraform
+      trigger: true
+    - get: concourse-terraform-image
+  - task: plan
+    image: concourse-terraform-image
+    file: concourse-terraform/tasks/plan.yaml
+    input_mapping:
+      terraform-source-dir: concourse-terraform
+    params:
+      <<: *terraform-aws-credentials-params
+      <<: *terraform-plan-params
+      ERROR_ON_NO_CHANGES: false
+
 # plan
 # ====
 - name: plan
   serial_groups: [terraform]
   plan:
-  - get: concourse-terraform
-  - get: concourse-terraform-image
+  - aggregate:
+    - get: concourse-terraform
+    - get: concourse-terraform-image
   - task: create-plan
     image: concourse-terraform-image
     file: concourse-terraform/tasks/create-plan.yaml
     input_mapping:
       terraform-source-dir: concourse-terraform
     params:
-      TF_WORKING_DIR: terraform-source-dir/testdata/terraform
-      SOURCE_REF_FILE: terraform-source-dir/.git/short_ref
-      TF_BACKEND_TYPE: s3
-      TF_BACKEND_CONFIG_access_key: ((aws_access_key_id))
-      TF_BACKEND_CONFIG_secret_key: ((aws_secret_access_key))
-      TF_BACKEND_CONFIG_bucket: ((aws_bucket_name))
-      TF_BACKEND_CONFIG_key: ((aws_bucket_prefix))/terraform/state/terraform.tfstate
-      TF_BACKEND_CONFIG_region: ((aws_region))
-      TF_BACKEND_CONFIG_encrypt: true
-      TF_BACKEND_CONFIG_acl: bucket-owner-full-control
+      <<: *terraform-aws-credentials-params
+      <<: *terraform-plan-params
   - put: terraform-apply-plan
     params:
       file: plan-output-archive/terraform-*.tar.gz
@@ -95,12 +123,13 @@ jobs:
 - name: review
   serial_groups: [terraform]
   plan:
-  - get: concourse-terraform
-    passed: [plan]
-  - get: concourse-terraform-image
-    passed: [plan]
-  - get: terraform-apply-plan
-    passed: [plan]
+  - aggregate:
+    - get: concourse-terraform
+      passed: [plan]
+    - get: concourse-terraform-image
+      passed: [plan]
+    - get: terraform-apply-plan
+      passed: [plan]
   - task: show-plan
     image: concourse-terraform-image
     file: concourse-terraform/tasks/show-plan.yaml
@@ -112,53 +141,50 @@ jobs:
 - name: approve
   serial_groups: [terraform]
   plan:
-  - get: concourse-terraform
-    passed: [review]
-  - get: concourse-terraform-image
-    passed: [review]
-  - get: terraform-apply-plan
-    passed: [review]
+  - aggregate:
+    - get: concourse-terraform
+      passed: [review]
+    - get: concourse-terraform-image
+      passed: [review]
+    - get: terraform-apply-plan
+      passed: [review]
 
 # apply
 # =====
 - name: apply
   serial_groups: [terraform]
   plan:
-  - get: concourse-terraform
-    passed: [approve]
-  - get: concourse-terraform-image
-    passed: [approve]
-  - get: terraform-apply-plan
-    passed: [approve]
+  - aggregate:
+    - get: concourse-terraform
+      passed: [approve]
+    - get: concourse-terraform-image
+      passed: [approve]
+    - get: terraform-apply-plan
+      passed: [approve]
   - task: apply-plan
     image: concourse-terraform-image
     file: concourse-terraform/tasks/apply-plan.yaml
     input_mapping:
       plan-output-archive: terraform-apply-plan
+    params:
+      <<: *terraform-aws-credentials-params
 
 # plan-destroy
 # ============
 - name: plan-destroy
   serial_groups: [terraform]
   plan:
-  - get: concourse-terraform
-  - get: concourse-terraform-image
+  - aggregate:
+    - get: concourse-terraform
+    - get: concourse-terraform-image
   - task: create-destroy-plan
     image: concourse-terraform-image
     file: concourse-terraform/tasks/create-plan.yaml
     input_mapping:
       terraform-source-dir: concourse-terraform
     params:
-      TF_WORKING_DIR: terraform-source-dir/testdata/terraform
-      SOURCE_REF_FILE: terraform-source-dir/.git/short_ref
-      TF_BACKEND_TYPE: s3
-      TF_BACKEND_CONFIG_access_key: ((aws_access_key_id))
-      TF_BACKEND_CONFIG_secret_key: ((aws_secret_access_key))
-      TF_BACKEND_CONFIG_bucket: ((aws_bucket_name))
-      TF_BACKEND_CONFIG_key: ((aws_bucket_prefix))/terraform/state/terraform.tfstate
-      TF_BACKEND_CONFIG_region: ((aws_region))
-      TF_BACKEND_CONFIG_encrypt: true
-      TF_BACKEND_CONFIG_acl: bucket-owner-full-control
+      <<: *terraform-aws-credentials-params
+      <<: *terraform-plan-params
       DESTROY: true
   - put: terraform-destroy-plan
     params:
@@ -170,12 +196,13 @@ jobs:
 - name: review-destroy
   serial_groups: [terraform]
   plan:
-  - get: concourse-terraform
-    passed: [plan-destroy]
-  - get: concourse-terraform-image
-    passed: [plan-destroy]
-  - get: terraform-destroy-plan
-    passed: [plan-destroy]
+  - aggregate:
+    - get: concourse-terraform
+      passed: [plan-destroy]
+    - get: concourse-terraform-image
+      passed: [plan-destroy]
+    - get: terraform-destroy-plan
+      passed: [plan-destroy]
   - task: show-destroy-plan
     image: concourse-terraform-image
     file: concourse-terraform/tasks/show-plan.yaml
@@ -187,26 +214,30 @@ jobs:
 - name: approve-destroy
   serial_groups: [terraform]
   plan:
-  - get: concourse-terraform
-    passed: [review-destroy]
-  - get: concourse-terraform-image
-    passed: [review-destroy]
-  - get: terraform-destroy-plan
-    passed: [review-destroy]
+  - aggregate:
+    - get: concourse-terraform
+      passed: [review-destroy]
+    - get: concourse-terraform-image
+      passed: [review-destroy]
+    - get: terraform-destroy-plan
+      passed: [review-destroy]
 
 # apply-destroy
 # =============
 - name: apply-destroy
   serial_groups: [terraform]
   plan:
-  - get: concourse-terraform
-    passed: [approve-destroy]
-  - get: concourse-terraform-image
-    passed: [approve-destroy]
-  - get: terraform-destroy-plan
-    passed: [approve-destroy]
+  - aggregate:
+    - get: concourse-terraform
+      passed: [approve-destroy]
+    - get: concourse-terraform-image
+      passed: [approve-destroy]
+    - get: terraform-destroy-plan
+      passed: [approve-destroy]
   - task: apply-destroy-plan
     image: concourse-terraform-image
     file: concourse-terraform/tasks/apply-plan.yaml
     input_mapping:
       plan-output-archive: terraform-destroy-plan
+    params:
+      <<: *terraform-aws-credentials-params
