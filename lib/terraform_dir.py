@@ -56,6 +56,7 @@ def _prep_terraform_dir(terraform_dir: str) -> None:
 def _copy_terraform_dir(
         source: str,
         destination: str) -> None:
+    distutils.dir_util._path_created = {}
     distutils.dir_util.copy_tree(source, destination)
 
 
