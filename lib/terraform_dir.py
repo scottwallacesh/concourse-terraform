@@ -57,7 +57,8 @@ def _copy_terraform_dir(
         source: str,
         destination: str) -> None:
     distutils.dir_util._path_created = {}
-    distutils.dir_util.copy_tree(source, destination)
+    # preserving symlinks since terraform plan archives contain them
+    distutils.dir_util.copy_tree(source, destination, preserve_symlinks=1)
 
 
 # =============================================================================
