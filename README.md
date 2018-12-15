@@ -331,7 +331,7 @@ to join a specific cluster host directly, set `CONCOURSE_TERRAFORM_CONSUL_JOIN` 
 
 otherwise, configure `retry_join` or similar to have the script wait for the leader status check to return OK
 
-#### providing paths to resources for consul
+#### providing paths to resources for the consul provider
 
 the most common use case is the need to provide ca certificates or client auth certificates and keys when authenticating to the consul cluster through the following environment variables:
 
@@ -374,6 +374,8 @@ CONSUL_CACERT=/tmp/build/e55deab7/consul-certificates/ca/ca-chain.pem
 CONSUL_CLIENT_CERT=/tmp/build/e55deab7/consul-certificates/client.pem
 CONSUL_CLIENT_KEY=/tmp/build/e55deab7/consul-certificates/client-key.pem
 ```
+
+**note**: these environment variables are not used during the agent join, so you must still also specify any needed certificate paths in `CONSUL_LOCAL_CONFIG`
 
 # tasks
 
