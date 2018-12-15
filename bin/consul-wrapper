@@ -26,6 +26,29 @@ get_agent_pid() {
   done
 }
 
+wait_for_consul_ready() {
+  attempt=1
+  while :
+  do
+    if curl --fail --silent "http://localhost:8500/v1/status/leader" 1>/dev/null
+    then
+      echo >&2 "consul is ready"
+      break
+    else
+      if [ $attempt -le $max_retries ]
+      then
+        echo >&2 "consul not ready, waiting 1 second and retrying... [$attempt/$max_retries]"
+        attempt=$((attempt + 1))
+        sleep 1
+      else
+        echo >&2 "max retries exceeded"
+        kill_agent
+        exit 64
+      fi
+    fi
+  done
+}
+
 kill_agent() {
   echo >&2 "gracefully killing the consul agent"
   kill -2 "${agent_pid}" 1>&2
@@ -96,6 +119,8 @@ then
     kill_agent
     exit 64
   }
+else
+  wait_for_consul_ready
 fi
 
 echo >&2 "executing $1 in the foreground"

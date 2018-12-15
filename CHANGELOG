@@ -2,3 +2,4 @@
 
 - add {tf-cmd}-consul.yaml tasks
 - supports wrapping a terraform phase with a consul cluster join
+- supports certificates through the CONCOURSE_TERRAFORM_CONSUL_ params

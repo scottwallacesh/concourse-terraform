@@ -3,6 +3,8 @@ platform: linux
 inputs:
 - name: concourse-terraform
 - name: plan-output-archive
+- name: consul-certificates
+  optional: true
 outputs:
 - name: state-output-dir
 params:

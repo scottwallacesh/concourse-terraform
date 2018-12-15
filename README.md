@@ -321,13 +321,15 @@ these tasks will run `dumb-init` as the entry point and then run the `consul-wra
 - run the terraform phase
 - on error, or success, gracefully leave the cluster
 
+they also include an additional optional input called `consul-certificates` which can be used to provide certificate files during authentication
+
 #### configuring the consul agent
 
-set `CONCOURSE_TERRAFORM_CONSUL_JOIN` to the intended cluster host or ip used for `consul join`
+consul configuration must be provided through the [CONSUL_LOCAL_CONFIG](https://www.consul.io/docs/guides/consul-containers.html#configuration) environment variable, as the consul exe will be executed as `consul agent` with no additional parameters
 
-remaining consul configuration must be provided through the [CONSUL_LOCAL_CONFIG](https://www.consul.io/docs/guides/consul-containers.html#configuration) environment variable, as the consul exe will be executed as `consul agent` with no additional parameters
+to join a specific cluster host directly, set `CONCOURSE_TERRAFORM_CONSUL_JOIN` to the intended cluster host or ip used for `consul join`
 
-**note**: to join a cluster, be sure to set `CONCOURSE_TERRAFORM_CONSUL_JOIN` rather than configure `retry_join` or similar, as otherwise the target command may execute before the agent has actually joined the cluster
+otherwise, configure `retry_join` or similar to have the script wait for the leader status check to return OK
 
 #### providing paths to resources for consul
 
@@ -343,11 +345,11 @@ however, unless these paths are either already inside your `terraform-source-dir
 e.g. if your current working directory from concourse looks like this:
 
 ```
-certificates/
+consul-certificates/
 terraform-source-dir/
 ```
 
-then any relative paths to the `certificates/` folder will be broken if the `TF_WORKING_DIR` is set to the default of `terraform-source-dir` or anything deeper
+then any relative paths to the `consul-certificates/` folder will be broken if the `TF_WORKING_DIR` is set to the default of `terraform-source-dir` or anything deeper
 
 to alleviate this issue, these additional environment variables can be provided to automatically set to the above variables to the absolute path of the relative file or directory path provided:
 
@@ -360,17 +362,17 @@ e.g. the above working directory might provide the following task params:
 
 ```yaml
 params:
-  CONCOURSE_TERRAFORM_CONSUL_CACERT: certificates/ca/ca-chain.pem
-  CONCOURSE_TERRAFORM_CONSUL_CLIENT_CERT: certificates/client.pem
-  CONCOURSE_TERRAFORM_CONSUL_CLIENT_KEY: certificates/client-key.pem
+  CONCOURSE_TERRAFORM_CONSUL_CACERT: consul-certificates/ca/ca-chain.pem
+  CONCOURSE_TERRAFORM_CONSUL_CLIENT_CERT: consul-certificates/client.pem
+  CONCOURSE_TERRAFORM_CONSUL_CLIENT_KEY: consul-certificates/client-key.pem
 ```
 
 which when ran with a concourse working directory of `/tmp/build/e55deab7/` will set the below environment values:
 
 ```
-CONSUL_CACERT=/tmp/build/e55deab7/certificates/ca/ca-chain.pem
-CONSUL_CLIENT_CERT=/tmp/build/e55deab7/certificates/client.pem
-CONSUL_CLIENT_KEY=/tmp/build/e55deab7/certificates/client-key.pem
+CONSUL_CACERT=/tmp/build/e55deab7/consul-certificates/ca/ca-chain.pem
+CONSUL_CLIENT_CERT=/tmp/build/e55deab7/consul-certificates/client.pem
+CONSUL_CLIENT_KEY=/tmp/build/e55deab7/consul-certificates/client-key.pem
 ```
 
 # tasks

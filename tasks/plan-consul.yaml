@@ -5,6 +5,8 @@ inputs:
 - name: terraform-source-dir
 - name: state-input-dir
   optional: true
+- name: consul-certificates
+  optional: true
 params:
   TF_WORKING_DIR: terraform-source-dir
   TF_DIR_PATH:

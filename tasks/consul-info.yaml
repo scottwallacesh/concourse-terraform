@@ -2,6 +2,8 @@
 platform: linux
 inputs:
 - name: concourse-terraform
+- name: consul-certificates
+  optional: true
 run:
   path: /usr/bin/dumb-init
   args:
