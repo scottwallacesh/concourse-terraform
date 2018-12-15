@@ -14,8 +14,10 @@ params:
   DEBUG:
   STATE_OUTPUT_DIR: state-output-dir
 run:
-  path: /bin/sh
+  path: /usr/bin/dumb-init
   args:
+  - concourse-terraform/bin/consul-wrapper
+  - /bin/sh
   - -c
   - |
     export PYTHONPATH="$(pwd)/concourse-terraform:${PYTHONPATH}"

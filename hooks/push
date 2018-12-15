@@ -7,4 +7,6 @@ for terraform_version in "${terraform_versions[@]}"
 do
   echo "pushing image for version ${terraform_version}"
   docker push "${DOCKER_REPO}:${terraform_version}"
+  echo "pushing consul image for version ${terraform_version}"
+  docker push "${DOCKER_REPO}:${terraform_version}-consul"
 done

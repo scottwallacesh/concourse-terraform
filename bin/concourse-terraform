@@ -131,7 +131,7 @@ def process_args(args: list) -> None:
             debug=debug)
     else:
         print(f'command not recognized: {command}')
-        print(f"available commands: {' '.join(lib.command.COMMANDS)}")
+        print(f"available commands: {' '.join(lib.commands.COMMANDS)}")
         raise NotImplementedError
 
 

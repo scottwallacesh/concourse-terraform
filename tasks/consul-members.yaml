@@ -1,0 +1,10 @@
+---
+platform: linux
+inputs:
+- name: concourse-terraform
+run:
+  path: /usr/bin/dumb-init
+  args:
+  - concourse-terraform/bin/consul-wrapper
+  - consul
+  - members

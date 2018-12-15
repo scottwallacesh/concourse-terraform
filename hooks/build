@@ -2,6 +2,7 @@
 set -ex
 
 terraform_versions=($(cat tf-versions))
+consul_version="$(cat consul-version)"
 
 for terraform_version in "${terraform_versions[@]}"
 do
@@ -10,9 +11,16 @@ do
         --build-arg TERRAFORM_VERSION="${terraform_version}" \
         --tag "${DOCKER_REPO}:${terraform_version}" \
         .
+  echo "building consul image for version ${terraform_version}"
+    docker build \
+        --build-arg PARENT_IMAGE="${DOCKER_REPO}:${terraform_version}" \
+        --build-arg CONSUL_VERSION="${consul_version}" \
+        --tag "${DOCKER_REPO}:${terraform_version}-consul" \
+        --file consul.Dockerfile \
+        .
   echo "building test image for version ${terraform_version}"
     docker build \
-        --build-arg APP_IMAGE="${DOCKER_REPO}:${terraform_version}" \
+        --build-arg PARENT_IMAGE="${DOCKER_REPO}:${terraform_version}" \
         --tag "${DOCKER_REPO}-tests:${terraform_version}" \
         --file test.Dockerfile \
         .

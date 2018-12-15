@@ -1,5 +1,5 @@
-ARG APP_IMAGE=snapkitchen/concourse-terraform:latest
-FROM $APP_IMAGE
+ARG PARENT_IMAGE=snapkitchen/concourse-terraform:latest
+FROM $PARENT_IMAGE
 
 ENV PYTHONPATH=$PYTHONPATH:/app
 WORKDIR /app
@@ -28,6 +28,8 @@ COPY \
 # copy binary files
 COPY \
   bin/concourse-terraform \
+  bin/consul-entrypoint \
+  bin/consul-wrapper \
   /app/bin/
 
 # TESTS

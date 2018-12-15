@@ -1,0 +1,4 @@
+2018-12-15
+
+- add {tf-cmd}-consul.yaml tasks
+- supports wrapping a terraform phase with a consul cluster join

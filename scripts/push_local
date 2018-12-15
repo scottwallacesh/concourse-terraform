@@ -3,49 +3,35 @@
 set -xeo pipefail
 
 DOCKER_IMAGE_NAME="snapkitchen/concourse-terraform"
+DOCKER_REPO_URL="docker-registry.service.local.consul:5000"
 
-build_app_image() {
+push_app_image() {
   # req: app_image
   # req: terraform_version
-  echo "building app image ${app_image}"
-  docker \
-    build \
-      --rm \
-      --file Dockerfile \
-      --tag "${app_image}" \
-      --build-arg "TERRAFORM_VERSION=${terraform_version}" \
-      .
+  local local_app_image="${DOCKER_REPO_URL}/${app_image}"
+  echo "pushing local app image ${local_app_image}"
+  docker tag "${app_image}" "${local_app_image}"
+  docker push "${local_app_image}"
 }
 
-build_consul_image() {
+push_consul_image() {
   # req: app_image
   # req: consul_image
   # req: consul_version
   # req: terraform_version
-  echo "building consul image ${consul_image}"
-  docker \
-    build \
-      --rm \
-      --file consul.Dockerfile \
-      --tag "${consul_image}" \
-      --build-arg "PARENT_IMAGE=${app_image}" \
-      --build-arg "CONSUL_VERSION=${consul_version}" \
-      --build-arg "TERRAFORM_VERSION=${terraform_version}" \
-      .
+  local local_consul_image="${DOCKER_REPO_URL}/${consul_image}"
+  echo "pushing local consul image ${local_consul_image}"
+  docker tag "${consul_image}" "${local_consul_image}"
+  docker push "${local_consul_image}"
 }
 
-build_test_image() {
+push_test_image() {
   # req: consul_image
   # req: test_image
-  echo "building test image ${test_image}"
-  docker \
-    build \
-      --rm \
-      --file test.Dockerfile \
-      --build-arg "PARENT_IMAGE=${consul_image}" \
-      ${PTVSD_INSTALL:+--build-arg PTVSD_INSTALL=1} \
-      --tag "${test_image}" \
-      .
+  local local_test_image="${DOCKER_REPO_URL}/${test_image}"
+  echo "pushing local test image ${local_test_image}"
+  docker tag "${test_image}" "${local_test_image}"
+  docker push "${local_test_image}"
 }
 
 # main
@@ -59,10 +45,10 @@ then
   consul_image="${DOCKER_IMAGE_NAME}:${terraform_version}-consul"
   test_image="${DOCKER_IMAGE_NAME}-tests:${terraform_version}"
 
-  if build_app_image
+  if push_app_image
   then
-    build_consul_image
-    build_test_image
+    push_consul_image
+    push_test_image
   fi
 else
   # build all supported versions
@@ -75,10 +61,10 @@ else
     consul_image="${DOCKER_IMAGE_NAME}:${terraform_version}-consul"
     test_image="${DOCKER_IMAGE_NAME}-tests:${terraform_version}"
 
-    if build_app_image
+    if push_app_image
     then
-      build_consul_image
-      build_test_image
+      push_consul_image
+      push_test_image
     fi
   done
 fi

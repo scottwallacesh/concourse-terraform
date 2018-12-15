@@ -6,17 +6,24 @@ inputs:
 - name: state-input-dir
   optional: true
 outputs:
-- name: state-output-dir
+- name: plan-output-archive
 params:
   TF_WORKING_DIR: terraform-source-dir
   TF_DIR_PATH:
   STATE_FILE_PATH:
+  PLAN_FILE_PATH:
+  SOURCE_REF:
+  SOURCE_REF_FILE:
+  ERROR_ON_NO_CHANGES:
+  DESTROY:
   DEBUG:
-  STATE_OUTPUT_DIR: state-output-dir
+  ARCHIVE_OUTPUT_DIR: plan-output-archive
 run:
-  path: /bin/sh
+  path: /usr/bin/dumb-init
   args:
+  - concourse-terraform/bin/consul-wrapper
+  - /bin/sh
   - -c
   - |
     export PYTHONPATH="$(pwd)/concourse-terraform:${PYTHONPATH}"
-    exec concourse-terraform/bin/concourse-terraform apply
+    exec concourse-terraform/bin/concourse-terraform create-plan

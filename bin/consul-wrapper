@@ -1,0 +1,108 @@
+#!/usr/bin/env sh
+set -e
+
+# functions
+# =============================================================================
+
+get_agent_pid() {
+  attempt=1
+  while :
+  do
+    if [ -e "${pid_file}" ]
+    then
+      cat $pid_file
+      break
+    else
+      if [ $attempt -le $max_retries ]
+      then
+        echo >&2 "pid file missing, waiting 1 second and retrying... [$attempt/$max_retries]"
+        attempt=$((attempt + 1))
+        sleep 1
+      else
+        echo >&2 "max retries exceeded"
+        exit 64
+      fi
+    fi
+  done
+}
+
+kill_agent() {
+  echo >&2 "gracefully killing the consul agent"
+  kill -2 "${agent_pid}" 1>&2
+  wait "${agent_pid}" 1>&2
+}
+
+# main
+# =============================================================================
+
+max_retries=10
+pid_file=/consul/run/pid
+
+# get the cwd
+current_dir="$(pwd)"
+
+# look for any CONCOURSE_TERRAFORM vars and set their counterparts
+if [ -n "${CONCOURSE_TERRAFORM_CONSUL_CACERT}" ]
+then
+  export CONSUL_CACERT="${current_dir}/${CONCOURSE_TERRAFORM_CONSUL_CACERT}"
+fi
+if [ -n "${CONCOURSE_TERRAFORM_CONSUL_CAPATH}" ]
+then
+  export CONSUL_CAPATH="${current_dir}/${CONCOURSE_TERRAFORM_CONSUL_CAPATH}"
+fi
+if [ -n "${CONCOURSE_TERRAFORM_CONSUL_CLIENT_CERT}" ]
+then
+  export CONSUL_CLIENT_CERT="${current_dir}/${CONCOURSE_TERRAFORM_CONSUL_CLIENT_CERT}"
+fi
+if [ -n "${CONCOURSE_TERRAFORM_CONSUL_CLIENT_KEY}" ]
+then
+  export CONSUL_CLIENT_KEY="${current_dir}/${CONCOURSE_TERRAFORM_CONSUL_CLIENT_KEY}"
+fi
+
+mkdir -p /consul/run 1>&2
+chown consul:consul /consul/run 1>&2
+
+# look for consul-entrypoint script
+consul_entrypoint="bin/consul-entrypoint"
+if ! [ -f "${consul_entrypoint}" ]
+then
+  consul_entrypoint="concourse-terraform/bin/consul-entrypoint"
+  if ! [ -f "${consul_entrypoint}" ]
+  then
+    echo >&2 "failed to find consul-entrypoint script"
+    exit 64
+  fi
+fi
+
+echo >&2 "launching consul agent in the background"
+
+"${consul_entrypoint}" agent -pid-file=${pid_file} 1>&2 &
+
+if jobs %% 1>&2
+then
+    agent_pid=$(get_agent_pid)
+else
+  echo >&2 "background job not found"
+  exit 64
+fi
+
+echo >&2 "agent running under process id ${agent_pid}"
+
+if [ -n "${CONCOURSE_TERRAFORM_CONSUL_JOIN}" ]
+then
+  echo >&2 "attempting to join the cluster at ${CONCOURSE_TERRAFORM_CONSUL_JOIN}"
+  consul join "${CONCOURSE_TERRAFORM_CONSUL_JOIN}" 1>&2 || {
+    echo >&2 "cluster join failed"
+    kill_agent
+    exit 64
+  }
+fi
+
+echo >&2 "executing $1 in the foreground"
+"${@}" || {
+  echo >&2 "$1 failed"
+  kill_agent
+  exit 64
+}
+
+kill_agent

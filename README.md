@@ -22,6 +22,10 @@
 
 		- [managing local state files](#managing-local-state-files)
 
+	- [advanced usage](#advanced-usage)
+
+		- [running `{tf-cmd}-consul` tasks with `consul-wrapper`](#running-tf-cmd-consul-tasks-with-consul-wrapper)
+
 - [tasks](#tasks)
 
 	- [plan](#planyaml-plan-with-no-output)
@@ -71,7 +75,7 @@ see [examples](examples/README.md)
 
 	- `.tfvars` files in the `terraform-source-dir`
 
-	- with `TF_CLI_ARGS_<command>` parameters (see [environment variables](https://www.terraform.io/docs/configuration/environment-variables.html#tf_cli_args-and-tf_cli_args_name))
+	- with `TF_CLI_ARGS_{command}` parameters (see [environment variables](https://www.terraform.io/docs/configuration/environment-variables.html#tf_cli_args-and-tf_cli_args_name))
 
 	- variables can still easily be provided with [task params](#providing-input-variable-values)
 
@@ -100,7 +104,7 @@ resources:
   type: docker-image
   source:
     repository: snapkitchen/concourse-terraform
-    tag: <VERSION>
+    tag: {VERSION}
 
 jobs:
 # a job using a terraform task with the terraform image
@@ -110,7 +114,7 @@ jobs:
   - get: concourse-terraform-image
   - task: do-terraform-task
     image: concourse-terraform-image
-    file: concourse-terraform/tasks/<TASK>.yml
+    file: concourse-terraform/tasks/{TASK}.yml
 ```
 
 you can also build the docker image yourself using the [docker-image-resource](https://github.com/concourse/docker-image-resource) and the `Dockerfile` from the source
@@ -128,7 +132,7 @@ jobs:
   - get: concourse-terraform-image
   - task: do-terraform-task
     image: concourse-terraform-image
-    file: concourse-terraform/tasks/<TASK>.yml
+    file: concourse-terraform/tasks/{TASK}.yml
     params:
       TF_VAR_my_var: my_value
 ```
@@ -141,7 +145,7 @@ the backend can be configured two ways:
 
 - by specifying the `TF_BACKEND_TYPE` parameter to automatically create a `backend.tf` file for you
 
-the backend configuration can be dynamically provided with additional params in the form of `TF_BACKEND_CONFIG_<var_name>: <var_value>`
+the backend configuration can be dynamically provided with additional params in the form of `TF_BACKEND_CONFIG_{var_name}: {var_value}`
 
 e.g. to automatically create and configure an s3 backend:
 
@@ -154,7 +158,7 @@ jobs:
   - get: concourse-terraform-image
   - task: do-terraform-task
     image: concourse-terraform-image
-    file: concourse-terraform/tasks/<TASK>.yml
+    file: concourse-terraform/tasks/{TASK}.yml
     params:
       TF_BACKEND_TYPE: s3
       TF_BACKEND_CONFIG_bucket: my-bucket
@@ -292,6 +296,83 @@ there are two ways to specify the terraform directory:
 	    STATE_FILE_PATH: terraform-state/terraform.tfstate
 	```
 
+## advanced usage
+
+### running `{tf-cmd}-consul` tasks with `consul-wrapper`
+
+#### using the pre-built image
+
+a consul image is also provided and automatically built by docker hub
+
+the image is available as per:
+
+`snapkitchen/concourse-terraform:{tf-version}-consul`
+
+the version of consul is determined by the value in `consul-version` at the time the image was built, thus it is recommended to build this image yourself if you want to use a specific consul version
+
+#### configuring the `{tf-cmd}-consul` tasks
+
+each terraform command task has a corresponding "with consul" version, named `{tf-cmd}-consul.yaml`
+
+these tasks will run `dumb-init` as the entry point and then run the `consul-wrapper` script, which will:
+
+- start the consul agent
+- join a cluster
+- run the terraform phase
+- on error, or success, gracefully leave the cluster
+
+#### configuring the consul agent
+
+set `CONCOURSE_TERRAFORM_CONSUL_JOIN` to the intended cluster host or ip used for `consul join`
+
+remaining consul configuration must be provided through the [CONSUL_LOCAL_CONFIG](https://www.consul.io/docs/guides/consul-containers.html#configuration) environment variable, as the consul exe will be executed as `consul agent` with no additional parameters
+
+**note**: to join a cluster, be sure to set `CONCOURSE_TERRAFORM_CONSUL_JOIN` rather than configure `retry_join` or similar, as otherwise the target command may execute before the agent has actually joined the cluster
+
+#### providing paths to resources for consul
+
+the most common use case is the need to provide ca certificates or client auth certificates and keys when authenticating to the consul cluster through the following environment variables:
+
+- `CONSUL_CACERT`
+- `CONSUL_CAPATH`
+- `CONSUL_CLIENT_CERT`
+- `CONSUL_CLIENT_KEY`
+
+however, unless these paths are either already inside your `terraform-source-dir` (unlikely), or you override the `TF_WORKING_DIR` to include the entire concourse working directory, then these paths may become broken if you try to use `provider "consul" {}` in your terraform project
+
+e.g. if your current working directory from concourse looks like this:
+
+```
+certificates/
+terraform-source-dir/
+```
+
+then any relative paths to the `certificates/` folder will be broken if the `TF_WORKING_DIR` is set to the default of `terraform-source-dir` or anything deeper
+
+to alleviate this issue, these additional environment variables can be provided to automatically set to the above variables to the absolute path of the relative file or directory path provided:
+
+- `CONCOURSE_TERRAFORM_CONSUL_CACERT`
+- `CONCOURSE_TERRAFORM_CONSUL_CAPATH`
+- `CONCOURSE_TERRAFORM_CONSUL_CLIENT_CERT`
+- `CONCOURSE_TERRAFORM_CONSUL_CLIENT_KEY`
+
+e.g. the above working directory might provide the following task params:
+
+```yaml
+params:
+  CONCOURSE_TERRAFORM_CONSUL_CACERT: certificates/ca/ca-chain.pem
+  CONCOURSE_TERRAFORM_CONSUL_CLIENT_CERT: certificates/client.pem
+  CONCOURSE_TERRAFORM_CONSUL_CLIENT_KEY: certificates/client-key.pem
+```
+
+which when ran with a concourse working directory of `/tmp/build/e55deab7/` will set the below environment values:
+
+```
+CONSUL_CACERT=/tmp/build/e55deab7/certificates/ca/ca-chain.pem
+CONSUL_CLIENT_CERT=/tmp/build/e55deab7/certificates/client.pem
+CONSUL_CLIENT_KEY=/tmp/build/e55deab7/certificates/client-key.pem
+```
+
 # tasks
 
 ## `plan.yaml`: plan with no output
@@ -324,9 +405,9 @@ there are two ways to specify the terraform directory:
 
 - `TF_BACKEND_TYPE`: _optional_. generate a terraform `backend.tf` file for this backend type. see [configuring the backend](#configuring-the-backend)
 
-- `TF_BACKEND_CONFIG_<key>`: _optional_. sets `-backend-config` value for `<key>`. see [configuring the backend](#configuring-the-backend)
+- `TF_BACKEND_CONFIG_{key}`: _optional_. sets `-backend-config` value for `{key}`. see [configuring the backend](#configuring-the-backend)
 
-- `TF_VAR_<key>`: _optional_. terraform input variables in the format described in [providing input variable values](#providing-input-variable-values)
+- `TF_VAR_{key}`: _optional_. terraform input variables in the format described in [providing input variable values](#providing-input-variable-values)
 
 ## `apply.yaml`: apply with no plan
 
@@ -362,9 +443,9 @@ there are two ways to specify the terraform directory:
 
 - `TF_BACKEND_TYPE`: _optional_. generate a terraform `backend.tf` file for this backend type. see [configuring the backend](#configuring-the-backend)
 
-- `TF_BACKEND_CONFIG_<key>`: _optional_. sets `-backend-config` value for `<key>`. see [configuring the backend](#configuring-the-backend)
+- `TF_BACKEND_CONFIG_{key}`: _optional_. sets `-backend-config` value for `{key}`. see [configuring the backend](#configuring-the-backend)
 
-- `TF_VAR_<key>`: _optional_. terraform input variables in the format described in [providing input variable values](#providing-input-variable-values)
+- `TF_VAR_{key}`: _optional_. terraform input variables in the format described in [providing input variable values](#providing-input-variable-values)
 
 ## `create-plan.yaml`: create a plan
 
@@ -402,9 +483,9 @@ there are two ways to specify the terraform directory:
 
 - `TF_BACKEND_TYPE`: _optional_. generate a terraform `backend.tf` file for this backend type. see [configuring the backend](#configuring-the-backend)
 
-- `TF_BACKEND_CONFIG_<key>`: _optional_. sets `-backend-config` value for `<key>`. see [configuring the backend](#configuring-the-backend)
+- `TF_BACKEND_CONFIG_{key}`: _optional_. sets `-backend-config` value for `{key}`. see [configuring the backend](#configuring-the-backend)
 
-- `TF_VAR_<key>`: _optional_. terraform input variables in the format described in [providing input variable values](#providing-input-variable-values)
+- `TF_VAR_{key}`: _optional_. terraform input variables in the format described in [providing input variable values](#providing-input-variable-values)
 
 ## `show-plan.yaml`: show a plan
 
