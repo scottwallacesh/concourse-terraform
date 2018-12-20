@@ -68,6 +68,12 @@ EXPOSE 8301 8301/udp 8302 8302/udp
 # use to interact with Consul.
 EXPOSE 8500 8600 8600/udp
 
-# We diverge here to change the entry point
+# We diverge here to install dnsmasq
+RUN apk add --no-cache --update dnsmasq
+
+# Set up dnsmasq
+COPY build/configure-dnsmasq /tmp/configure-dnsmasq
+RUN chmod 0555 /tmp/configure-dnsmasq && /tmp/configure-dnsmasq
+
 ENTRYPOINT ["/usr/bin/dumb-init", "--"]
 CMD ["/bin/sh"]

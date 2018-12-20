@@ -4,30 +4,33 @@ set -e
 # functions
 # =============================================================================
 
-get_agent_pid() {
-  attempt=1
+get_pid() {
+  get_pid_file="${1}"
+  get_pid_attempt=1
+  get_pid_max_retries=10
   while :
   do
-    if [ -e "${pid_file}" ]
+    if [ -e "${get_pid_file}" ]
     then
-      cat $pid_file
+      cat $get_pid_file
       break
     else
-      if [ $attempt -le $max_retries ]
+      if [ $get_pid_attempt -le $get_pid_max_retries ]
       then
-        echo >&2 "pid file missing, waiting 1 second and retrying... [$attempt/$max_retries]"
-        attempt=$((attempt + 1))
+        echo >&2 "pid file missing, waiting 1 second and retrying... [$get_pid_attempt/$get_pid_max_retries]"
+        get_pid_attempt=$((get_pid_attempt + 1))
         sleep 1
       else
         echo >&2 "max retries exceeded"
-        exit 64
+        return 64
       fi
     fi
   done
 }
 
 wait_for_consul_ready() {
-  attempt=1
+  wait_for_attempt=1
+  wait_for_max_retries=10
   while :
   do
     if curl --fail --silent "http://localhost:8500/v1/status/leader" 1>/dev/null
@@ -35,31 +38,35 @@ wait_for_consul_ready() {
       echo >&2 "consul is ready"
       break
     else
-      if [ $attempt -le $max_retries ]
+      if [ $wait_for_attempt -le $wait_for_max_retries ]
       then
-        echo >&2 "consul not ready, waiting 1 second and retrying... [$attempt/$max_retries]"
-        attempt=$((attempt + 1))
+        echo >&2 "consul not ready, waiting 1 second and retrying... [$wait_for_attempt/$wait_for_max_retries]"
+        wait_for_attempt=$((wait_for_attempt + 1))
         sleep 1
       else
         echo >&2 "max retries exceeded"
-        kill_agent
-        exit 64
+        return 64
       fi
     fi
   done
 }
 
-kill_agent() {
-  echo >&2 "gracefully killing the consul agent"
-  kill -2 "${agent_pid}" 1>&2
-  wait "${agent_pid}" 1>&2
+interrupt_and_wait_for() {
+  pid_to_interrupt="${1}"
+  echo >&2 "interrupting ${pid_to_interrupt}"
+  kill -2 "${pid_to_interrupt}" 1>&2
+  wait "${pid_to_interrupt}" 1>&2
+}
+
+stop_and_wait_for() {
+  pid_to_stop="${1}"
+  echo >&2 "stopping ${pid_to_stop}"
+  kill -15 "${pid_to_stop}" 1>&2
+  wait "${pid_to_stop}" 1>&2
 }
 
 # main
 # =============================================================================
-
-max_retries=10
-pid_file=/consul/run/pid
 
 # get the cwd
 current_dir="$(pwd)"
@@ -97,15 +104,39 @@ then
   fi
 fi
 
-echo >&2 "launching consul agent in the background"
+echo >&2 "launching dnsmasq in the background"
 
-"${consul_entrypoint}" agent -pid-file=${pid_file} 1>&2 &
+dnsmasq_pid_file=/var/run/dnsmasq.pid
+dnsmasq -k --user=root --log-facility=/dev/stderr &
 
 if jobs %% 1>&2
 then
-    agent_pid=$(get_agent_pid)
+    dnsmasq_pid=$(get_pid "${dnsmasq_pid_file}") || {
+      echo >&2 "failed to get pid for dnsmasq"
+      exit 64
+    }
 else
-  echo >&2 "background job not found"
+  echo >&2 "dnsmasq background job not found"
+  exit 64
+fi
+
+echo >&2 "dnsmasq running under process id ${dnsmasq_pid}"
+
+echo >&2 "launching consul agent in the background"
+
+consul_pid_file=/consul/run/pid
+"${consul_entrypoint}" agent -pid-file=${consul_pid_file} 1>&2 &
+
+if jobs %% 1>&2
+then
+    agent_pid=$(get_pid "${consul_pid_file}") || {
+      echo >&2 "failed to get pid for consul"
+      stop_and_wait_for "${dnsmasq_pid}"
+      exit 64
+    }
+else
+  echo >&2 "consul background job not found"
+  stop_and_wait_for "${dnsmasq_pid}"
   exit 64
 fi
 
@@ -116,18 +147,26 @@ then
   echo >&2 "attempting to join the cluster at ${CONCOURSE_TERRAFORM_CONSUL_JOIN}"
   consul join "${CONCOURSE_TERRAFORM_CONSUL_JOIN}" 1>&2 || {
     echo >&2 "cluster join failed"
-    kill_agent
+    interrupt_and_wait_for "${agent_pid}"
+    stop_and_wait_for "${dnsmasq_pid}"
     exit 64
   }
 else
-  wait_for_consul_ready
+  wait_for_consul_ready || {
+    echo >&2 "failed waiting for consul to be ready"
+    interrupt_and_wait_for "${agent_pid}"
+    stop_and_wait_for "${dnsmasq_pid}"
+    exit 64
+  }
 fi
 
 echo >&2 "executing $1 in the foreground"
 "${@}" || {
   echo >&2 "$1 failed"
-  kill_agent
+  interrupt_and_wait_for "${agent_pid}"
+  stop_and_wait_for "${dnsmasq_pid}"
   exit 64
 }
 
-kill_agent
+  interrupt_and_wait_for "${agent_pid}"
+  stop_and_wait_for "${dnsmasq_pid}"

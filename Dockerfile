@@ -6,7 +6,7 @@ ARG TERRAFORM_VERSION=0.0.0
 
 COPY hashicorp.asc .
 
-RUN apk add --update \
+RUN apk add --no-cache --update \
         curl \
         git \
         gnupg \
