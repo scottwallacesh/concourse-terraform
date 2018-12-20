@@ -30,7 +30,6 @@ build_consul_image() {
       --tag "${consul_image}" \
       --build-arg "PARENT_IMAGE=${app_image}" \
       --build-arg "CONSUL_VERSION=${consul_version}" \
-      --build-arg "TERRAFORM_VERSION=${terraform_version}" \
       .
 }
 
