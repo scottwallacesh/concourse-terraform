@@ -3,11 +3,6 @@ FROM $PARENT_IMAGE
 # based on the official hashicorp consul image
 # at https://raw.githubusercontent.com/hashicorp/docker-consul/master/0.X/Dockerfile
 
-# Create a consul user and group first so the IDs get set the same way, even as
-# the rest of this may change over time.
-RUN addgroup consul && \
-    adduser -S -G consul consul
-
 ARG CONSUL_VERSION=0.0.0
 
 COPY hashicorp.asc .
@@ -31,8 +26,7 @@ RUN apk add --no-cache --update \
 # with /consul/config as the configuration directory so you can add additional
 # config files in that location.
 RUN mkdir -p /consul/data && \
-    mkdir -p /consul/config && \
-    chown -R consul:consul /consul
+    mkdir -p /consul/config
 
 # set up nsswitch.conf for Go's "netgo" implementation which is used by Consul,
 # otherwise DNS supercedes the container's hosts file, which we don't want.
@@ -54,12 +48,6 @@ EXPOSE 8301 8301/udp 8302 8302/udp
 # use to interact with Consul.
 EXPOSE 8500 8600 8600/udp
 
-# We diverge here to install dnsmasq
-RUN apk add --no-cache --update dnsmasq
-
-# Set up dnsmasq
-COPY build/configure-dnsmasq /tmp/configure-dnsmasq
-RUN chmod 0555 /tmp/configure-dnsmasq && /tmp/configure-dnsmasq
-
+# We diverge here to configure the entry point
 ENTRYPOINT ["/usr/bin/dumb-init", "--"]
 CMD ["/bin/sh"]

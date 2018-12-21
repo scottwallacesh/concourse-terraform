@@ -316,11 +316,10 @@ each terraform command task has a corresponding "with consul" version, named `{t
 
 these tasks will run `dumb-init` as the entry point and then run the `consul-wrapper` script, which will:
 
-- start dnsmasq, forwarding requests for `*.consul`
 - start the consul agent
 - join a cluster
 - run the terraform phase
-- on error, or success, leave the cluster and stop dnsmasq
+- on error, or success, gracefully leave the cluster
 
 they also include an additional optional input called `consul-certificates` which can be used to provide certificate files during authentication
 

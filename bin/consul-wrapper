@@ -58,13 +58,6 @@ interrupt_and_wait_for() {
   wait "${pid_to_interrupt}" 1>&2
 }
 
-stop_and_wait_for() {
-  pid_to_stop="${1}"
-  echo >&2 "stopping ${pid_to_stop}"
-  kill -15 "${pid_to_stop}" 1>&2
-  wait "${pid_to_stop}" 1>&2
-}
-
 # main
 # =============================================================================
 
@@ -90,7 +83,6 @@ then
 fi
 
 mkdir -p /consul/run 1>&2
-chown consul:consul /consul/run 1>&2
 
 # look for consul-entrypoint script
 consul_entrypoint="bin/consul-entrypoint"
@@ -104,24 +96,6 @@ then
   fi
 fi
 
-echo >&2 "launching dnsmasq in the background"
-
-dnsmasq_pid_file=/var/run/dnsmasq.pid
-dnsmasq -k --user=root --log-facility=/dev/stderr &
-
-if jobs %% 1>&2
-then
-    dnsmasq_pid=$(get_pid "${dnsmasq_pid_file}") || {
-      echo >&2 "failed to get pid for dnsmasq"
-      exit 64
-    }
-else
-  echo >&2 "dnsmasq background job not found"
-  exit 64
-fi
-
-echo >&2 "dnsmasq running under process id ${dnsmasq_pid}"
-
 echo >&2 "launching consul agent in the background"
 
 consul_pid_file=/consul/run/pid
@@ -131,12 +105,10 @@ if jobs %% 1>&2
 then
     agent_pid=$(get_pid "${consul_pid_file}") || {
       echo >&2 "failed to get pid for consul"
-      stop_and_wait_for "${dnsmasq_pid}"
       exit 64
     }
 else
   echo >&2 "consul background job not found"
-  stop_and_wait_for "${dnsmasq_pid}"
   exit 64
 fi
 
@@ -148,14 +120,12 @@ then
   consul join "${CONCOURSE_TERRAFORM_CONSUL_JOIN}" 1>&2 || {
     echo >&2 "cluster join failed"
     interrupt_and_wait_for "${agent_pid}"
-    stop_and_wait_for "${dnsmasq_pid}"
     exit 64
   }
 else
   wait_for_consul_ready || {
     echo >&2 "failed waiting for consul to be ready"
     interrupt_and_wait_for "${agent_pid}"
-    stop_and_wait_for "${dnsmasq_pid}"
     exit 64
   }
 fi
@@ -164,9 +134,7 @@ echo >&2 "executing $1 in the foreground"
 "${@}" || {
   echo >&2 "$1 failed"
   interrupt_and_wait_for "${agent_pid}"
-  stop_and_wait_for "${dnsmasq_pid}"
   exit 64
 }
 
-  interrupt_and_wait_for "${agent_pid}"
-  stop_and_wait_for "${dnsmasq_pid}"
+interrupt_and_wait_for "${agent_pid}"
