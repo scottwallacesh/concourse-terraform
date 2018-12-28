@@ -18,6 +18,11 @@ class TestInit(unittest.TestCase):
         with common.create_test_working_dir() as test_working_dir:
             common.init_test_working_dir(test_working_dir)
 
+    def test_init_without_plugin_cache_dir(self):
+        with common.create_test_working_dir() as test_working_dir:
+            common.init_test_working_dir_without_plugin_cache_dir(
+                test_working_dir)
+
 
 # =============================================================================
 #

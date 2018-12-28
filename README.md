@@ -24,6 +24,8 @@
 
 	- [advanced usage](#advanced-usage)
 
+		- [providing auxiliary inputs](#providing-auxiliary-inputs)
+
 		- [running `{tf-cmd}-consul` tasks with `consul-wrapper`](#running-tf-cmd-consul-tasks-with-consul-wrapper)
 
 - [tasks](#tasks)
@@ -66,6 +68,8 @@ see [examples](examples/README.md)
 
 	- generates plan archives using an absolute working dir `/tmp/tfwork/terraform`  
 	(this ensures paths will be consistent when using plan files in separate pipeline steps).
+
+	- caches plugins with concourse [task caches](https://concourse-ci.org/tasks.html#caches) and imports the plugin cache into `/tmp/tfwork/terraform/.tfcache`
 
 	- plan archives can be persisted to remote storage using concourse resources (such as the [s3 resource](https://github.com/concourse/s3-resource))
 
@@ -298,6 +302,70 @@ there are two ways to specify the terraform directory:
 
 ## advanced usage
 
+### providing auxiliary inputs
+
+in addition to the `terraform-source-dir` input, eight (8) auxiliary inputs are provided to allow composition of complex terraform projects
+
+tasks which support auxiliary inputs are marked as such in their description
+
+to provide an input, map to one of the available inputs, `aux-input-{index}`, where `index` is a number between `1` and `8`
+
+once mapped, you must then set the `TF_AUX_INPUT_PATH_{index}` parameter to the path inside the aux input you wish to map (usually `aux-input-{index}`)
+
+the contents from the aux input will be copied into `TF_WORKING_DIR`
+
+optionally you may set `TF_AUX_INPUT_NAME_{index}` to a directory name which will create that specified directory name inside `TF_WORKING_DIR` and copy the aux input's contents into it
+
+example
+
+given an input `ca-certificates` with the directory layout:
+
+```
+ca-certificates/root.pem
+ca-certificates/intermediate.pem
+```
+
+given a task which configures `aux-input-1` without a name:
+
+```yaml
+- task: terraform-plan
+  image: concourse-terraform-image
+  file: concourse-terraform/tasks/plan.yaml
+  input_mapping:
+    terraform-source-dir: src
+    aux-input-1: ca-certificates
+  params:
+    TF_AUX_INPUT_PATH_1: aux-input-1
+```
+
+results in the following terraform dir:
+
+```
+/tmp/tfwork/terraform/root.pem
+/tmp/tfwork/terraform/intermediate.pem
+```
+
+given a task which configures `aux-input-1` with a name:
+
+```yaml
+- task: terraform-plan
+  image: concourse-terraform-image
+  file: concourse-terraform/tasks/plan.yaml
+  input_mapping:
+    terraform-source-dir: src
+    aux-input-1: ca-certificates
+  params:
+    TF_AUX_INPUT_PATH_1: aux-input-1
+    TF_AUX_INPUT_NAME_1: ca-certs
+```
+
+results in the following terraform dir:
+
+```
+/tmp/tfwork/terraform/ca-certs/root.pem
+/tmp/tfwork/terraform/ca-certs/intermediate.pem
+```
+
 ### running `{tf-cmd}-consul` tasks with `consul-wrapper`
 
 #### using the pre-built image
@@ -389,6 +457,8 @@ CONSUL_CLIENT_KEY=/tmp/build/e55deab7/consul-certificates/client-key.pem
 
 - `state-input-dir`: _optional_. when using local state, the directory containing the state file. you must also configure `STATE_FILE_PATH`. see [managing local state files](#managing-local-state-files)
 
+- `aux-input-{index}`: _optional_. supports up to eight (8) auxiliary inputs. see [providing auxiliary inputs](#providing-auxiliary-inputs)
+
 ### outputs
 
 - none
@@ -413,6 +483,10 @@ CONSUL_CLIENT_KEY=/tmp/build/e55deab7/consul-certificates/client-key.pem
 
 - `TF_VAR_{key}`: _optional_. terraform input variables in the format described in [providing input variable values](#providing-input-variable-values)
 
+- `TF_AUX_INPUT_PATH_{index}`: _optional_. path to aux input number `index`. see [providing auxiliary inputs](#providing-auxiliary-inputs)
+
+- `TF_AUX_INPUT_NAME_{index}`: _optional_. directory name for aux input number `index`. see [providing auxiliary inputs](#providing-auxiliary-inputs)
+
 ## `apply.yaml`: apply with no plan
 
 **caution**:
@@ -430,6 +504,8 @@ CONSUL_CLIENT_KEY=/tmp/build/e55deab7/consul-certificates/client-key.pem
 - `terraform-source-dir`: _required_. the terraform source directory.
 
 - `state-input-dir`: _optional_. when using local state, the directory containing the state file. you must also configure `STATE_FILE_PATH`. see [managing local state files](#managing-local-state-files)
+
+- `aux-input-{index}`: _optional_. supports up to eight (8) auxiliary inputs. see [providing auxiliary inputs](#providing-auxiliary-inputs)
 
 ### outputs
 
@@ -451,6 +527,10 @@ CONSUL_CLIENT_KEY=/tmp/build/e55deab7/consul-certificates/client-key.pem
 
 - `TF_VAR_{key}`: _optional_. terraform input variables in the format described in [providing input variable values](#providing-input-variable-values)
 
+- `TF_AUX_INPUT_PATH_{index}`: _optional_. path to aux input number `index`. see [providing auxiliary inputs](#providing-auxiliary-inputs)
+
+- `TF_AUX_INPUT_NAME_{index}`: _optional_. directory name for aux input number `index`. see [providing auxiliary inputs](#providing-auxiliary-inputs)
+
 ## `create-plan.yaml`: create a plan
 
 ### inputs
@@ -460,6 +540,8 @@ CONSUL_CLIENT_KEY=/tmp/build/e55deab7/consul-certificates/client-key.pem
 - `terraform-source-dir`: _required_. the terraform source directory.
 
 - `state-input-dir`: _optional_. when using local state, the directory containing the state file. you must also configure `STATE_FILE_PATH`. see [managing local state files](#managing-local-state-files)
+
+- `aux-input-{index}`: _optional_. supports up to eight (8) auxiliary inputs. see [providing auxiliary inputs](#providing-auxiliary-inputs)
 
 ### outputs
 
@@ -490,6 +572,10 @@ CONSUL_CLIENT_KEY=/tmp/build/e55deab7/consul-certificates/client-key.pem
 - `TF_BACKEND_CONFIG_{key}`: _optional_. sets `-backend-config` value for `{key}`. see [configuring the backend](#configuring-the-backend)
 
 - `TF_VAR_{key}`: _optional_. terraform input variables in the format described in [providing input variable values](#providing-input-variable-values)
+
+- `TF_AUX_INPUT_PATH_{index}`: _optional_. path to aux input number `index`. see [providing auxiliary inputs](#providing-auxiliary-inputs)
+
+- `TF_AUX_INPUT_NAME_{index}`: _optional_. directory name for aux input number `index`. see [providing auxiliary inputs](#providing-auxiliary-inputs)
 
 ## `show-plan.yaml`: show a plan
 

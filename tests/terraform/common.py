@@ -19,6 +19,7 @@ TEST_STATE_FILE_WITH_KEY = \
 TEST_STATE_FILE_WITHOUT_KEY = \
     os.path.join(TEST_STATE_DIR, 'without-key.tfstate')
 TEST_PLAN_FILE_NAME = '.tfplan'
+TEST_PLUGIN_CACHE_DIR = '/tmp/test-tfcache/'
 
 
 # =============================================================================
@@ -48,6 +49,17 @@ def init_test_working_dir(test_working_dir: str) -> None:
     lib.terraform.init(
         test_working_dir,
         terraform_dir_path=TEST_TERRAFORM_DIR,
+        plugin_cache_dir_path=TEST_PLUGIN_CACHE_DIR,
+        debug=True)
+
+
+# =============================================================================
+# init_test_working_dir_without_plugin_cache_dir
+# =============================================================================
+def init_test_working_dir_without_plugin_cache_dir(test_working_dir: str) -> None:
+    lib.terraform.init(
+        test_working_dir,
+        terraform_dir_path=TEST_TERRAFORM_DIR,
         debug=True)
 
 
@@ -58,6 +70,7 @@ def create_plan_with_no_output(test_working_dir: str) -> None:
     lib.terraform.plan(
         test_working_dir,
         terraform_dir_path=TEST_TERRAFORM_DIR,
+        plugin_cache_dir_path=TEST_PLUGIN_CACHE_DIR,
         debug=True)
 
 
@@ -72,6 +85,7 @@ def create_plan_with_existing_state(
     lib.terraform.plan(
         test_working_dir,
         terraform_dir_path=TEST_TERRAFORM_DIR,
+        plugin_cache_dir_path=TEST_PLUGIN_CACHE_DIR,
         state_file_path=test_state_file_path,
         debug=True)
 
@@ -87,6 +101,7 @@ def create_plan_with_existing_empty_state(
     lib.terraform.plan(
         test_working_dir,
         terraform_dir_path=TEST_TERRAFORM_DIR,
+        plugin_cache_dir_path=TEST_PLUGIN_CACHE_DIR,
         state_file_path=test_state_file_path,
         debug=True)
 
@@ -102,6 +117,7 @@ def create_plan_destroy_with_existing_state(
     lib.terraform.plan(
         test_working_dir,
         terraform_dir_path=TEST_TERRAFORM_DIR,
+        plugin_cache_dir_path=TEST_PLUGIN_CACHE_DIR,
         state_file_path=test_state_file_path,
         destroy=True,
         debug=True)
@@ -118,6 +134,7 @@ def create_plan_destroy_with_existing_empty_state(
     lib.terraform.plan(
         test_working_dir,
         terraform_dir_path=TEST_TERRAFORM_DIR,
+        plugin_cache_dir_path=TEST_PLUGIN_CACHE_DIR,
         state_file_path=test_state_file_path,
         destroy=True,
         debug=True)
@@ -130,6 +147,7 @@ def create_plan_with_no_output_allow_no_changes(test_working_dir: str) -> None:
     lib.terraform.plan(
         test_working_dir,
         terraform_dir_path=TEST_TERRAFORM_DIR,
+        plugin_cache_dir_path=TEST_PLUGIN_CACHE_DIR,
         error_on_no_changes=False,
         debug=True)
 
@@ -142,6 +160,7 @@ def create_plan_destroy_with_no_output_allow_no_changes(
     lib.terraform.plan(
         test_working_dir,
         terraform_dir_path=TEST_TERRAFORM_DIR,
+        plugin_cache_dir_path=TEST_PLUGIN_CACHE_DIR,
         error_on_no_changes=False,
         destroy=True,
         debug=True)
@@ -154,6 +173,7 @@ def create_plan_file(test_working_dir: str) -> None:
     lib.terraform.plan(
         test_working_dir,
         terraform_dir_path=TEST_TERRAFORM_DIR,
+        plugin_cache_dir_path=TEST_PLUGIN_CACHE_DIR,
         create_plan_file=True,
         plan_file_path=TEST_PLAN_FILE_NAME,
         debug=True)
@@ -176,6 +196,7 @@ def apply_with_no_plan(test_working_dir: str) -> None:
     lib.terraform.apply(
         test_working_dir,
         terraform_dir_path=TEST_TERRAFORM_DIR,
+        plugin_cache_dir_path=TEST_PLUGIN_CACHE_DIR,
         debug=True)
 
 
@@ -190,6 +211,7 @@ def apply_with_no_plan_with_existing_state(
     lib.terraform.apply(
         test_working_dir,
         terraform_dir_path=TEST_TERRAFORM_DIR,
+        plugin_cache_dir_path=TEST_PLUGIN_CACHE_DIR,
         state_file_path=test_state_file_path,
         debug=True)
 
@@ -205,6 +227,7 @@ def apply_with_no_plan_with_existing_empty_state(
     lib.terraform.apply(
         test_working_dir,
         terraform_dir_path=TEST_TERRAFORM_DIR,
+        plugin_cache_dir_path=TEST_PLUGIN_CACHE_DIR,
         state_file_path=test_state_file_path,
         debug=True)
 
@@ -216,5 +239,6 @@ def apply_plan_file(test_working_dir: str) -> None:
     lib.terraform.apply(
         test_working_dir,
         terraform_dir_path=TEST_TERRAFORM_DIR,
+        plugin_cache_dir_path=TEST_PLUGIN_CACHE_DIR,
         plan_file_path=TEST_PLAN_FILE_NAME,
         debug=True)

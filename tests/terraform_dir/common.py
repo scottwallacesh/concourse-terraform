@@ -1,6 +1,7 @@
 # stdlib
 import os
 import tempfile
+import unittest.mock
 
 # =============================================================================
 #
@@ -21,6 +22,9 @@ TEST_STATE_FILE_WITHOUT_KEY = \
     os.path.join(TEST_STATE_DIR, 'without-key.tfstate')
 TEST_INVALID_TERRAFORM_DIR = \
     os.path.join(TEST_ROOT_DIR, 'testdata/terraform-fail')
+TEST_TERRAFORM_AUX_DIR = \
+    os.path.join(TEST_ROOT_DIR, 'testdata/terraform-aux')
+TEST_TERRAFORM_AUX_FILE_NAME = 'aux.txt'
 
 
 # =============================================================================
@@ -34,3 +38,12 @@ TEST_INVALID_TERRAFORM_DIR = \
 # =============================================================================
 def create_test_working_dir() -> tempfile.TemporaryDirectory:
     return tempfile.TemporaryDirectory()
+
+
+# =============================================================================
+# mocked_env_vars
+# =============================================================================
+def mocked_env_vars(env_vars: dict) -> dict:
+    return unittest.mock.patch.dict(
+        'os.environ',
+        env_vars)

@@ -17,12 +17,18 @@ import lib.terraform
 #
 # =============================================================================
 
-TERRAFORM_WORK_DIR = '/tmp/tfwork'
-TERRAFORM_DIR_NAME = 'terraform'
-TERRAFORM_PLAN_FILE_NAME = '.tfplan'
+AUX_INPUT_PATH_PREFIX = 'TF_AUX_INPUT_PATH_'
+AUX_INPUT_NAME_PREFIX = 'TF_AUX_INPUT_NAME_'
+AUX_INPUT_PATH_KEY = 'PATH'
+AUX_INPUT_NAME_KEY = 'NAME'
 BACKEND_FILE_NAME = 'backend.tf'
 BACKEND_TYPE_VAR = 'TF_BACKEND_TYPE'
 BACKEND_CONFIG_VAR_PREFIX = 'TF_BACKEND_CONFIG_'
+TERRAFORM_WORK_DIR = '/tmp/tfwork'
+TERRAFORM_DIR_NAME = 'terraform'
+TERRAFORM_PLUGIN_CACHE_DIR_NAME = '.tfcache'
+TERRAFORM_PLUGIN_CACHE_VAR_NAME = 'TF_PLUGIN_CACHE'
+TERRAFORM_PLAN_FILE_NAME = '.tfplan'
 TERRAFORM_STATE_FILE_NAME = 'terraform.tfstate'
 TERRAFORM_BACKUP_STATE_FILE_NAME = f'{TERRAFORM_STATE_FILE_NAME}.backup'
 
@@ -278,6 +284,81 @@ def _get_backend_config_from_environment() -> Optional[dict]:
 
 
 # =============================================================================
+# _get_aux_inputs_from_environment
+# =============================================================================
+def _get_aux_inputs_from_environment() -> Optional[list]:
+    aux_inputs: list = []
+    for key, value in os.environ.items():
+        if key.startswith(AUX_INPUT_PATH_PREFIX):
+            aux_input: dict = {}
+            # add the path
+            aux_input[AUX_INPUT_PATH_KEY] = value
+            aux_input_index: str = None
+            # strip prefix and use the remainder as the input index
+            aux_input_index = key[len(AUX_INPUT_PATH_PREFIX):]
+            # build the expected name key
+            aux_input_name_key = \
+                AUX_INPUT_NAME_PREFIX + aux_input_index
+            # check if the name key was set
+            if aux_input_name_key in os.environ:
+                # add the name
+                aux_input[AUX_INPUT_NAME_KEY] = os.environ[aux_input_name_key]
+            # add the aux input to the output list
+            aux_inputs.append(aux_input)
+    return aux_inputs or None
+
+
+# =============================================================================
+# _copy_aux_inputs_to_terraform_dir
+# =============================================================================
+def _copy_aux_inputs_to_terraform_dir(
+        aux_inputs: list,
+        terraform_dir: str) -> None:
+    for aux_input in aux_inputs:
+        aux_input_source_path: str = aux_input[AUX_INPUT_PATH_KEY]
+        aux_input_name: str = None
+        if AUX_INPUT_NAME_KEY in aux_input:
+            aux_input_name = aux_input[AUX_INPUT_NAME_KEY]
+        if aux_input_name:
+            aux_input_dest_path = os.path.join(terraform_dir, aux_input_name)
+        else:
+            aux_input_dest_path = terraform_dir
+        _copy_terraform_dir(aux_input_source_path, aux_input_dest_path)
+
+
+# =============================================================================
+# _get_plugin_cache_dir
+# =============================================================================
+def _get_plugin_cache_dir(terraform_dir: str):
+    return os.path.join(terraform_dir, TERRAFORM_PLUGIN_CACHE_DIR_NAME)
+
+
+# =============================================================================
+# _get_plugin_cache_dir_from_environment
+# =============================================================================
+def _get_plugin_cache_dir_from_environment() -> Optional[str]:
+    return os.environ.get(TERRAFORM_PLUGIN_CACHE_VAR_NAME)
+
+
+# =============================================================================
+# _import_plugin_cache_dir
+# =============================================================================
+def _import_plugin_cache_dir(
+        input_plugin_cache_dir: str,
+        plugin_cache_dir: str) -> None:
+    _copy_terraform_dir(input_plugin_cache_dir, plugin_cache_dir)
+
+
+# =============================================================================
+# _export_plugin_cache_dir
+# =============================================================================
+def _export_plugin_cache_dir(
+        plugin_cache_dir: str,
+        output_plugin_cache_dir: str) -> None:
+    _copy_terraform_dir(plugin_cache_dir, output_plugin_cache_dir)
+
+
+# =============================================================================
 #
 # public functions
 #
@@ -289,17 +370,25 @@ def _get_backend_config_from_environment() -> Optional[dict]:
 def init_terraform_dir(
         terraform_source_dir: str,
         terraform_dir_path: Optional[str] = None,
-        terraform_work_dir: str = TERRAFORM_WORK_DIR,
+        terraform_work_dir: Optional[str] = None,
         debug: bool = False) -> str:
     # check source dir
     if not terraform_source_dir:
         raise ValueError('terraform_source_dir cannot be empty')
+    # default the work dir
+    if not terraform_work_dir:
+        terraform_work_dir = TERRAFORM_WORK_DIR
     # get path to terraform dir
     terraform_dir = _get_terraform_dir(terraform_work_dir)
     # prep the terraform dir
     _prep_terraform_dir(terraform_dir)
     # copy the terraform source dir into terraform dir
     _copy_terraform_dir(terraform_source_dir, terraform_dir)
+    # get aux inputs from environment
+    aux_inputs = _get_aux_inputs_from_environment()
+    # optionally copy aux inputs to terraform dir
+    if aux_inputs:
+        _copy_aux_inputs_to_terraform_dir(aux_inputs, terraform_dir)
     # get backend type from environment
     backend_type = _get_backend_type_from_environment()
     # optionally create a backend configuration
@@ -310,12 +399,25 @@ def init_terraform_dir(
             debug=debug)
     # get any backend config values from environment
     backend_config_vars = _get_backend_config_from_environment()
+    # get the plugin cache dir path
+    plugin_cache_dir = _get_plugin_cache_dir(terraform_dir)
+    # check for input plugin cache dir
+    input_plugin_cache_dir = _get_plugin_cache_dir_from_environment()
+    # optionally import the plugin cache dir into terraform plugin cache dir
+    if input_plugin_cache_dir:
+        _import_plugin_cache_dir(input_plugin_cache_dir,
+                                 plugin_cache_dir)
     # terraform init
     lib.terraform.init(
         terraform_dir,
         terraform_dir_path=terraform_dir_path,
+        plugin_cache_dir_path=plugin_cache_dir,
         backend_config_vars=backend_config_vars,
         debug=debug)
+    # optionally export the terraform plugin cache dir back to the input
+    if input_plugin_cache_dir:
+        _export_plugin_cache_dir(plugin_cache_dir,
+                                 input_plugin_cache_dir)
     return terraform_dir
 
 
@@ -352,11 +454,14 @@ def archive_terraform_dir(
 # =============================================================================
 def restore_terraform_dir(
         archive_input_dir: str,
-        terraform_work_dir: str = TERRAFORM_WORK_DIR,
+        terraform_work_dir: Optional[str] = None,
         debug: bool = False) -> str:
     # check archive input dir
     if not archive_input_dir:
         raise ValueError('archive_input_dir cannot be empty')
+    # default the work dir
+    if not terraform_work_dir:
+        terraform_work_dir = TERRAFORM_WORK_DIR
     # get path to terraform dir
     terraform_dir = _get_terraform_dir(terraform_work_dir)
     # prep the terraform dir
@@ -392,9 +497,12 @@ def plan_terraform_dir(
             _import_state_file_to_terraform_dir(
                 state_file_path,
                 terraform_dir)
+    # get the plugin cache path
+    plugin_cache_dir = _get_plugin_cache_dir(terraform_dir)
     lib.terraform.plan(
         terraform_dir,
         terraform_dir_path=terraform_dir_path,
+        plugin_cache_dir_path=plugin_cache_dir,
         state_file_path=state_file_path,
         create_plan_file=create_plan_file,
         plan_file_path=plan_file_path,
@@ -424,10 +532,13 @@ def apply_terraform_dir(
             _import_state_file_to_terraform_dir(
                 state_file_path,
                 terraform_dir)
+    # get the plugin cache path
+    plugin_cache_dir = _get_plugin_cache_dir(terraform_dir)
     try:
         lib.terraform.apply(
             terraform_dir,
             terraform_dir_path=terraform_dir_path,
+            plugin_cache_dir_path=plugin_cache_dir,
             state_file_path=state_file_path,
             debug=debug)
     finally:
@@ -451,9 +562,12 @@ def apply_terraform_plan(
     # check plan file path
     if not plan_file_path:
         plan_file_path = TERRAFORM_PLAN_FILE_NAME
+    # get the plugin cache path
+    plugin_cache_dir = _get_plugin_cache_dir(terraform_dir)
     try:
         lib.terraform.apply(
             terraform_dir,
+            plugin_cache_dir_path=plugin_cache_dir,
             plan_file_path=plan_file_path,
             debug=debug)
     finally:
