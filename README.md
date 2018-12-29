@@ -40,6 +40,8 @@
 
 	- [apply-plan](#apply-planyaml-apply-a-plan)
 
+	- [output](#outputyaml-write-outputs-to-disk)
+
 - [development](#development)
 
 - [helper scripts](#helper-scripts)
@@ -475,8 +477,6 @@ CONSUL_CLIENT_KEY=/tmp/build/e55deab7/consul-certificates/client-key.pem
 
 - `DESTROY`: _optional_. executes a `-destroy` plan. set to `true` to enable. default: `false`
 
-- `DEBUG`: _optional_. prints command line arguments and increases log verbosity. set to `true` to enable. **may result in leaked credentials**. default: `false`
-
 - `TF_BACKEND_TYPE`: _optional_. generate a terraform `backend.tf` file for this backend type. see [configuring the backend](#configuring-the-backend)
 
 - `TF_BACKEND_CONFIG_{key}`: _optional_. sets `-backend-config` value for `{key}`. see [configuring the backend](#configuring-the-backend)
@@ -486,6 +486,8 @@ CONSUL_CLIENT_KEY=/tmp/build/e55deab7/consul-certificates/client-key.pem
 - `TF_AUX_INPUT_PATH_{index}`: _optional_. path to aux input number `index`. see [providing auxiliary inputs](#providing-auxiliary-inputs)
 
 - `TF_AUX_INPUT_NAME_{index}`: _optional_. directory name for aux input number `index`. see [providing auxiliary inputs](#providing-auxiliary-inputs)
+
+- `DEBUG`: _optional_. prints command line arguments and increases log verbosity. set to `true` to enable. **may result in leaked credentials**. default: `false`
 
 ## `apply.yaml`: apply with no plan
 
@@ -519,8 +521,6 @@ CONSUL_CLIENT_KEY=/tmp/build/e55deab7/consul-certificates/client-key.pem
 
 - `STATE_FILE_PATH`: _optional_. when using local state, the path to the input state file. can be relative to the concourse working directory. see [managing local state files](#managing-local-state-files). default: none
 
-- `DEBUG`: _optional_. prints command line arguments and increases log verbosity. set to `true` to enable. **may result in leaked credentials**. default: `false`
-
 - `TF_BACKEND_TYPE`: _optional_. generate a terraform `backend.tf` file for this backend type. see [configuring the backend](#configuring-the-backend)
 
 - `TF_BACKEND_CONFIG_{key}`: _optional_. sets `-backend-config` value for `{key}`. see [configuring the backend](#configuring-the-backend)
@@ -530,6 +530,8 @@ CONSUL_CLIENT_KEY=/tmp/build/e55deab7/consul-certificates/client-key.pem
 - `TF_AUX_INPUT_PATH_{index}`: _optional_. path to aux input number `index`. see [providing auxiliary inputs](#providing-auxiliary-inputs)
 
 - `TF_AUX_INPUT_NAME_{index}`: _optional_. directory name for aux input number `index`. see [providing auxiliary inputs](#providing-auxiliary-inputs)
+
+- `DEBUG`: _optional_. prints command line arguments and increases log verbosity. set to `true` to enable. **may result in leaked credentials**. default: `false`
 
 ## `create-plan.yaml`: create a plan
 
@@ -565,8 +567,6 @@ CONSUL_CLIENT_KEY=/tmp/build/e55deab7/consul-certificates/client-key.pem
 
 - `DESTROY`: _optional_. creates a `-destroy` plan. set to `true` to enable. default: `false`
 
-- `DEBUG`: _optional_. prints command line arguments and increases log verbosity. set to `true` to enable. **may result in leaked credentials**. default: `false`
-
 - `TF_BACKEND_TYPE`: _optional_. generate a terraform `backend.tf` file for this backend type. see [configuring the backend](#configuring-the-backend)
 
 - `TF_BACKEND_CONFIG_{key}`: _optional_. sets `-backend-config` value for `{key}`. see [configuring the backend](#configuring-the-backend)
@@ -576,6 +576,8 @@ CONSUL_CLIENT_KEY=/tmp/build/e55deab7/consul-certificates/client-key.pem
 - `TF_AUX_INPUT_PATH_{index}`: _optional_. path to aux input number `index`. see [providing auxiliary inputs](#providing-auxiliary-inputs)
 
 - `TF_AUX_INPUT_NAME_{index}`: _optional_. directory name for aux input number `index`. see [providing auxiliary inputs](#providing-auxiliary-inputs)
+
+- `DEBUG`: _optional_. prints command line arguments and increases log verbosity. set to `true` to enable. **may result in leaked credentials**. default: `false`
 
 ## `show-plan.yaml`: show a plan
 
@@ -620,6 +622,36 @@ CONSUL_CLIENT_KEY=/tmp/build/e55deab7/consul-certificates/client-key.pem
 ### params
 
 - `PLAN_FILE_PATH`: _optional_. path to the terraform plan file inside the working directory. default: `.tfplan`
+
+- `DEBUG`: _optional_. prints command line arguments and increases log verbosity. set to `true` to enable. **may result in leaked credentials**. default: `false`
+
+## `output.yaml`: write output(s) to disk
+
+### inputs
+
+- `concourse-terraform`: _required_. the concourse terraform directory.
+
+- `state-input-dir`: _optional_. when using local state, the directory containing the state file. you must also configure `STATE_FILE_PATH`. see [managing local state files](#managing-local-state-files)
+
+- `aux-input-{index}`: _optional_. supports up to eight (8) auxiliary inputs. see [providing auxiliary inputs](#providing-auxiliary-inputs)
+
+### outputs
+
+- `terraform-output`: a json output file named `tf-output.json` will be placed here.
+
+### params
+
+- `TF_OUTPUT_TARGET`: _optional_. path to the terraform plan file inside the working directory. default: none. see: [command: output](https://www.terraform.io/docs/commands/output.html)
+
+- `STATE_FILE_PATH`: _optional_. when using local state, the path to the input state file. can be relative to the concourse working directory. see [managing local state files](#managing-local-state-files). default: none
+
+- `TF_BACKEND_TYPE`: _optional_. generate a terraform `backend.tf` file for this backend type. see [configuring the backend](#configuring-the-backend)
+
+- `TF_BACKEND_CONFIG_{key}`: _optional_. sets `-backend-config` value for `{key}`. see [configuring the backend](#configuring-the-backend)
+
+- `TF_AUX_INPUT_PATH_{index}`: _optional_. path to aux input number `index`. see [providing auxiliary inputs](#providing-auxiliary-inputs)
+
+- `TF_AUX_INPUT_NAME_{index}`: _optional_. directory name for aux input number `index`. see [providing auxiliary inputs](#providing-auxiliary-inputs)
 
 - `DEBUG`: _optional_. prints command line arguments and increases log verbosity. set to `true` to enable. **may result in leaked credentials**. default: `false`
 

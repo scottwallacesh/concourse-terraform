@@ -13,12 +13,14 @@ APPLY = 'apply'
 CREATE_PLAN = 'create-plan'
 SHOW_PLAN = 'show-plan'
 APPLY_PLAN = 'apply-plan'
+OUTPUT = 'output'
 COMMANDS = [
     PLAN,
     APPLY,
     CREATE_PLAN,
     SHOW_PLAN,
-    APPLY_PLAN
+    APPLY_PLAN,
+    OUTPUT
 ]
 
 
@@ -132,4 +134,22 @@ def apply_plan(
         terraform_dir,
         state_output_dir=state_output_dir,
         plan_file_path=plan_file_path,
+        debug=debug)
+
+
+# =============================================================================
+# output
+# =============================================================================
+def output(
+        output_dir: str,
+        output_target: Optional[str] = None,
+        state_file_path: Optional[str] = None,
+        debug: bool = False) -> None:
+    terraform_dir = lib.terraform_dir.init_terraform_dir(
+        debug=debug)
+    lib.terraform_dir.output_terraform_dir(
+        terraform_dir,
+        output_dir,
+        output_target=output_target,
+        state_file_path=state_file_path,
         debug=debug)

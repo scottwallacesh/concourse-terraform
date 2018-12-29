@@ -18,6 +18,8 @@ TEST_STATE_FILE_WITH_KEY = \
     os.path.join(TEST_STATE_DIR, 'with-key.tfstate')
 TEST_STATE_FILE_WITHOUT_KEY = \
     os.path.join(TEST_STATE_DIR, 'without-key.tfstate')
+TEST_STATE_FILE_WITH_OUTPUT = \
+    os.path.join(TEST_STATE_DIR, 'with-output.tfstate')
 TEST_PLAN_FILE_NAME = '.tfplan'
 TEST_PLUGIN_CACHE_DIR = '/tmp/test-tfcache/'
 
@@ -242,3 +244,21 @@ def apply_plan_file(test_working_dir: str) -> None:
         plugin_cache_dir_path=TEST_PLUGIN_CACHE_DIR,
         plan_file_path=TEST_PLAN_FILE_NAME,
         debug=True)
+
+
+# =============================================================================
+# output_with_existing_state
+# =============================================================================
+def output_with_existing_state(
+        test_working_dir: str,
+        test_state_dir: str) -> str:
+    test_state_file_path = \
+        copy_state_file(TEST_STATE_FILE_WITH_OUTPUT, test_state_dir)
+    test_output_file_path = \
+        os.path.join(test_state_dir, 'output.json')
+    lib.terraform.output(
+        test_working_dir,
+        test_output_file_path,
+        state_file_path=test_state_file_path,
+        debug=True)
+    return test_output_file_path

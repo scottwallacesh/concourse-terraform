@@ -2,6 +2,7 @@
 import enum
 import os
 import subprocess
+import sys
 from typing import Optional
 
 
@@ -52,6 +53,7 @@ def _terraform(
         working_dir: str = None,
         plugin_cache_dir: str = None,
         error_on_no_changes: bool = True,
+        output_file: str = None,
         debug: bool = False) -> None:
     process_args = [
         TERRAFORM_BIN_FILE_PATH,
@@ -71,14 +73,27 @@ def _terraform(
         with subprocess.Popen(
                 process_args,
                 stdout=subprocess.PIPE,
-                stderr=subprocess.STDOUT,  # redirect stderr to stdout
+                stderr=subprocess.PIPE,  # redirect stderr to stdout
                 bufsize=1,
                 universal_newlines=True,
                 stdin=input,
                 cwd=working_dir) as pipe:
-            for line in pipe.stdout:
-                # log the output as it arrives
-                print(line, end="")
+            if output_file:
+                with open(output_file, 'w') as output_file_obj:
+                    for line in pipe.stdout:
+                        output_file_obj.write(line)
+                        if debug:
+                            # log the output as it arrives
+                            print(line, end="")
+                if debug:
+                    print(f'[debug] wrote output to {output_file}')
+            else:
+                for line in pipe.stdout:
+                    # log the output as it arrives
+                    print(line, end="")
+            if pipe.stderr:
+                for line in pipe.stderr:
+                    print(line, end="", file=sys.stderr)
         # mask args if we're not in debug
         masked_args = pipe.args if debug else [TERRAFORM_BIN_FILE_PATH]
         # check if we're using detailed exit codes
@@ -105,6 +120,7 @@ def _terraform(
         if plugin_cache_dir and debug:
             print(f'[debug] dumping updated plugin cache')
             _dump_plugin_cache(plugin_cache_dir)
+
 
 # =============================================================================
 #
@@ -237,4 +253,30 @@ def show(
         'show',
         plan_file_path,
         working_dir=working_dir_path,
+        debug=debug)
+
+
+# =============================================================================
+# output
+# =============================================================================
+def output(
+        working_dir_path: str,
+        output_file_path: str,
+        state_file_path: Optional[str] = None,
+        target_name: Optional[str] = None,
+        debug: bool = False) -> None:
+    terraform_command_args = []
+    if state_file_path:
+        # specify state file
+        terraform_command_args.append(f"-state={state_file_path}")
+    if target_name:
+        # specify target
+        terraform_command_args.append(target_name)
+    # execute
+    _terraform(
+        'output',
+        '-json',
+        *terraform_command_args,
+        working_dir=working_dir_path,
+        output_file=output_file_path,
         debug=debug)

@@ -16,6 +16,8 @@ DEBUG = 'DEBUG'
 ERROR_ON_NO_CHANGES = 'ERROR_ON_NO_CHANGES'
 TERRAFORM_SOURCE_DIR = 'TF_WORKING_DIR'
 TERRAFORM_DIR_PATH = 'TF_DIR_PATH'
+TERRAFORM_OUTPUT_DIR = 'TF_OUTPUT_DIR'
+TERRAFORM_OUTPUT_TARGET = 'TF_OUTPUT_TARGET'
 ARCHIVE_OUTPUT_DIR = 'ARCHIVE_OUTPUT_DIR'
 ARCHIVE_INPUT_DIR = 'ARCHIVE_INPUT_DIR'
 SOURCE_REF = 'SOURCE_REF'
@@ -24,7 +26,6 @@ PLAN_FILE_PATH = 'PLAN_FILE_PATH'
 DESTROY = 'DESTROY'
 STATE_FILE_PATH = 'STATE_FILE_PATH'
 STATE_OUTPUT_DIR = 'STATE_OUTPUT_DIR'
-
 
 # =============================================================================
 # process_args
@@ -128,6 +129,20 @@ def process_args(args: list) -> None:
             archive_input_dir,
             state_output_dir=state_output_dir,
             plan_file_path=plan_file_path,
+            debug=debug)
+    elif command == lib.commands.OUTPUT:
+        # get parameters from environment
+        output_dir = os.environ[TERRAFORM_OUTPUT_DIR]
+        output_target = os.environ.get(TERRAFORM_OUTPUT_TARGET)
+        state_file_path = os.environ.get(STATE_FILE_PATH)
+        debug = os.environ.get(DEBUG)
+        if debug:
+            # convert to bool if specified
+            debug = bool(strtobool(debug))
+        lib.commands.output(
+            output_dir,
+            output_target=output_target,
+            state_file_path=state_file_path,
             debug=debug)
     else:
         print(f'command not recognized: {command}')

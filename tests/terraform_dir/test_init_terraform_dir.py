@@ -25,17 +25,6 @@ TEST_AUX_INPUT_NAME = 'aux_test'
 # =============================================================================
 
 class TestInitTerraformDir(unittest.TestCase):
-    def test_requires_terraform_source_dir(self):
-        # create a new temp dir as the working dir
-        with common.create_test_working_dir() as test_working_dir:
-            # test init with empty string as the terraform source dir
-            with self.assertRaises(ValueError):
-                lib.terraform_dir.init_terraform_dir(
-                    '',
-                    terraform_work_dir=test_working_dir,
-                    debug=True
-                )
-
     def test_destroys_existing_terraform_dir(self):
         # create a new temp dir as the working dir
         with common.create_test_working_dir() as test_working_dir:
@@ -50,7 +39,7 @@ class TestInitTerraformDir(unittest.TestCase):
                 terraform_file.write('variable "test" {}')
             # test init
             lib.terraform_dir.init_terraform_dir(
-                common.TEST_TERRAFORM_DIR,
+                terraform_source_dir=common.TEST_TERRAFORM_DIR,
                 terraform_work_dir=test_working_dir,
                 debug=True
             )
@@ -71,7 +60,7 @@ class TestInitTerraformDir(unittest.TestCase):
                     {lib.terraform_dir.BACKEND_TYPE_VAR: 'local'}):
                 # test init
                 lib.terraform_dir.init_terraform_dir(
-                    common.TEST_TERRAFORM_DIR,
+                    terraform_source_dir=common.TEST_TERRAFORM_DIR,
                     terraform_work_dir=test_working_dir,
                     debug=True
                 )
@@ -103,7 +92,7 @@ class TestInitTerraformDir(unittest.TestCase):
                     }):
                 # test init
                 lib.terraform_dir.init_terraform_dir(
-                    common.TEST_TERRAFORM_DIR,
+                    terraform_source_dir=common.TEST_TERRAFORM_DIR,
                     terraform_work_dir=test_working_dir,
                     debug=True
                 )
@@ -137,7 +126,7 @@ class TestInitTerraformDir(unittest.TestCase):
                     }):
                 # test init
                 lib.terraform_dir.init_terraform_dir(
-                    common.TEST_TERRAFORM_DIR,
+                    terraform_source_dir=common.TEST_TERRAFORM_DIR,
                     terraform_work_dir=test_working_dir,
                     debug=True
                 )
@@ -169,7 +158,7 @@ class TestInitTerraformDir(unittest.TestCase):
                     }):
                 # test init
                 lib.terraform_dir.init_terraform_dir(
-                    common.TEST_TERRAFORM_DIR,
+                    terraform_source_dir=common.TEST_TERRAFORM_DIR,
                     terraform_work_dir=test_working_dir,
                     debug=True
                 )
@@ -201,7 +190,7 @@ class TestInitTerraformDir(unittest.TestCase):
                 with common.create_test_working_dir() as test_working_dir:
                     # test init
                     lib.terraform_dir.init_terraform_dir(
-                        common.TEST_TERRAFORM_DIR,
+                        terraform_source_dir=common.TEST_TERRAFORM_DIR,
                         terraform_work_dir=test_working_dir,
                         debug=True
                     )

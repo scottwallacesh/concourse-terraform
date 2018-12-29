@@ -30,6 +30,7 @@ TERRAFORM_PLUGIN_CACHE_DIR_NAME = '.tfcache'
 TERRAFORM_PLUGIN_CACHE_VAR_NAME = 'TF_PLUGIN_CACHE'
 TERRAFORM_PLAN_FILE_NAME = '.tfplan'
 TERRAFORM_STATE_FILE_NAME = 'terraform.tfstate'
+TERRAFORM_OUTPUT_FILE_NAME = 'tf-output.json'
 TERRAFORM_BACKUP_STATE_FILE_NAME = f'{TERRAFORM_STATE_FILE_NAME}.backup'
 
 
@@ -359,6 +360,25 @@ def _export_plugin_cache_dir(
 
 
 # =============================================================================
+# _export_output_file
+# =============================================================================
+def _export_output_file(
+        output_file_path: str,
+        output_dir: str) -> None:
+    # create output dir, if needed
+    if not os.path.isdir(output_dir):
+        os.makedirs(output_dir)
+    # copy path_to/file.ext to output_dir/file.ext
+    dst_output_file_path = os.path.join(
+        output_dir,
+        os.path.basename(output_file_path))
+    shutil.copyfile(
+        output_file_path,
+        dst_output_file_path)
+    print(f"exported output to: {dst_output_file_path}")
+
+
+# =============================================================================
 #
 # public functions
 #
@@ -368,13 +388,10 @@ def _export_plugin_cache_dir(
 # init_terraform_dir
 # =============================================================================
 def init_terraform_dir(
-        terraform_source_dir: str,
+        terraform_source_dir: Optional[str] = None,
         terraform_dir_path: Optional[str] = None,
         terraform_work_dir: Optional[str] = None,
         debug: bool = False) -> str:
-    # check source dir
-    if not terraform_source_dir:
-        raise ValueError('terraform_source_dir cannot be empty')
     # default the work dir
     if not terraform_work_dir:
         terraform_work_dir = TERRAFORM_WORK_DIR
@@ -382,8 +399,9 @@ def init_terraform_dir(
     terraform_dir = _get_terraform_dir(terraform_work_dir)
     # prep the terraform dir
     _prep_terraform_dir(terraform_dir)
-    # copy the terraform source dir into terraform dir
-    _copy_terraform_dir(terraform_source_dir, terraform_dir)
+    # optionally copy the terraform source dir into terraform dir
+    if terraform_source_dir:
+        _copy_terraform_dir(terraform_source_dir, terraform_dir)
     # get aux inputs from environment
     aux_inputs = _get_aux_inputs_from_environment()
     # optionally copy aux inputs to terraform dir
@@ -594,3 +612,35 @@ def show_terraform_plan(
         terraform_dir,
         plan_file_path,
         debug=debug)
+
+
+# =============================================================================
+# output_terraform_dir
+# =============================================================================
+def output_terraform_dir(
+        terraform_dir: str,
+        output_dir: str,
+        output_target: Optional[str] = None,
+        terraform_work_dir: Optional[str] = None,
+        state_file_path: Optional[str] = None,
+        debug: bool = False) -> None:
+    # check terraform dir
+    if not terraform_dir:
+        raise ValueError('terraform_dir cannot be empty')
+    # check output_dir
+    if not output_dir:
+        raise ValueError('output_dir cannot be empty')
+    if state_file_path:
+        # import the state file and update the path
+        state_file_path = \
+            _import_state_file_to_terraform_dir(
+                state_file_path,
+                terraform_dir)
+    output_file_path = os.path.join(terraform_dir, TERRAFORM_OUTPUT_FILE_NAME)
+    lib.terraform.output(
+        terraform_dir,
+        output_file_path,
+        state_file_path=state_file_path,
+        target_name=output_target,
+        debug=debug)
+    _export_output_file(output_file_path, output_dir)
