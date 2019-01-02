@@ -713,7 +713,7 @@ CONSUL_CLIENT_KEY=/tmp/build/e55deab7/consul-certificates/client-key.pem
 
 ### params
 
-- `TF_OUTPUT_TARGET`: _optional_. path to the terraform plan file inside the working directory. default: none. see: [command: output](https://www.terraform.io/docs/commands/output.html)
+- `TF_OUTPUT_TARGET`: _optional_. name of a specific output to write. default: none. see: [command: output](https://www.terraform.io/docs/commands/output.html)
 
 - `STATE_FILE_PATH`: _optional_. when using local state, the path to the input state file. can be relative to the concourse working directory. see [managing local state files](#managing-local-state-files). default: none
 
