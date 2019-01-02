@@ -79,11 +79,11 @@ see [examples](examples/README.md)
 
 - no explicit interface to `-var-file`, so var files can be provided via:
 
-	- `.tfvars` files in the `terraform-source-dir`
+	- `*.auto.tfvars` / `terraform.tfvars` files in the `TF_WORKING_DIR`
 
-	- with `TF_CLI_ARGS_{command}` parameters (see [environment variables](https://www.terraform.io/docs/configuration/environment-variables.html#tf_cli_args-and-tf_cli_args_name))
+	- task parameters (see [providing input variable values](#providing-input-variable-values))
 
-	- variables can still easily be provided with [task params](#providing-input-variable-values)
+	- `TF_CLI_ARGS_{command}` parameters (see [environment variables](https://www.terraform.io/docs/configuration/environment-variables.html#tf_cli_args-and-tf_cli_args_name))
 
 - [workspaces](https://www.terraform.io/docs/state/workspaces.html) are not yet supported
 
@@ -103,7 +103,7 @@ resources:
 - name: concourse-terraform
   type: git
   source:
-  	uri: https://github.com/Snapkitchen/concourse-terraform
+    uri: https://github.com/Snapkitchen/concourse-terraform
 
 # the terraform image
 - name: concourse-terraform-image
@@ -127,7 +127,7 @@ you can also build the docker image yourself using the [docker-image-resource](h
 
 ### providing input variable values
 
-tfvars can be provided by including `terraform.tfvars` or `*.auto.tfvars` files in the terraform source dir, or by passing them as parameters into the task
+tfvars can be provided by including `terraform.tfvars` or `*.auto.tfvars` files in the terraform working dir, or by passing them as parameters into the task
 
 ```yaml
 jobs:
@@ -147,7 +147,7 @@ jobs:
 
 the backend can be configured two ways:
 
-- by including a `.tf` file containing the backend configuration in the terraform source dir
+- by including a `.tf` file containing the backend configuration in the `TF_DIR_PATH`
 
 - by specifying the `TF_BACKEND_TYPE` parameter to automatically create a `backend.tf` file for you
 
@@ -184,9 +184,9 @@ with init parameters:
 
 ```sh
 terraform init \
-	-backend-config="bucket=my-bucket" \
-	-backend-config="key=path/to/my/key" \
-	-backend-config="region=us-east-1"
+  -backend-config="bucket=my-bucket" \
+  -backend-config="key=path/to/my/key" \
+  -backend-config="region=us-east-1"
 ```
 
 ### providing terraform source files
@@ -212,9 +212,9 @@ there are two ways to specify the terraform directory:
 	  image: concourse-terraform-image
 	  file: concourse-terraform/tasks/plan.yaml
 	  input_mapping:
-	  	terraform-source-dir: src
+	    terraform-source-dir: src
 	  params:
-	  	TF_WORKING_DIR: terraform-source-dir/terraform
+	    TF_WORKING_DIR: terraform-source-dir/terraform
 	```
 
 	the advantage to the this method is that only the contents of the `src/terraform` are copied to the working directory. this may reduce the size of the plan artifact if you have a lot of extra files in your source tree.
@@ -244,9 +244,9 @@ there are two ways to specify the terraform directory:
 	  image: concourse-terraform-image
 	  file: concourse-terraform/tasks/plan.yaml
 	  input_mapping:
-	  	terraform-source-dir: src
+	    terraform-source-dir: src
 	  params:
-	  	TF_DIR_PATH: terraform
+	    TF_DIR_PATH: terraform
 	```
 
 	the advantage to this method is that you can reference additional relative files outside of the terraform directory.
@@ -343,8 +343,8 @@ given a task which configures `aux-input-1` without a name:
 results in the following terraform dir:
 
 ```
-/tmp/tfwork/terraform/root.pem
-/tmp/tfwork/terraform/intermediate.pem
+root.pem
+intermediate.pem
 ```
 
 given a task which configures `aux-input-1` with a name:
@@ -364,8 +364,8 @@ given a task which configures `aux-input-1` with a name:
 results in the following terraform dir:
 
 ```
-/tmp/tfwork/terraform/ca-certs/root.pem
-/tmp/tfwork/terraform/ca-certs/intermediate.pem
+ca-certs/root.pem
+ca-certs/intermediate.pem
 ```
 
 ### running `{tf-cmd}-consul` tasks with `consul-wrapper`
@@ -395,9 +395,81 @@ they also include an additional optional input called `consul-certificates` whic
 
 #### configuring the consul agent
 
-consul configuration must be provided through the [CONSUL_LOCAL_CONFIG](https://www.consul.io/docs/guides/consul-containers.html#configuration) environment variable, as the consul exe will be executed as `consul agent` with no additional parameters
+consul configuration may be provided through the [CONSUL_LOCAL_CONFIG](https://www.consul.io/docs/guides/consul-containers.html#configuration) environment variable, or by providing a terraform [output file](#outputyaml-write-outputs-to-disk)
 
-to join a specific cluster host directly, set `CONCOURSE_TERRAFORM_CONSUL_JOIN` to the intended cluster host or ip used for `consul join`
+to provide a terraform output file, set the environment variable `CT_CONSUL_TF_CONFIG_{name}` to the path of the terraform output file
+
+- the file `{name}.json` will be created in the `/consul/config` directory
+
+- if the terraform output file only contains a single value, you must set `{name}` to the configuration key you are overriding
+
+  example, to set the `datacenter` configuration setting:
+
+	given terraform output `cluster-dc/tf-output.json` from a specific `TF_OUTPUT_TARGET`
+
+	```
+	{
+	  "sensitive": false,
+	  "type": "string",
+	  "value": "us-east-1"
+	}
+	```
+
+	and env var
+
+	```
+	CT_CONSUL_TF_CONFIG_datacenter="cluster-dc/tf-output.json"
+	```
+
+	results in `/consul/config/datacenter.json`
+
+	```
+	{
+	  "datacenter": "us-east-1"
+	}
+	```
+
+- if the terraform output file contains multiple values, `{name}` is only used for the file name, in which case the terraform output name must already match the intended configuration key
+
+  example, attempting to set `datacenter` and `encrypt` configuration keys:
+
+	given terraform output `cluster/tf-output.json`
+
+	```
+	{
+	  "datacenter": {
+	    "sensitive": false,
+	    "type": "string",
+	    "value": "us-east-1"
+	  },
+	  "gossip_key": {
+	    "sensitive": true,
+	    "type": "string",
+	    "value": "1234exampleABCD"
+	  }
+	}
+	```
+
+	and env var
+
+	```
+	CT_CONSUL_TF_CONFIG_cluster="cluster/tf-output.json"
+	```
+
+	results in `/consul/config/cluster.json`
+
+	```
+	{
+	  "datacenter": "us-east-1",
+	  "gossip_key": "1234exampleABCD"
+	}
+	```
+
+	note that `encrypt` is the correct configuration key, not `gossip_key`, so this configuration would be invalid
+
+	to correct it, the terraform output `gossip_key` would need to be renamed to `encrypt`, or alternatively provided as a single explicit output file by using `TF_OUTPUT_TARGET` (as per above)
+
+to join a specific cluster host directly, set `CT_CONSUL_JOIN` to the intended cluster host or ip used for `consul join`
 
 otherwise, configure `retry_join` or similar to have the script wait for the leader status check to return OK
 
@@ -423,18 +495,18 @@ then any relative paths to the `consul-certificates/` folder will be broken if t
 
 to alleviate this issue, these additional environment variables can be provided to automatically set to the above variables to the absolute path of the relative file or directory path provided:
 
-- `CONCOURSE_TERRAFORM_CONSUL_CACERT`
-- `CONCOURSE_TERRAFORM_CONSUL_CAPATH`
-- `CONCOURSE_TERRAFORM_CONSUL_CLIENT_CERT`
-- `CONCOURSE_TERRAFORM_CONSUL_CLIENT_KEY`
+- `CT_CONSUL_CACERT`
+- `CT_CONSUL_CAPATH`
+- `CT_CONSUL_CLIENT_CERT`
+- `CT_CONSUL_CLIENT_KEY`
 
 e.g. the above working directory might provide the following task params:
 
 ```yaml
 params:
-  CONCOURSE_TERRAFORM_CONSUL_CACERT: consul-certificates/ca/ca-chain.pem
-  CONCOURSE_TERRAFORM_CONSUL_CLIENT_CERT: consul-certificates/client.pem
-  CONCOURSE_TERRAFORM_CONSUL_CLIENT_KEY: consul-certificates/client-key.pem
+  CT_CONSUL_CACERT: consul-certificates/ca/ca-chain.pem
+  CT_CONSUL_CLIENT_CERT: consul-certificates/client.pem
+  CT_CONSUL_CLIENT_KEY: consul-certificates/client-key.pem
 ```
 
 which when ran with a concourse working directory of `/tmp/build/e55deab7/` will set the below environment values:

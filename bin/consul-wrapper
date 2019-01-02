@@ -4,21 +4,21 @@ set -e
 # functions
 # =============================================================================
 
-get_pid() {
-  get_pid_file="${1}"
-  get_pid_attempt=1
-  get_pid_max_retries=10
+wait_for_consul_running() {
+  wait_for_consul_running_file="${1}"
+  wait_for_consul_running_attempt=1
+  wait_for_consul_running_max_retries=10
   while :
   do
-    if [ -e "${get_pid_file}" ]
+    if [ -e "${wait_for_consul_running_file}" ]
     then
-      cat $get_pid_file
+      cat $wait_for_consul_running_file
       break
     else
-      if [ $get_pid_attempt -le $get_pid_max_retries ]
+      if [ $wait_for_consul_running_attempt -le $wait_for_consul_running_max_retries ]
       then
-        echo >&2 "pid file missing, waiting 1 second and retrying... [$get_pid_attempt/$get_pid_max_retries]"
-        get_pid_attempt=$((get_pid_attempt + 1))
+        echo >&2 "pid file missing, waiting 1 second and retrying... [$wait_for_consul_running_attempt/$wait_for_consul_running_max_retries]"
+        wait_for_consul_running_attempt=$((wait_for_consul_running_attempt + 1))
         sleep 1
       else
         echo >&2 "max retries exceeded"
@@ -64,23 +64,41 @@ interrupt_and_wait_for() {
 # get the cwd
 current_dir="$(pwd)"
 
-# look for any CONCOURSE_TERRAFORM vars and set their counterparts
-if [ -n "${CONCOURSE_TERRAFORM_CONSUL_CACERT}" ]
+# look for any CT vars and set their counterparts
+if [ -n "${CT_CONSUL_CACERT}" ]
 then
-  export CONSUL_CACERT="${current_dir}/${CONCOURSE_TERRAFORM_CONSUL_CACERT}"
+  export CONSUL_CACERT="${current_dir}/${CT_CONSUL_CACERT}"
 fi
-if [ -n "${CONCOURSE_TERRAFORM_CONSUL_CAPATH}" ]
+if [ -n "${CT_CONSUL_CAPATH}" ]
 then
-  export CONSUL_CAPATH="${current_dir}/${CONCOURSE_TERRAFORM_CONSUL_CAPATH}"
+  export CONSUL_CAPATH="${current_dir}/${CT_CONSUL_CAPATH}"
 fi
-if [ -n "${CONCOURSE_TERRAFORM_CONSUL_CLIENT_CERT}" ]
+if [ -n "${CT_CONSUL_CLIENT_CERT}" ]
 then
-  export CONSUL_CLIENT_CERT="${current_dir}/${CONCOURSE_TERRAFORM_CONSUL_CLIENT_CERT}"
+  export CONSUL_CLIENT_CERT="${current_dir}/${CT_CONSUL_CLIENT_CERT}"
 fi
-if [ -n "${CONCOURSE_TERRAFORM_CONSUL_CLIENT_KEY}" ]
+if [ -n "${CT_CONSUL_CLIENT_KEY}" ]
 then
-  export CONSUL_CLIENT_KEY="${current_dir}/${CONCOURSE_TERRAFORM_CONSUL_CLIENT_KEY}"
+  export CONSUL_CLIENT_KEY="${current_dir}/${CT_CONSUL_CLIENT_KEY}"
 fi
+
+# look for consul-config script
+consul_config="bin/consul-config"
+if ! [ -f "${consul_config}" ]
+then
+  consul_config="concourse-terraform/bin/consul-config"
+  if ! [ -f "${consul_config}" ]
+  then
+    echo >&2 "failed to find consul-config script"
+    exit 64
+  fi
+fi
+
+# run consul-config
+"${consul_config}" || {
+  echo >&2 "failed to run consul-config"
+  exit 64
+}
 
 mkdir -p /consul/run 1>&2
 
@@ -103,8 +121,8 @@ consul_pid_file=/consul/run/pid
 
 if jobs %% 1>&2
 then
-    agent_pid=$(get_pid "${consul_pid_file}") || {
-      echo >&2 "failed to get pid for consul"
+    agent_pid=$(wait_for_consul_running "${consul_pid_file}") || {
+      echo >&2 "failed waiting for consul to run"
       exit 64
     }
 else
@@ -114,10 +132,10 @@ fi
 
 echo >&2 "agent running under process id ${agent_pid}"
 
-if [ -n "${CONCOURSE_TERRAFORM_CONSUL_JOIN}" ]
+if [ -n "${CT_CONSUL_JOIN}" ]
 then
-  echo >&2 "attempting to join the cluster at ${CONCOURSE_TERRAFORM_CONSUL_JOIN}"
-  consul join "${CONCOURSE_TERRAFORM_CONSUL_JOIN}" 1>&2 || {
+  echo >&2 "attempting to join the cluster at ${CT_CONSUL_JOIN}"
+  consul join "${CT_CONSUL_JOIN}" 1>&2 || {
     echo >&2 "cluster join failed"
     interrupt_and_wait_for "${agent_pid}"
     exit 64

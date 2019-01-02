@@ -21,6 +21,7 @@ EXPOSE 5678/tcp
 COPY \
   lib/__init__.py \
   lib/commands.py \
+  lib/consul_config.py \
   lib/terraform.py \
   lib/terraform_dir.py \
   /app/lib/
@@ -28,6 +29,7 @@ COPY \
 # copy binary files
 COPY \
   bin/concourse-terraform \
+  bin/consul-config \
   bin/consul-entrypoint \
   bin/consul-wrapper \
   /app/bin/
