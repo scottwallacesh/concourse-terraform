@@ -4,6 +4,15 @@ set -e
 # functions
 # =============================================================================
 
+is_debug() {
+  if [ -n "${DEBUG}" ]
+  then
+    return 0
+  else
+    return 1
+  fi
+}
+
 wait_for_consul_running() {
   wait_for_consul_running_file="${1}"
   wait_for_consul_running_attempt=1
@@ -63,6 +72,12 @@ interrupt_and_wait_for() {
 
 # get the cwd
 current_dir="$(pwd)"
+
+if is_debug
+then
+  echo >&2 "[consul-wrapper] working directory: ${current_dir}"
+  ls -la "${current_dir}/" 1>&2
+fi
 
 # look for any CT vars and set their counterparts
 if [ -n "${CT_CONSUL_CACERT}" ]
