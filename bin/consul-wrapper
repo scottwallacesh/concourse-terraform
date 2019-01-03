@@ -84,6 +84,7 @@ fi
 
 # look for consul-config script
 consul_config="bin/consul-config"
+python_path_mod="${current_dir}"
 if ! [ -f "${consul_config}" ]
 then
   consul_config="concourse-terraform/bin/consul-config"
@@ -92,10 +93,11 @@ then
     echo >&2 "failed to find consul-config script"
     exit 64
   fi
+  python_path_mod="${current_dir}/concourse-terraform"
 fi
 
 # run consul-config
-"${consul_config}" || {
+PYTHONPATH="${python_path_mod}:${PYTHONPATH}" "${consul_config}" || {
   echo >&2 "failed to run consul-config"
   exit 64
 }
