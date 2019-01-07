@@ -1,0 +1,12 @@
+{
+  "example": {
+    "sensitive": false,
+    "type": "string",
+    "value": "foo"
+  },
+  "algorithm": {
+    "sensitive": false,
+    "type": "string",
+    "value": "RSA"
+  }
+}

@@ -22,6 +22,9 @@ TEST_STATE_FILE_WITH_OUTPUT = \
     os.path.join(TEST_STATE_DIR, 'with-output.tfstate')
 TEST_PLAN_FILE_NAME = '.tfplan'
 TEST_PLUGIN_CACHE_DIR = '/tmp/test-tfcache/'
+TEST_TERRAFORM_VAR_DIR = '/app/testdata/terraform-var'
+TEST_TERRAFORM_VAR_FILE = os.path.join(TEST_TERRAFORM_VAR_DIR,
+                                       'algorithm.tfvars.json')
 
 
 # =============================================================================
@@ -73,6 +76,29 @@ def create_plan_with_no_output(test_working_dir: str) -> None:
         test_working_dir,
         terraform_dir_path=TEST_TERRAFORM_DIR,
         plugin_cache_dir_path=TEST_PLUGIN_CACHE_DIR,
+        debug=True)
+
+
+# =============================================================================
+# create_plan_without_var_file
+# =============================================================================
+def create_plan_without_var_file(test_working_dir: str) -> None:
+    lib.terraform.plan(
+        test_working_dir,
+        terraform_dir_path=TEST_TERRAFORM_VAR_DIR,
+        plugin_cache_dir_path=TEST_PLUGIN_CACHE_DIR,
+        debug=True)
+
+
+# =============================================================================
+# create_plan_with_var_file
+# =============================================================================
+def create_plan_with_var_file(test_working_dir: str) -> None:
+    lib.terraform.plan(
+        test_working_dir,
+        terraform_dir_path=TEST_TERRAFORM_VAR_DIR,
+        plugin_cache_dir_path=TEST_PLUGIN_CACHE_DIR,
+        var_file_paths=[TEST_TERRAFORM_VAR_FILE],
         debug=True)
 
 

@@ -4,6 +4,7 @@ from typing import Optional
 # local
 import lib.terraform_dir
 
+
 # =============================================================================
 # constants
 # =============================================================================
@@ -31,6 +32,7 @@ def plan(
         terraform_source_dir: str,
         terraform_dir_path: Optional[str] = None,
         state_file_path: Optional[str] = None,
+        output_var_files: Optional[dict] = None,
         error_on_no_changes: Optional[bool] = None,
         destroy: Optional[bool] = None,
         debug: bool = False) -> None:
@@ -42,6 +44,7 @@ def plan(
         terraform_dir,
         terraform_dir_path=terraform_dir_path,
         state_file_path=state_file_path,
+        output_var_files=output_var_files,
         error_on_no_changes=error_on_no_changes,
         destroy=destroy,
         debug=debug)

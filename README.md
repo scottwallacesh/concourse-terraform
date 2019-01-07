@@ -64,6 +64,8 @@ see [examples](examples/README.md)
 
 	- local state can be produced as an output and managed with concourse resources or scripts
 
+	- outputs can be passed between tasks, eliminating the need to directly couple state backends together
+
 - pre-built images for the terraform versions in `tf-versions` are available on docker hub, or you can build any version with the provided `Dockerfile`
 
 - orchestrates the [plan and apply on different machines](https://www.terraform.io/guides/running-terraform-in-automation.html) automation strategy
@@ -81,7 +83,7 @@ see [examples](examples/README.md)
 
 	- `*.auto.tfvars` / `terraform.tfvars` files in the `TF_WORKING_DIR`
 
-	- task parameters (see [providing input variable values](#providing-input-variable-values))
+	- task parameters or terraform output files (see [providing input variable values](#providing-input-variable-values))
 
 	- `TF_CLI_ARGS_{command}` parameters (see [environment variables](https://www.terraform.io/docs/configuration/environment-variables.html#tf_cli_args-and-tf_cli_args_name))
 
@@ -127,21 +129,97 @@ you can also build the docker image yourself using the [docker-image-resource](h
 
 ### providing input variable values
 
-tfvars can be provided by including `terraform.tfvars` or `*.auto.tfvars` files in the terraform working dir, or by passing them as parameters into the task
+tfvars can be provided by:
 
-```yaml
-jobs:
-# a terraform task with variables
-- name: terraform-task
-  plan:
-  - get: concourse-terraform
-  - get: concourse-terraform-image
-  - task: do-terraform-task
-    image: concourse-terraform-image
-    file: concourse-terraform/tasks/{TASK}.yml
-    params:
-      TF_VAR_my_var: my_value
-```
+- including `terraform.tfvars` or `*.auto.tfvars` files in the `TF_WORKING_DIR`
+
+- passing them as parameters into the task
+
+	```yaml
+	jobs:
+	# a terraform task with variables
+	- name: terraform-task
+	  plan:
+	  - get: concourse-terraform
+	  - get: concourse-terraform-image
+	  - task: do-terraform-task
+	    image: concourse-terraform-image
+	    file: concourse-terraform/tasks/{TASK}.yml
+	    params:
+	      TF_VAR_my_var: my_value
+	```
+
+- converting a terraform output file into an input var file
+
+	to provide a terraform output file, set the environment variable `TF_OUTPUT_VAR_FILE_{name}` to the path of the terraform output file
+
+	- the file `{name}.tfvars.json` will be created in the `TF_WORKING_DIR` directory
+
+	- the path to `{name}.tfvars.json` will be provided to `-var-file`
+
+	- if the terraform output file only contains a single value, you must set `{name}` to the terraform input var you are setting
+
+		example, to set the `cluster_region` terraform input var:
+
+		given terraform output `cluster/tf-output.json` from a specific `TF_OUTPUT_TARGET`
+
+		```
+		{
+		  "sensitive": false,
+		  "type": "string",
+		  "value": "us-east-1"
+		}
+		```
+
+		and env var
+
+		```
+		TF_OUTPUT_VAR_FILE_cluster_region="cluster/tf-output.json"
+		```
+
+		results in `{TF_WORKING_DIR}/cluster_region.tfvars.json`
+
+		```
+		{
+		  "cluster_region": "us-east-1"
+		}
+		```
+
+	- if the terraform output file contains multiple values, `{name}` is only used for the file name, in which case the terraform output name must already match the intended terraform input var names
+
+	  example, attempting to set `cluster_region` and `cluster_name` terraform input vars:
+
+		given terraform output `cluster/tf-output.json`
+
+		```
+		{
+		  "cluster_region": {
+		    "sensitive": false,
+		    "type": "string",
+		    "value": "us-east-1"
+		  },
+		  "cluster_name": {
+		    "sensitive": true,
+		    "type": "string",
+		    "value": "foo"
+		  }
+		}
+		```
+
+		and env var
+
+		```
+		TF_OUTPUT_VAR_FILE_cluster="cluster/tf-output.json"
+		```
+
+		results in `{TF_WORKING_DIR}/cluster.tfvars.json`
+
+		```
+		{
+		  "cluster_region": "us-east-1",
+		  "cluster_name": "foo"
+		}
+		```
 
 ### configuring the backend
 
@@ -803,7 +881,7 @@ also exports relevant variables
 
 # automated builds
 
-automated builds are handled by [docker hub](https://hub.docker.com)
+automated builds are handled by [docker hub](https://hub.docker.com/r/snapkitchen/concourse-terraform/)
 
 custom build hooks are used to build and test every version in the `tf-versions` file
 

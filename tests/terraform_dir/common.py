@@ -27,6 +27,16 @@ TEST_INVALID_TERRAFORM_DIR = \
 TEST_TERRAFORM_AUX_DIR = \
     os.path.join(TEST_ROOT_DIR, 'testdata/terraform-aux')
 TEST_TERRAFORM_AUX_FILE_NAME = 'aux.txt'
+TEST_TERRAFORM_VAR_DIR = \
+    os.path.join(TEST_ROOT_DIR, 'testdata/terraform-var')
+TEST_TERRAFORM_SINGLE_OUTPUT_VAR_FILE_PATH = \
+    os.path.join(TEST_TERRAFORM_VAR_DIR, 'single-output.json')
+TEST_TERRAFORM_MULTI_OUTPUT_VAR_FILE_PATH = \
+    os.path.join(TEST_TERRAFORM_VAR_DIR, 'multi-output.json')
+TEST_TERRAFORM_CONVERTED_SINGLE_OUTPUT_VAR_FILE_PATH = \
+    os.path.join(TEST_TERRAFORM_VAR_DIR, 'algorithm.tfvars.json')
+TEST_TERRAFORM_CONVERTED_MULTI_OUTPUT_VAR_FILE_PATH = \
+    os.path.join(TEST_TERRAFORM_VAR_DIR, 'multi.tfvars.json')
 
 
 # =============================================================================

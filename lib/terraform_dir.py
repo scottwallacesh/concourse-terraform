@@ -1,5 +1,6 @@
 # stdlib
 import distutils.dir_util
+import json
 import os
 import shutil
 import tarfile
@@ -379,6 +380,49 @@ def _export_output_file(
 
 
 # =============================================================================
+# _convert_output_var_file_into_var_file
+# =============================================================================
+def _convert_output_var_file_into_var_file(
+        var_name: str,
+        output_var_file_contents: dict) -> Optional[dict]:
+    var_file: dict = {}
+    # look for 'value' key, indicating this is
+    # just a single output item
+    if 'value' in output_var_file_contents:
+        # since it's just a single item
+        # use the var name as the key name
+        var_file[var_name] = output_var_file_contents['value']
+    else:
+        # multiple items, look for 'value' in each
+        for key, value in output_var_file_contents.items():
+            if value and 'value' in value:
+                var_file[key] = value['value']
+    return var_file or None
+
+
+# =============================================================================
+# _convert_and_import_output_var_files_to_terraform_dir
+# =============================================================================
+def _convert_and_import_output_var_files_to_terraform_dir(
+        output_var_files: dict,
+        terraform_dir: str) -> Optional[list]:
+    var_files: list = []
+    for key, value in output_var_files.items():
+        with open(value, 'r') as output_var_file:
+            output_var_file_contents = json.load(output_var_file)
+        var_file_contents = _convert_output_var_file_into_var_file(
+            key,
+            output_var_file_contents)
+        if var_file_contents:
+            var_file_path = os.path.join(terraform_dir,
+                                         f"{key}.tfvars.json")
+            with open(var_file_path, 'w') as var_file:
+                json.dump(var_file_contents, var_file)
+            var_files.append(var_file_path)
+    return var_files or None
+
+
+# =============================================================================
 #
 # public functions
 #
@@ -501,6 +545,7 @@ def plan_terraform_dir(
         state_file_path: Optional[str] = None,
         create_plan_file: bool = False,
         plan_file_path: Optional[str] = None,
+        output_var_files: Optional[dict] = None,
         error_on_no_changes: Optional[bool] = None,
         destroy: Optional[bool] = None,
         debug: bool = False) -> Optional[str]:
@@ -517,6 +562,17 @@ def plan_terraform_dir(
                 terraform_dir)
     # get the plugin cache path
     plugin_cache_dir = _get_plugin_cache_dir(terraform_dir)
+    # optionally import var files
+    var_file_paths = []
+    if output_var_files:
+        # convert and import the output var files
+        imported_output_var_files = \
+            _convert_and_import_output_var_files_to_terraform_dir(
+                output_var_files,
+                terraform_dir)
+        # add their paths to the list of var files
+        if imported_output_var_files:
+            var_file_paths.extend(imported_output_var_files)
     lib.terraform.plan(
         terraform_dir,
         terraform_dir_path=terraform_dir_path,
@@ -526,6 +582,7 @@ def plan_terraform_dir(
         plan_file_path=plan_file_path,
         error_on_no_changes=error_on_no_changes,
         destroy=destroy,
+        var_file_paths=var_file_paths,
         debug=debug)
     if create_plan_file:
         print(f"wrote plan file to: {plan_file_path}")

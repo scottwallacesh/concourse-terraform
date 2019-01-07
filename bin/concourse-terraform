@@ -7,6 +7,7 @@ from distutils.util import strtobool
 
 # local
 import lib.commands
+import lib.environment
 
 
 # =============================================================================
@@ -27,6 +28,7 @@ DESTROY = 'DESTROY'
 STATE_FILE_PATH = 'STATE_FILE_PATH'
 STATE_OUTPUT_DIR = 'STATE_OUTPUT_DIR'
 
+
 # =============================================================================
 # process_args
 # =============================================================================
@@ -38,6 +40,8 @@ def process_args(args: list) -> None:
         terraform_dir_path = os.environ.get(TERRAFORM_DIR_PATH)
         state_file_path = os.environ.get(STATE_FILE_PATH)
         error_on_no_changes = os.environ.get(ERROR_ON_NO_CHANGES)
+        output_var_files = \
+            lib.environment.get_tf_output_var_files(os.environ)
         if error_on_no_changes:
             # convert to bool if specified
             error_on_no_changes = bool(strtobool(error_on_no_changes))
@@ -53,6 +57,7 @@ def process_args(args: list) -> None:
             terraform_source_dir,
             terraform_dir_path=terraform_dir_path,
             state_file_path=state_file_path,
+            output_var_files=output_var_files,
             error_on_no_changes=error_on_no_changes,
             destroy=destroy,
             debug=debug)

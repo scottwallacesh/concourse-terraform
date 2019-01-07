@@ -1,3 +1,7 @@
+2019-01-07
+
+- supports consuming terraform outputs as terraform var files
+
 2019-01-02
 
 - added consul-config to consul-wrapper

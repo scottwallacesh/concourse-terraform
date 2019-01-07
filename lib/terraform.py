@@ -177,6 +177,7 @@ def plan(
         plan_file_path: Optional[str] = None,
         error_on_no_changes: Optional[bool] = None,
         destroy: Optional[bool] = None,
+        var_file_paths: Optional[list] = None,
         debug: bool = False) -> None:
     if error_on_no_changes not in [True, False]:
         error_on_no_changes = True
@@ -191,6 +192,9 @@ def plan(
     if create_plan_file:
         # creating a plan file
         terraform_command_args.append(f"-out={plan_file_path}")
+    if var_file_paths:
+        for var_file_path in var_file_paths:
+            terraform_command_args.append(f"-var-file={var_file_path}")
     if destroy:
         # creating a destroy plan
         terraform_command_args.append('-destroy')
@@ -217,6 +221,7 @@ def apply(
         state_file_path: Optional[str] = None,
         output_state_file_path: Optional[str] = None,
         plan_file_path: Optional[str] = None,
+        var_file_paths: Optional[list] = None,
         debug: bool = False) -> None:
     if not terraform_dir_path:
         terraform_dir_path = '.'
@@ -230,6 +235,9 @@ def apply(
     if state_file_path:
         # specify state file
         terraform_command_args.append(f"-state={state_file_path}")
+    if var_file_paths:
+        for var_file_path in var_file_paths:
+            terraform_command_args.append(f"-var-file={var_file_path}")
     # execute
     _terraform(
         'apply',

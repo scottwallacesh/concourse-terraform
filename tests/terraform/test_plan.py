@@ -2,6 +2,7 @@
 
 # stdlib
 import unittest
+from subprocess import CalledProcessError
 
 # local
 import tests.terraform.common as common
@@ -19,6 +20,17 @@ class TestPlan(unittest.TestCase):
         with common.create_test_working_dir() as test_working_dir:
             common.init_test_working_dir(test_working_dir)
             common.create_plan_with_no_output(test_working_dir)
+
+    def test_create_plan_without_var_file(self):
+        with common.create_test_working_dir() as test_working_dir:
+            common.init_test_working_dir(test_working_dir)
+            with self.assertRaises(CalledProcessError):
+                common.create_plan_without_var_file(test_working_dir)
+
+    def test_create_plan_with_var_file(self):
+        with common.create_test_working_dir() as test_working_dir:
+            common.init_test_working_dir(test_working_dir)
+            common.create_plan_with_var_file(test_working_dir)
 
     def test_create_plan_file(self):
         with common.create_test_working_dir() as test_working_dir:
