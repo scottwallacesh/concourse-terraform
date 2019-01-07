@@ -64,6 +64,8 @@ def process_args(args: list) -> None:
         # get parameters from environment
         terraform_source_dir = os.environ[TERRAFORM_SOURCE_DIR]
         terraform_dir_path = os.environ.get(TERRAFORM_DIR_PATH)
+        output_var_files = \
+            lib.environment.get_tf_output_var_files(os.environ)
         state_file_path = os.environ.get(STATE_FILE_PATH)
         state_output_dir = os.environ.get(STATE_OUTPUT_DIR)
         debug = os.environ.get(DEBUG)
@@ -73,6 +75,7 @@ def process_args(args: list) -> None:
         lib.commands.apply(
             terraform_source_dir,
             terraform_dir_path=terraform_dir_path,
+            output_var_files=output_var_files,
             state_file_path=state_file_path,
             state_output_dir=state_output_dir,
             debug=debug)
