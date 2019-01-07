@@ -707,6 +707,7 @@ def output_terraform_dir(
                 state_file_path=state_file_path,
                 target_name=target_name,
                 debug=debug)
+            _export_output_file(output_file_path, output_dir)
     else:
         # dump output(s) to default name
         output_file_path = \
@@ -716,4 +717,4 @@ def output_terraform_dir(
             output_file_path,
             state_file_path=state_file_path,
             debug=debug)
-    _export_output_file(output_file_path, output_dir)
+        _export_output_file(output_file_path, output_dir)
