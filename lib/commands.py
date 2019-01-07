@@ -145,7 +145,7 @@ def apply_plan(
 # =============================================================================
 def output(
         output_dir: str,
-        output_target: Optional[str] = None,
+        output_targets: Optional[dict] = None,
         state_file_path: Optional[str] = None,
         debug: bool = False) -> None:
     terraform_dir = lib.terraform_dir.init_terraform_dir(
@@ -153,6 +153,6 @@ def output(
     lib.terraform_dir.output_terraform_dir(
         terraform_dir,
         output_dir,
-        output_target=output_target,
+        output_targets=output_targets,
         state_file_path=state_file_path,
         debug=debug)

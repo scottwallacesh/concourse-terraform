@@ -27,7 +27,6 @@ caches:
 params:
   TF_OUTPUT_DIR: terraform-output
   TF_PLUGIN_CACHE: .tfcache
-  TF_OUTPUT_TARGET:
   STATE_FILE_PATH:
   DEBUG:
 run:

@@ -55,7 +55,7 @@ class TestOutputTerraformDir(unittest.TestCase):
                         lib.terraform_dir.TERRAFORM_OUTPUT_FILE_NAME)
                 self.assertTrue(os.path.isfile(expected_output_file_path))
 
-    def test_allows_specifying_output_target(self):
+    def test_allows_specifying_output_targets(self):
         # create a new temp dir as the working dir
         with common.create_test_working_dir() as test_working_dir:
             with common.create_test_working_dir() as test_output_dir:
@@ -63,11 +63,15 @@ class TestOutputTerraformDir(unittest.TestCase):
                 terraform_dir = lib.terraform_dir.init_terraform_dir(
                     terraform_work_dir=test_working_dir,
                     debug=True)
+                # create targets
+                output_targets = {
+                    "test": "example"
+                }
                 # output
                 lib.terraform_dir.output_terraform_dir(
                     terraform_dir,
                     test_output_dir,
-                    output_target='example',
+                    output_targets=output_targets,
                     terraform_work_dir=test_working_dir,
                     state_file_path=common.TEST_STATE_FILE_WITH_OUTPUT,
                     debug=True)
@@ -75,7 +79,7 @@ class TestOutputTerraformDir(unittest.TestCase):
                 output_file_path = \
                     os.path.join(
                         test_output_dir,
-                        lib.terraform_dir.TERRAFORM_OUTPUT_FILE_NAME)
+                        "test.json")
                 with open(output_file_path, 'r') as output_file:
                     output_file_contents = json.load(output_file)
                 self.assertTrue('value' in output_file_contents)

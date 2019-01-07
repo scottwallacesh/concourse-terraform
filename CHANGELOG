@@ -1,6 +1,8 @@
 2019-01-07
 
-- supports consuming terraform outputs as terraform var files
+- [new] supports consuming terraform outputs as terraform var files
+- [enhancement] changed output tasks to support multiple outputs targets at once
+- [breaking] no longer supports a single output target using TF_OUTPUT_TARGET
 
 2019-01-02
 

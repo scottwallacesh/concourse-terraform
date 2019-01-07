@@ -18,7 +18,6 @@ ERROR_ON_NO_CHANGES = 'ERROR_ON_NO_CHANGES'
 TERRAFORM_SOURCE_DIR = 'TF_WORKING_DIR'
 TERRAFORM_DIR_PATH = 'TF_DIR_PATH'
 TERRAFORM_OUTPUT_DIR = 'TF_OUTPUT_DIR'
-TERRAFORM_OUTPUT_TARGET = 'TF_OUTPUT_TARGET'
 ARCHIVE_OUTPUT_DIR = 'ARCHIVE_OUTPUT_DIR'
 ARCHIVE_INPUT_DIR = 'ARCHIVE_INPUT_DIR'
 SOURCE_REF = 'SOURCE_REF'
@@ -138,7 +137,8 @@ def process_args(args: list) -> None:
     elif command == lib.commands.OUTPUT:
         # get parameters from environment
         output_dir = os.environ[TERRAFORM_OUTPUT_DIR]
-        output_target = os.environ.get(TERRAFORM_OUTPUT_TARGET)
+        output_targets = \
+            lib.environment.get_tf_output_targets(os.environ)
         state_file_path = os.environ.get(STATE_FILE_PATH)
         debug = os.environ.get(DEBUG)
         if debug:
@@ -146,7 +146,7 @@ def process_args(args: list) -> None:
             debug = bool(strtobool(debug))
         lib.commands.output(
             output_dir,
-            output_target=output_target,
+            output_targets=output_targets,
             state_file_path=state_file_path,
             debug=debug)
     else:

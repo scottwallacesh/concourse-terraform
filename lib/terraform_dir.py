@@ -32,6 +32,7 @@ TERRAFORM_PLUGIN_CACHE_VAR_NAME = 'TF_PLUGIN_CACHE'
 TERRAFORM_PLAN_FILE_NAME = '.tfplan'
 TERRAFORM_STATE_FILE_NAME = 'terraform.tfstate'
 TERRAFORM_OUTPUT_FILE_NAME = 'tf-output.json'
+TERRAFORM_OUTPUT_FILE_SUFFIX = '.json'
 TERRAFORM_BACKUP_STATE_FILE_NAME = f'{TERRAFORM_STATE_FILE_NAME}.backup'
 
 
@@ -677,7 +678,7 @@ def show_terraform_plan(
 def output_terraform_dir(
         terraform_dir: str,
         output_dir: str,
-        output_target: Optional[str] = None,
+        output_targets: Optional[dict] = None,
         terraform_work_dir: Optional[str] = None,
         state_file_path: Optional[str] = None,
         debug: bool = False) -> None:
@@ -693,11 +694,26 @@ def output_terraform_dir(
             _import_state_file_to_terraform_dir(
                 state_file_path,
                 terraform_dir)
-    output_file_path = os.path.join(terraform_dir, TERRAFORM_OUTPUT_FILE_NAME)
-    lib.terraform.output(
-        terraform_dir,
-        output_file_path,
-        state_file_path=state_file_path,
-        target_name=output_target,
-        debug=debug)
+    if output_targets:
+        # dump each output to a file named after itself
+        for target_file, target_name in output_targets.items():
+            output_file_path = \
+                os.path.join(
+                    terraform_dir,
+                    target_file + TERRAFORM_OUTPUT_FILE_SUFFIX)
+            lib.terraform.output(
+                terraform_dir,
+                output_file_path,
+                state_file_path=state_file_path,
+                target_name=target_name,
+                debug=debug)
+    else:
+        # dump output(s) to default name
+        output_file_path = \
+            os.path.join(terraform_dir, TERRAFORM_OUTPUT_FILE_NAME)
+        lib.terraform.output(
+            terraform_dir,
+            output_file_path,
+            state_file_path=state_file_path,
+            debug=debug)
     _export_output_file(output_file_path, output_dir)

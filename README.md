@@ -161,7 +161,7 @@ tfvars can be provided by:
 
 		example, to set the `cluster_region` terraform input var:
 
-		given terraform output `cluster/tf-output.json` from a specific `TF_OUTPUT_TARGET`
+		given terraform output `cluster/region.json` from `TF_OUTPUT_TARGET_region`
 
 		```
 		{
@@ -174,7 +174,7 @@ tfvars can be provided by:
 		and env var
 
 		```
-		TF_OUTPUT_VAR_FILE_cluster_region="cluster/tf-output.json"
+		TF_OUTPUT_VAR_FILE_cluster_region="cluster/region.json"
 		```
 
 		results in `{TF_WORKING_DIR}/cluster_region.tfvars.json`
@@ -483,7 +483,7 @@ to provide a terraform output file, set the environment variable `CT_CONSUL_TF_C
 
   example, to set the `datacenter` configuration setting:
 
-	given terraform output `cluster-dc/tf-output.json` from a specific `TF_OUTPUT_TARGET`
+	given terraform output `cluster/dc.json` from `TF_OUTPUT_TARGET_dc`
 
 	```
 	{
@@ -496,7 +496,7 @@ to provide a terraform output file, set the environment variable `CT_CONSUL_TF_C
 	and env var
 
 	```
-	CT_CONSUL_TF_CONFIG_datacenter="cluster-dc/tf-output.json"
+	CT_CONSUL_TF_CONFIG_datacenter="cluster/dc.json"
 	```
 
 	results in `/consul/config/datacenter.json`
@@ -545,7 +545,7 @@ to provide a terraform output file, set the environment variable `CT_CONSUL_TF_C
 
 	note that `encrypt` is the correct configuration key, not `gossip_key`, so this configuration would be invalid
 
-	to correct it, the terraform output `gossip_key` would need to be renamed to `encrypt`, or alternatively provided as a single explicit output file by using `TF_OUTPUT_TARGET` (as per above)
+	to correct it, the terraform output `gossip_key` would need to be renamed to `encrypt`, or alternatively provided as a single explicit output file by using `TF_OUTPUT_TARGET_` (as per above)
 
 to join a specific cluster host directly, set `CT_CONSUL_JOIN` to the intended cluster host or ip used for `consul join`
 
@@ -787,11 +787,11 @@ CONSUL_CLIENT_KEY=/tmp/build/e55deab7/consul-certificates/client-key.pem
 
 ### outputs
 
-- `terraform-output`: a json output file named `tf-output.json` will be placed here.
+- `terraform-output`: json output file(s) will be placed here. if no `TF_OUTPUT_TARGET_{name}` is specified, file will be named `tf-output.json`.
 
 ### params
 
-- `TF_OUTPUT_TARGET`: _optional_. name of a specific output to write. default: none. see: [command: output](https://www.terraform.io/docs/commands/output.html)
+- `TF_OUTPUT_TARGET_{name}`: _optional_. name of a specific output to write. can be specified multiple times (once per `{name}`). results in `{name}.json` file in `terraform-output`. default: none. see: [command: output](https://www.terraform.io/docs/commands/output.html)
 
 - `STATE_FILE_PATH`: _optional_. when using local state, the path to the input state file. can be relative to the concourse working directory. see [managing local state files](#managing-local-state-files). default: none
 
