@@ -596,6 +596,7 @@ def plan_terraform_dir(
 def apply_terraform_dir(
         terraform_dir: str,
         terraform_dir_path: str = None,
+        output_var_files: Optional[dict] = None,
         state_file_path: Optional[str] = None,
         state_output_dir: Optional[str] = None,
         debug: bool = False) -> None:
@@ -610,11 +611,23 @@ def apply_terraform_dir(
                 terraform_dir)
     # get the plugin cache path
     plugin_cache_dir = _get_plugin_cache_dir(terraform_dir)
+    # optionally import var files
+    var_file_paths = []
+    if output_var_files:
+        # convert and import the output var files
+        imported_output_var_files = \
+            _convert_and_import_output_var_files_to_terraform_dir(
+                output_var_files,
+                terraform_dir)
+        # add their paths to the list of var files
+        if imported_output_var_files:
+            var_file_paths.extend(imported_output_var_files)
     try:
         lib.terraform.apply(
             terraform_dir,
             terraform_dir_path=terraform_dir_path,
             plugin_cache_dir_path=plugin_cache_dir,
+            var_file_paths=var_file_paths,
             state_file_path=state_file_path,
             debug=debug)
     finally:
