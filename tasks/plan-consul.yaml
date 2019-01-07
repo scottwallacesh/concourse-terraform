@@ -41,4 +41,4 @@ run:
   - -c
   - |
     export PYTHONPATH="$(pwd)/concourse-terraform:${PYTHONPATH}"
-    exec concourse-terraform/bin/consul-wrapper concourse-terraform/bin/concourse-terraform plan
+    exec concourse-terraform/bin/concourse-terraform plan
