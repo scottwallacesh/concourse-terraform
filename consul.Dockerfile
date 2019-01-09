@@ -8,10 +8,10 @@ ARG CONSUL_VERSION=0.0.0
 COPY hashicorp.asc .
 
 RUN apk add --no-cache --update \
-        curl \
-        gnupg \
-        openssh \
-        && \
+      curl \
+      gnupg \
+      openssh \
+      && \
     curl https://releases.hashicorp.com/consul/${CONSUL_VERSION}/consul_${CONSUL_VERSION}_SHA256SUMS.sig > consul_${CONSUL_VERSION}_SHA256SUMS.sig && \
     curl https://releases.hashicorp.com/consul/${CONSUL_VERSION}/consul_${CONSUL_VERSION}_SHA256SUMS > consul_${CONSUL_VERSION}_SHA256SUMS && \
     gpg --import hashicorp.asc && \
@@ -31,10 +31,9 @@ FROM $PARENT_IMAGE
 COPY --from=build /bin/consul /bin/consul
 
 RUN consul version && \
-    RUNTIME_PACKAGES="dumb-init" && \
-    DEBIAN_FRONTEND=noninteractive apt-get update && \
-    DEBIAN_FRONTEND=noninteractive apt-get install -y ${RUNTIME_PACKAGES} && \
-    rm -rf /var/lib/apt/lists/*
+    apk add --no-cache --update \
+      dumb-init \
+      iptables
 
 # The /consul/data dir is used by Consul to store state. The agent will be started
 # with /consul/config as the configuration directory so you can add additional

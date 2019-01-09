@@ -1,8 +1,3 @@
-2019-01-09
-
-- [change] switched from "alpine"-based to "debian-slim-stretch"-based images
-  - this is in preparation for consul DNS support, as alpine does not work with custom resolvers
-
 2019-01-08
 
 - [new] supports installing trusted ca certs into the system root store
