@@ -26,6 +26,8 @@
 
 		- [providing auxiliary inputs](#providing-auxiliary-inputs)
 
+		- [installing trusted ca certs](#installing-trusted-ca-certs)
+
 		- [running `{tf-cmd}-consul` tasks with `consul-wrapper`](#running-tf-cmd-consul-tasks-with-consul-wrapper)
 
 - [tasks](#tasks)
@@ -446,6 +448,14 @@ ca-certs/root.pem
 ca-certs/intermediate.pem
 ```
 
+### installing trusted ca certs
+
+tasks which support installing trusted ca certs are marked as such in their description
+
+set param `CT_TRUSTED_CA_CERT_{name}` to the path of a ca certificate
+
+the file will be copied to `/usr/local/share/ca-certificates/{name}.crt` and then installed to the system's root store
+
 ### running `{tf-cmd}-consul` tasks with `consul-wrapper`
 
 #### using the pre-built image
@@ -637,6 +647,8 @@ CONSUL_CLIENT_KEY=/tmp/build/e55deab7/consul-certificates/client-key.pem
 
 - `TF_AUX_INPUT_NAME_{index}`: _optional_. directory name for aux input number `index`. see [providing auxiliary inputs](#providing-auxiliary-inputs)
 
+- `CT_TRUSTED_CA_CERT_{name}`: _optional_. path to a ca certificate to install to the system's trusted root store. may be provided multiple times (once per `{name}`). see [installing trusted ca certs](#installing-trusted-ca-certs)
+
 - `DEBUG`: _optional_. prints command line arguments and increases log verbosity. set to `true` to enable. **may result in leaked credentials**. default: `false`
 
 ## `apply.yaml`: apply with no plan
@@ -680,6 +692,8 @@ CONSUL_CLIENT_KEY=/tmp/build/e55deab7/consul-certificates/client-key.pem
 - `TF_AUX_INPUT_PATH_{index}`: _optional_. path to aux input number `index`. see [providing auxiliary inputs](#providing-auxiliary-inputs)
 
 - `TF_AUX_INPUT_NAME_{index}`: _optional_. directory name for aux input number `index`. see [providing auxiliary inputs](#providing-auxiliary-inputs)
+
+- `CT_TRUSTED_CA_CERT_{name}`: _optional_. path to a ca certificate to install to the system's trusted root store. may be provided multiple times (once per `{name}`). see [installing trusted ca certs](#installing-trusted-ca-certs)
 
 - `DEBUG`: _optional_. prints command line arguments and increases log verbosity. set to `true` to enable. **may result in leaked credentials**. default: `false`
 
@@ -727,6 +741,8 @@ CONSUL_CLIENT_KEY=/tmp/build/e55deab7/consul-certificates/client-key.pem
 
 - `TF_AUX_INPUT_NAME_{index}`: _optional_. directory name for aux input number `index`. see [providing auxiliary inputs](#providing-auxiliary-inputs)
 
+- `CT_TRUSTED_CA_CERT_{name}`: _optional_. path to a ca certificate to install to the system's trusted root store. may be provided multiple times (once per `{name}`). see [installing trusted ca certs](#installing-trusted-ca-certs)
+
 - `DEBUG`: _optional_. prints command line arguments and increases log verbosity. set to `true` to enable. **may result in leaked credentials**. default: `false`
 
 ## `show-plan.yaml`: show a plan
@@ -773,6 +789,8 @@ CONSUL_CLIENT_KEY=/tmp/build/e55deab7/consul-certificates/client-key.pem
 
 - `PLAN_FILE_PATH`: _optional_. path to the terraform plan file inside the working directory. default: `.tfplan`
 
+- `CT_TRUSTED_CA_CERT_{name}`: _optional_. path to a ca certificate to install to the system's trusted root store. may be provided multiple times (once per `{name}`). see [installing trusted ca certs](#installing-trusted-ca-certs)
+
 - `DEBUG`: _optional_. prints command line arguments and increases log verbosity. set to `true` to enable. **may result in leaked credentials**. default: `false`
 
 ## `output.yaml`: write output(s) to disk
@@ -802,6 +820,8 @@ CONSUL_CLIENT_KEY=/tmp/build/e55deab7/consul-certificates/client-key.pem
 - `TF_AUX_INPUT_PATH_{index}`: _optional_. path to aux input number `index`. see [providing auxiliary inputs](#providing-auxiliary-inputs)
 
 - `TF_AUX_INPUT_NAME_{index}`: _optional_. directory name for aux input number `index`. see [providing auxiliary inputs](#providing-auxiliary-inputs)
+
+- `CT_TRUSTED_CA_CERT_{name}`: _optional_. path to a ca certificate to install to the system's trusted root store. may be provided multiple times (once per `{name}`). see [installing trusted ca certs](#installing-trusted-ca-certs)
 
 - `DEBUG`: _optional_. prints command line arguments and increases log verbosity. set to `true` to enable. **may result in leaked credentials**. default: `false`
 

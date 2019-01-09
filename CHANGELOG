@@ -1,3 +1,7 @@
+2019-01-08
+
+- [new] supports installing trusted ca certs into the system root store
+
 2019-01-07
 
 - [new] supports consuming terraform outputs as terraform var files

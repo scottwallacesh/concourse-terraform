@@ -42,4 +42,5 @@ run:
   - -c
   - |
     export PYTHONPATH="$(pwd)/concourse-terraform:${PYTHONPATH}"
+    concourse-terraform/bin/install-trusted-ca-certs &&
     exec concourse-terraform/bin/concourse-terraform apply

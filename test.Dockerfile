@@ -22,8 +22,9 @@ COPY \
   lib/__init__.py \
   lib/commands.py \
   lib/consul_config.py \
-  lib/terraform.py \
   lib/terraform_dir.py \
+  lib/terraform.py \
+  lib/trusted_ca_certs.py \
   /app/lib/
 
 # copy binary files
