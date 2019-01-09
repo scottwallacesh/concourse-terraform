@@ -32,8 +32,8 @@ COPY --from=build /bin/consul /bin/consul
 
 RUN consul version && \
     apk add --no-cache --update \
-      dumb-init \
-      iptables
+      curl \
+      dumb-init
 
 # The /consul/data dir is used by Consul to store state. The agent will be started
 # with /consul/config as the configuration directory so you can add additional
