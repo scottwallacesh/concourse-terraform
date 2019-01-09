@@ -1,5 +1,5 @@
 ARG PARENT_IMAGE=snapkitchen/concourse-consul:latest
-FROM $PARENT_IMAGE
+FROM alpine:3.8 as build
 # based on the official hashicorp consul image
 # at https://raw.githubusercontent.com/hashicorp/docker-consul/master/0.X/Dockerfile
 
@@ -8,7 +8,10 @@ ARG CONSUL_VERSION=0.0.0
 COPY hashicorp.asc .
 
 RUN apk add --no-cache --update \
-        dumb-init && \
+        curl \
+        gnupg \
+        openssh \
+        && \
     curl https://releases.hashicorp.com/consul/${CONSUL_VERSION}/consul_${CONSUL_VERSION}_SHA256SUMS.sig > consul_${CONSUL_VERSION}_SHA256SUMS.sig && \
     curl https://releases.hashicorp.com/consul/${CONSUL_VERSION}/consul_${CONSUL_VERSION}_SHA256SUMS > consul_${CONSUL_VERSION}_SHA256SUMS && \
     gpg --import hashicorp.asc && \
@@ -19,8 +22,19 @@ RUN apk add --no-cache --update \
     rm -f consul_${CONSUL_VERSION}_SHA256SUMS.sig \
       consul_${CONSUL_VERSION}_SHA256SUMS \
       consul_${CONSUL_VERSION}_linux_amd64.zip \
-      hashicorp.asc && \
-    consul version
+      hashicorp.asc
+
+FROM $PARENT_IMAGE
+# based on the official hashicorp consul image
+# at https://raw.githubusercontent.com/hashicorp/docker-consul/master/0.X/Dockerfile
+
+COPY --from=build /bin/consul /bin/consul
+
+RUN consul version && \
+    RUNTIME_PACKAGES="dumb-init" && \
+    DEBIAN_FRONTEND=noninteractive apt-get update && \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y ${RUNTIME_PACKAGES} && \
+    rm -rf /var/lib/apt/lists/*
 
 # The /consul/data dir is used by Consul to store state. The agent will be started
 # with /consul/config as the configuration directory so you can add additional

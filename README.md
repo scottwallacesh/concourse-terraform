@@ -827,7 +827,7 @@ CONSUL_CLIENT_KEY=/tmp/build/e55deab7/consul-certificates/client-key.pem
 
 # development
 
-install python 3.7.1 and requirements from `requirements-dev.txt`
+install python 3.7.2 and requirements from `requirements-dev.txt`
 
 `.vscode/settings.json` will enable linters in vscode
 

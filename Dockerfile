@@ -1,6 +1,4 @@
-FROM python:3.7.1-alpine3.8
-ENV PYTHONUNBUFFERED=1
-CMD ["/bin/sh"]
+FROM alpine:3.8 as build
 
 ARG TERRAFORM_VERSION=0.0.0
 
@@ -8,7 +6,6 @@ COPY hashicorp.asc .
 
 RUN apk add --no-cache --update \
         curl \
-        git \
         gnupg \
         openssh \
         && \
@@ -23,3 +20,17 @@ RUN apk add --no-cache --update \
       terraform_${TERRAFORM_VERSION}_SHA256SUMS \
       terraform_${TERRAFORM_VERSION}_linux_amd64.zip \
       hashicorp.asc
+
+FROM python:3.7.2-slim-stretch
+
+ENV PYTHONUNBUFFERED=1
+
+COPY --from=build /bin/terraform /bin/terraform
+
+RUN CHECKPOINT_DISABLE=1 terraform --version && \
+    RUNTIME_PACKAGES="git" && \
+    DEBIAN_FRONTEND=noninteractive apt-get update && \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends ${RUNTIME_PACKAGES} && \
+    rm -rf /var/lib/apt/lists/*
+
+CMD ["/bin/sh"]
