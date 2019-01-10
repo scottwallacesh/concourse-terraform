@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 
 # stdlib
+import datetime
 import os
 import sys
+import time
 from distutils.util import strtobool
 
 # local
@@ -26,6 +28,9 @@ PLAN_FILE_PATH = 'PLAN_FILE_PATH'
 DESTROY = 'DESTROY'
 STATE_FILE_PATH = 'STATE_FILE_PATH'
 STATE_OUTPUT_DIR = 'STATE_OUTPUT_DIR'
+WORKSTATION_MODE = 'WORKSTATION_MODE'
+WORKSTATION_MODE_TIMEOUT = 'WORKSTATION_MODE_TIMEOUT'
+WORKSTATION_MODE_DEFAULT_TIMEOUT = 60
 
 
 # =============================================================================
@@ -158,11 +163,48 @@ def process_args(args: list) -> None:
         raise NotImplementedError
 
 
+def do_workstation_mode() -> None:
+    # check for WORKSTATION_MODE
+    workstation_mode = os.environ.get(WORKSTATION_MODE)
+    if workstation_mode:
+        # convert to bool if specified
+        workstation_mode = bool(strtobool(workstation_mode))
+    workstation_mode_timeout = os.environ.get(WORKSTATION_MODE_TIMEOUT)
+    if workstation_mode_timeout:
+        workstation_mode_timeout = int(workstation_mode_timeout)
+    else:
+        workstation_mode_timeout = WORKSTATION_MODE_DEFAULT_TIMEOUT
+    # if WORKSTATION_MODE is enabled
+    if workstation_mode:
+        def _should_wait(start_time, timeout):
+            # get current time
+            current_time = datetime.datetime.utcnow()
+            # get end time
+            end_time = start_time + datetime.timedelta(minutes=timeout)
+            # get time delta between the two
+            time_remaining = end_time - current_time
+            print('[workstation] time remaining: ' +
+                  str(time_remaining).split(".")[0])
+            return current_time < end_time
+        print('[workstation] starting workstation mode')
+        print(f'[workstation] timeout: {workstation_mode_timeout} minutes')
+        # get start time
+        start_time = datetime.datetime.utcnow()
+        while _should_wait(start_time, workstation_mode_timeout):
+            sleep_time = 30
+            print(f'[workstation] sleeping for {sleep_time} seconds...')
+            time.sleep(sleep_time)
+        print('[workstation] stopping workstation mode')
+
+
 # =============================================================================
 # main
 # =============================================================================
 def main(args: list) -> None:
-    process_args(args)
+    try:
+        process_args(args)
+    finally:
+        do_workstation_mode()
 
 
 if __name__ == "__main__":

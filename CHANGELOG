@@ -1,3 +1,7 @@
+2019-01-09
+
+- [new] workstation mode provides a way to intercept a container without it exiting early
+
 2019-01-08
 
 - [new] supports installing trusted ca certs into the system root store

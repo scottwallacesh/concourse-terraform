@@ -28,6 +28,8 @@
 
 		- [installing trusted ca certs](#installing-trusted-ca-certs)
 
+		- [using workstation mode](#using-workstation-mode)
+
 		- [running `{tf-cmd}-consul` tasks with `consul-wrapper`](#running-tf-cmd-consul-tasks-with-consul-wrapper)
 
 - [tasks](#tasks)
@@ -455,6 +457,18 @@ tasks which support installing trusted ca certs are marked as such in their desc
 set param `CT_TRUSTED_CA_CERT_{name}` to the path of a ca certificate
 
 the file will be copied to `/usr/local/share/ca-certificates/{name}.crt` and then installed to the system's root store
+
+### using workstation mode
+
+workstation mode allow users to ssh into the worker and perform advanced operations while the terraform environment is configured
+
+enabling workstation mode causes the operation to sleep for a set amount of time after any other operations have completed, including error states
+
+this provides a user the ability to [intercept](https://concourse-ci.org/builds.html#fly-intercept) the build container with concourse and ensures it remains running, regardless of the current concourse cleanup behavior
+
+- to enable, set `WORKSTATION_MODE` to a true value (e.g. `true`, or `1`)
+
+- the default timeout is `60` minutes, and can be customized by setting `WORKSTATION_MODE_TIMEOUT`
 
 ### running `{tf-cmd}-consul` tasks with `consul-wrapper`
 
