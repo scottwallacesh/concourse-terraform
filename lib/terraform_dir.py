@@ -708,7 +708,6 @@ def output_terraform_dir(
                 state_file_path,
                 terraform_dir)
     if output_targets:
-        tf_output_file_contents: str = ''
         # get a temporary file to write to
         with tempfile.NamedTemporaryFile() as tf_output_temp_file:
             # dump output(s) to temporary file
