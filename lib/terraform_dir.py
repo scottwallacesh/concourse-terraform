@@ -708,18 +708,26 @@ def output_terraform_dir(
                 state_file_path,
                 terraform_dir)
     if output_targets:
-        # dump each output to a file named after itself
+        tf_output_file_contents: str = ''
+        # get a temporary file to write to
+        with tempfile.NamedTemporaryFile() as tf_output_temp_file:
+            # dump output(s) to temporary file
+            lib.terraform.output(
+                terraform_dir,
+                tf_output_temp_file.name,
+                state_file_path=state_file_path,
+                debug=debug)
+            # read contents from temporary file
+            tf_output_file_contents = json.load(tf_output_temp_file)
+        # each to a file named after itself
         for target_file, target_name in output_targets.items():
             output_file_path = \
                 os.path.join(
                     terraform_dir,
                     target_file + TERRAFORM_OUTPUT_FILE_SUFFIX)
-            lib.terraform.output(
-                terraform_dir,
-                output_file_path,
-                state_file_path=state_file_path,
-                target_name=target_name,
-                debug=debug)
+            output_target_value = tf_output_file_contents[target_name]
+            with open(output_file_path, 'w') as output_file:
+                json.dump(output_target_value, output_file)
             _export_output_file(output_file_path, output_dir)
     else:
         # dump output(s) to default name
