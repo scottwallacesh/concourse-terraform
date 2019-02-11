@@ -1,3 +1,7 @@
+2019-02-11
+
+- [bugfix] added TF_OUTPUT_VAR_FILE_ to create-plan and updated documentation where it was missing
+
 2019-02-06
 
 - [optimization] target outputs are now extracted from a single parent output rather than multiple calls to "terraform output"

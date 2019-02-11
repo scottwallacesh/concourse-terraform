@@ -657,6 +657,8 @@ CONSUL_CLIENT_KEY=/tmp/build/e55deab7/consul-certificates/client-key.pem
 
 - `TF_VAR_{key}`: _optional_. terraform input variables in the format described in [providing input variable values](#providing-input-variable-values)
 
+- `TF_OUTPUT_VAR_FILE_{name}`: _optional_. terraform output var file to use as value for input var `{name}`. may be provided multiple times (once per `{name}`). see [providing input variable values](#providing-input-variable-values)
+
 - `TF_AUX_INPUT_PATH_{index}`: _optional_. path to aux input number `index`. see [providing auxiliary inputs](#providing-auxiliary-inputs)
 
 - `TF_AUX_INPUT_NAME_{index}`: _optional_. directory name for aux input number `index`. see [providing auxiliary inputs](#providing-auxiliary-inputs)
@@ -702,6 +704,8 @@ CONSUL_CLIENT_KEY=/tmp/build/e55deab7/consul-certificates/client-key.pem
 - `TF_BACKEND_CONFIG_{key}`: _optional_. sets `-backend-config` value for `{key}`. see [configuring the backend](#configuring-the-backend)
 
 - `TF_VAR_{key}`: _optional_. terraform input variables in the format described in [providing input variable values](#providing-input-variable-values)
+
+- `TF_OUTPUT_VAR_FILE_{name}`: _optional_. terraform output var file to use as value for input var `{name}`. may be provided multiple times (once per `{name}`). see [providing input variable values](#providing-input-variable-values)
 
 - `TF_AUX_INPUT_PATH_{index}`: _optional_. path to aux input number `index`. see [providing auxiliary inputs](#providing-auxiliary-inputs)
 
@@ -750,6 +754,8 @@ CONSUL_CLIENT_KEY=/tmp/build/e55deab7/consul-certificates/client-key.pem
 - `TF_BACKEND_CONFIG_{key}`: _optional_. sets `-backend-config` value for `{key}`. see [configuring the backend](#configuring-the-backend)
 
 - `TF_VAR_{key}`: _optional_. terraform input variables in the format described in [providing input variable values](#providing-input-variable-values)
+
+- `TF_OUTPUT_VAR_FILE_{name}`: _optional_. terraform output var file to use as value for input var `{name}`. may be provided multiple times (once per `{name}`). see [providing input variable values](#providing-input-variable-values)
 
 - `TF_AUX_INPUT_PATH_{index}`: _optional_. path to aux input number `index`. see [providing auxiliary inputs](#providing-auxiliary-inputs)
 

@@ -82,6 +82,7 @@ def create_plan(
         plan_file_path: Optional[str] = None,
         terraform_dir_path: Optional[str] = None,
         state_file_path: Optional[str] = None,
+        output_var_files: Optional[dict] = None,
         source_ref: Optional[str] = None,
         source_ref_file: Optional[str] = None,
         error_on_no_changes: Optional[bool] = None,
@@ -97,6 +98,7 @@ def create_plan(
         create_plan_file=True,
         plan_file_path=plan_file_path,
         state_file_path=state_file_path,
+        output_var_files=output_var_files,
         error_on_no_changes=error_on_no_changes,
         destroy=destroy,
         debug=debug)

@@ -94,6 +94,8 @@ def process_args(args: list) -> None:
         source_ref = os.environ.get(SOURCE_REF)
         source_ref_file = os.environ.get(SOURCE_REF_FILE)
         error_on_no_changes = os.environ.get(ERROR_ON_NO_CHANGES)
+        output_var_files = \
+            lib.environment.get_tf_output_var_files(os.environ)
         if error_on_no_changes:
             # convert to bool if specified
             error_on_no_changes = bool(strtobool(error_on_no_changes))
@@ -111,6 +113,7 @@ def process_args(args: list) -> None:
             plan_file_path=plan_file_path,
             terraform_dir_path=terraform_dir_path,
             state_file_path=state_file_path,
+            output_var_files=output_var_files,
             source_ref=source_ref,
             source_ref_file=source_ref_file,
             error_on_no_changes=error_on_no_changes,
