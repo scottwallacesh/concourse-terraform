@@ -20,6 +20,8 @@ inputs:
   optional: true
 - name: consul-certificates
   optional: true
+- name: consul-config
+  optional: true
 run:
   path: /usr/bin/dumb-init
   args:

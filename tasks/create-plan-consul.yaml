@@ -23,6 +23,8 @@ inputs:
   optional: true
 - name: consul-certificates
   optional: true
+- name: consul-config
+  optional: true
 outputs:
 - name: plan-output-archive
 caches:

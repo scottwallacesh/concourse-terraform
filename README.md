@@ -493,7 +493,11 @@ these tasks will run `dumb-init` as the entry point and then run the `consul-wra
 - run the terraform phase
 - on error, or success, gracefully leave the cluster
 
-they also include an additional optional input called `consul-certificates` which can be used to provide certificate files during authentication
+they also include additional optional inputs:
+
+- `consul-certificates` which can be used to provide certificate files during authentication
+
+- `consul-config` which can be used to provide `CT_CONSUL_TF_CONFIG_{name}` files
 
 #### configuring the consul agent
 
@@ -507,7 +511,7 @@ to provide a terraform output file, set the environment variable `CT_CONSUL_TF_C
 
   example, to set the `datacenter` configuration setting:
 
-	given terraform output `cluster/dc.json` from `TF_OUTPUT_TARGET_dc`
+	given terraform output `consul-config/dc.json` from `TF_OUTPUT_TARGET_dc`
 
 	```
 	{
@@ -520,7 +524,7 @@ to provide a terraform output file, set the environment variable `CT_CONSUL_TF_C
 	and env var
 
 	```
-	CT_CONSUL_TF_CONFIG_datacenter="cluster/dc.json"
+	CT_CONSUL_TF_CONFIG_datacenter="consul-config/dc.json"
 	```
 
 	results in `/consul/config/datacenter.json`
@@ -535,7 +539,7 @@ to provide a terraform output file, set the environment variable `CT_CONSUL_TF_C
 
   example, attempting to set `datacenter` and `encrypt` configuration keys:
 
-	given terraform output `cluster/tf-output.json`
+	given terraform output `consul-config/tf-output.json`
 
 	```
 	{
@@ -555,7 +559,7 @@ to provide a terraform output file, set the environment variable `CT_CONSUL_TF_C
 	and env var
 
 	```
-	CT_CONSUL_TF_CONFIG_cluster="cluster/tf-output.json"
+	CT_CONSUL_TF_CONFIG_cluster="consul-config/tf-output.json"
 	```
 
 	results in `/consul/config/cluster.json`

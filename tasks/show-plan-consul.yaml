@@ -5,6 +5,8 @@ inputs:
 - name: plan-output-archive
 - name: consul-certificates
   optional: true
+- name: consul-config
+  optional: true
 params:
   PLAN_FILE_PATH:
   DEBUG:
