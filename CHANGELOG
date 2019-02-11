@@ -2,6 +2,7 @@
 
 - [bugfix] added TF_OUTPUT_VAR_FILE_ to create-plan and updated documentation where it was missing
 - [enhancement] added consul-config optional input to consul tasks for providing CT_CONSUL_TF_CONFIG_ files
+- [enhancement] added aux-inputs to all tasks which did not have them
 
 2019-02-06
 
