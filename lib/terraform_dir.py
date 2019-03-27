@@ -134,9 +134,9 @@ def _generate_backend_file_contents(backend_type: str) -> str:
 # =============================================================================
 def _create_backend_file(
         backend_type: str,
-        terraform_dir: str,
+        terraform_work_dir: str,
         debug: bool = False) -> None:
-    backend_file_path = os.path.join(terraform_dir, BACKEND_FILE_NAME)
+    backend_file_path = os.path.join(terraform_work_dir, BACKEND_FILE_NAME)
     backend_file_contents = _generate_backend_file_contents(backend_type)
     with open(backend_file_path, 'w') as backend_file:
         backend_file.write(backend_file_contents)
@@ -458,7 +458,7 @@ def init_terraform_dir(
     if backend_type:
         _create_backend_file(
             backend_type,
-            terraform_dir,
+            terraform_work_dir,
             debug=debug)
     # get any backend config values from environment
     backend_config_vars = _get_backend_config_from_environment()
