@@ -67,7 +67,8 @@ def _prep_terraform_dir_path(
         terraform_dir_path: str) -> str:
     prepped_terraform_dir_path = os.path.join(
         terraform_dir, terraform_dir_path)
-    os.makedirs(prepped_terraform_dir_path)
+    if not os.path.isdir(prepped_terraform_dir_path):
+        os.makedirs(prepped_terraform_dir_path)
     return prepped_terraform_dir_path
 
 
