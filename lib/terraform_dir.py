@@ -60,6 +60,18 @@ def _prep_terraform_dir(terraform_dir: str) -> None:
 
 
 # =============================================================================
+# _prep_terraform_dir_path
+# =============================================================================
+def _prep_terraform_dir_path(
+        terraform_dir: str,
+        terraform_dir_path: str) -> str:
+    prepped_terraform_dir_path = os.path.join(
+        terraform_dir, terraform_dir_path)
+    os.makedirs(prepped_terraform_dir_path)
+    return prepped_terraform_dir_path
+
+
+# =============================================================================
 # _copy_terraform_dir
 # =============================================================================
 def _copy_terraform_dir(
@@ -134,9 +146,9 @@ def _generate_backend_file_contents(backend_type: str) -> str:
 # =============================================================================
 def _create_backend_file(
         backend_type: str,
-        terraform_source_dir: str,
+        backend_file_dir: str,
         debug: bool = False) -> None:
-    backend_file_path = os.path.join(terraform_source_dir, BACKEND_FILE_NAME)
+    backend_file_path = os.path.join(backend_file_dir, BACKEND_FILE_NAME)
     backend_file_contents = _generate_backend_file_contents(backend_type)
     with open(backend_file_path, 'w') as backend_file:
         backend_file.write(backend_file_contents)
@@ -456,9 +468,14 @@ def init_terraform_dir(
     backend_type = _get_backend_type_from_environment()
     # optionally create a backend configuration
     if backend_type:
+        if terraform_dir_path:
+            backend_file_dir = _prep_terraform_dir_path(
+                terraform_dir, terraform_dir_path)
+        else:
+            backend_file_dir = terraform_dir
         _create_backend_file(
             backend_type,
-            terraform_source_dir,
+            backend_file_dir,
             debug=debug)
     # get any backend config values from environment
     backend_config_vars = _get_backend_config_from_environment()
