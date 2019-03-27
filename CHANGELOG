@@ -1,6 +1,6 @@
 2019-03-27
 
-- [bugfix] setting TF_BACKEND_TYPE now correctly creates the `backend.tf` file in the `TF_WORKING_DIR` rather than the `TF_DIR_PATH`
+- [bugfix] setting TF_BACKEND_TYPE now correctly creates the `backend.tf` file in the `TF_DIR_PATH` rather than the `TF_WORKING_DIR`
 
 2019-03-19
 

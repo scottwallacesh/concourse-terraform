@@ -51,7 +51,7 @@ class TestInitTerraformDir(unittest.TestCase):
         with common.create_test_working_dir() as test_working_dir:
             # get the expected backend file path
             backend_file_path = \
-                os.path.join(test_working_dir,
+                os.path.join(common.TEST_TERRAFORM_DIR,
                              lib.terraform_dir.BACKEND_FILE_NAME)
             # set the backend type in the environment
             with common.mocked_env_vars(
