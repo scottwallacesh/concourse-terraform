@@ -2,8 +2,8 @@
 
 # linting
 pep8==1.7.1
-flake8==3.6.0
+flake8==3.7.7
 flake8-mypy==17.8.0
 
 # remote debugging
-ptvsd==4.1.4
+ptvsd==4.2.8

@@ -34,6 +34,8 @@
 
 - [tasks](#tasks)
 
+	- [init](#inityaml-init-with-no-other-commands)
+
 	- [plan](#planyaml-plan-with-no-output)
 
 	- [apply](#applyyaml-apply-with-no-plan)
@@ -470,6 +472,8 @@ this provides a user the ability to [intercept](https://concourse-ci.org/builds.
 
 - the default timeout is `60` minutes, and can be customized by setting `WORKSTATION_MODE_TIMEOUT`
 
+- the recommended task to use is the [init](#inityaml-init-with-no-other-commands) task, since it only initializes the backend
+
 ### running `{tf-cmd}-consul` tasks with `consul-wrapper`
 
 #### using the pre-built image
@@ -626,6 +630,44 @@ CONSUL_CLIENT_KEY=/tmp/build/e55deab7/consul-certificates/client-key.pem
 **note**: these environment variables are not used during the agent join, so you must still also specify any needed certificate paths in `CONSUL_LOCAL_CONFIG`
 
 # tasks
+
+## `init.yaml`: init with no other commands
+
+**note:** this task is best suited for [workstation mode](#using-workstation-mode). if doing plan, apply, or other operations, use the appropriate task (as they already run the init operation, if needed).
+
+### inputs
+
+- `concourse-terraform`: _required_. the concourse terraform directory.
+
+- `terraform-source-dir`: _required_. the terraform source directory.
+
+- `state-input-dir`: _optional_. when using local state, the directory containing the state file. see [managing local state files](#managing-local-state-files)
+
+- `aux-input-{index}`: _optional_. supports up to eight (8) auxiliary inputs. see [providing auxiliary inputs](#providing-auxiliary-inputs)
+
+### outputs
+
+- none
+
+### params
+
+- `TF_WORKING_DIR`: _optional_. path to the terraform working directory. see [providing terraform source files](#providing-terraform-source-files). default: `terraform-source-dir`
+
+- `TF_DIR_PATH`: _optional_. path to the terraform files inside the working directory. see [providing terraform source files](#providing-terraform-source-files). default: `.`
+
+- `TF_BACKEND_TYPE`: _optional_. generate a terraform `backend.tf` file for this backend type. see [configuring the backend](#configuring-the-backend)
+
+- `TF_BACKEND_CONFIG_{key}`: _optional_. sets `-backend-config` value for `{key}`. see [configuring the backend](#configuring-the-backend)
+
+- `TF_VAR_{key}`: _optional_. terraform input variables in the format described in [providing input variable values](#providing-input-variable-values)
+
+- `TF_AUX_INPUT_PATH_{index}`: _optional_. path to aux input number `index`. see [providing auxiliary inputs](#providing-auxiliary-inputs)
+
+- `TF_AUX_INPUT_NAME_{index}`: _optional_. directory name for aux input number `index`. see [providing auxiliary inputs](#providing-auxiliary-inputs)
+
+- `CT_TRUSTED_CA_CERT_{name}`: _optional_. path to a ca certificate to install to the system's trusted root store. may be provided multiple times (once per `{name}`). see [installing trusted ca certs](#installing-trusted-ca-certs)
+
+- `DEBUG`: _optional_. prints command line arguments and increases log verbosity. set to `true` to enable. **may result in leaked credentials**. default: `false`
 
 ## `plan.yaml`: plan with no output
 

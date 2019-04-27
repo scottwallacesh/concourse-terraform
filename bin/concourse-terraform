@@ -38,7 +38,19 @@ WORKSTATION_MODE_DEFAULT_TIMEOUT = 60
 # =============================================================================
 def process_args(args: list) -> None:
     command = args[0]
-    if command == lib.commands.PLAN:
+    if command == lib.commands.INIT:
+        # get parameters from environment
+        terraform_source_dir = os.environ[TERRAFORM_SOURCE_DIR]
+        terraform_dir_path = os.environ.get(TERRAFORM_DIR_PATH)
+        debug = os.environ.get(DEBUG)
+        if debug:
+            # convert to bool if specified
+            debug = bool(strtobool(debug))
+        lib.commands.init(
+            terraform_source_dir,
+            terraform_dir_path=terraform_dir_path,
+            debug=debug)
+    elif command == lib.commands.PLAN:
         # get parameters from environment
         terraform_source_dir = os.environ[TERRAFORM_SOURCE_DIR]
         terraform_dir_path = os.environ.get(TERRAFORM_DIR_PATH)
