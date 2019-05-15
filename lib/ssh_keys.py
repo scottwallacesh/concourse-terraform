@@ -79,8 +79,8 @@ def create_ssh_config(ssh_keys_dir: str = None) -> None:
             'config')
     with open(ssh_config_file_path, 'w') as ssh_config_file:
         ssh_config_file.write(
-            'StrictHostKeyChecking no'
-            'LogLevel quiet'
+            'StrictHostKeyChecking no\n'
+            'LogLevel quiet\n'
         )
     log(f"wrote ssh config to: {ssh_config_file_path}")
 
