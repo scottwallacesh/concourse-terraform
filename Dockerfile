@@ -8,7 +8,6 @@ RUN apk add --no-cache --update \
       curl \
       gnupg \
       openssh \
-      openssh-client \
       && \
     curl https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_SHA256SUMS.sig > terraform_${TERRAFORM_VERSION}_SHA256SUMS.sig && \
     curl https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_SHA256SUMS > terraform_${TERRAFORM_VERSION}_SHA256SUMS && \
@@ -30,6 +29,7 @@ COPY --from=build /bin/terraform /bin/terraform
 
 RUN CHECKPOINT_DISABLE=1 terraform --version && \
     apk add --no-cache --update \
-      git
+      git \
+      openssh-client
 
 CMD ["/bin/sh"]
