@@ -466,17 +466,17 @@ the file will be copied to `/usr/local/share/ca-certificates/{name}.crt` and the
 
 tasks which support installing ssh keys are marked as such in their description
 
-#### ssh keys from file
+one of two methods can be used to provide the ssh identity file:
 
-set param `CT_SSH_KEY_FILE_{name}` to the path of an ssh key file
+- ssh key from file
 
-the file will be copied to `/root/.ssh/{name}.pem`
+	- set param `CT_GIT_IDENTITY_FILE` to the path of an ssh key file
 
-#### ssh keys from value
+- ssh key from value
 
-set param `CT_SSH_KEY_VALUE_{name}` to the value of an ssh key
+	- set param `CT_GIT_IDENTITY_VALUE` to the value of an ssh key
 
-the value will be written to `/root/.ssh/{name}.pem`
+the identity file will be used for all git host connections
 
 ### using workstation mode
 
@@ -683,9 +683,9 @@ CONSUL_CLIENT_KEY=/tmp/build/e55deab7/consul-certificates/client-key.pem
 
 - `TF_AUX_INPUT_NAME_{index}`: _optional_. directory name for aux input number `index`. see [providing auxiliary inputs](#providing-auxiliary-inputs)
 
-- `CT_SSH_KEY_VALUE_{name}`: _optional_. value of ssh key to write to the system ssh key dir. may be provided multiple times (once per `{name}`). see [installing ssh keys](#installing-ssh-keys)
+- `CT_GIT_IDENTITY_VALUE`: _optional_. value of an ssh key to use for git authentication. see [installing ssh keys](#installing-ssh-keys)
 
-- `CT_SSH_KEY_FILE_{name}`: _optional_. path to an ssh key to copy to the system ssh key dir. may be provided multiple times (once per `{name}`). see [installing ssh keys](#installing-ssh-keys)
+- `CT_GIT_IDENTITY_FILE`: _optional_. path to an ssh key to use for git authentication. see [installing ssh keys](#installing-ssh-keys)
 
 - `CT_TRUSTED_CA_CERT_{name}`: _optional_. path to a ca certificate to install to the system's trusted root store. may be provided multiple times (once per `{name}`). see [installing trusted ca certs](#installing-trusted-ca-certs)
 
@@ -731,9 +731,9 @@ CONSUL_CLIENT_KEY=/tmp/build/e55deab7/consul-certificates/client-key.pem
 
 - `TF_AUX_INPUT_NAME_{index}`: _optional_. directory name for aux input number `index`. see [providing auxiliary inputs](#providing-auxiliary-inputs)
 
-- `CT_SSH_KEY_VALUE_{name}`: _optional_. value of ssh key to write to the system ssh key dir. may be provided multiple times (once per `{name}`). see [installing ssh keys](#installing-ssh-keys)
+- `CT_GIT_IDENTITY_VALUE`: _optional_. value of an ssh key to use for git authentication. see [installing ssh keys](#installing-ssh-keys)
 
-- `CT_SSH_KEY_FILE_{name}`: _optional_. path to an ssh key to copy to the system ssh key dir. may be provided multiple times (once per `{name}`). see [installing ssh keys](#installing-ssh-keys)
+- `CT_GIT_IDENTITY_FILE`: _optional_. path to an ssh key to use for git authentication. see [installing ssh keys](#installing-ssh-keys)
 
 - `CT_TRUSTED_CA_CERT_{name}`: _optional_. path to a ca certificate to install to the system's trusted root store. may be provided multiple times (once per `{name}`). see [installing trusted ca certs](#installing-trusted-ca-certs)
 
@@ -783,9 +783,9 @@ CONSUL_CLIENT_KEY=/tmp/build/e55deab7/consul-certificates/client-key.pem
 
 - `TF_AUX_INPUT_NAME_{index}`: _optional_. directory name for aux input number `index`. see [providing auxiliary inputs](#providing-auxiliary-inputs)
 
-- `CT_SSH_KEY_VALUE_{name}`: _optional_. value of ssh key to write to the system ssh key dir. may be provided multiple times (once per `{name}`). see [installing ssh keys](#installing-ssh-keys)
+- `CT_GIT_IDENTITY_VALUE`: _optional_. value of an ssh key to use for git authentication. see [installing ssh keys](#installing-ssh-keys)
 
-- `CT_SSH_KEY_FILE_{name}`: _optional_. path to an ssh key to copy to the system ssh key dir. may be provided multiple times (once per `{name}`). see [installing ssh keys](#installing-ssh-keys)
+- `CT_GIT_IDENTITY_FILE`: _optional_. path to an ssh key to use for git authentication. see [installing ssh keys](#installing-ssh-keys)
 
 - `CT_TRUSTED_CA_CERT_{name}`: _optional_. path to a ca certificate to install to the system's trusted root store. may be provided multiple times (once per `{name}`). see [installing trusted ca certs](#installing-trusted-ca-certs)
 
@@ -837,9 +837,9 @@ CONSUL_CLIENT_KEY=/tmp/build/e55deab7/consul-certificates/client-key.pem
 
 - `TF_AUX_INPUT_NAME_{index}`: _optional_. directory name for aux input number `index`. see [providing auxiliary inputs](#providing-auxiliary-inputs)
 
-- `CT_SSH_KEY_VALUE_{name}`: _optional_. value of ssh key to write to the system ssh key dir. may be provided multiple times (once per `{name}`). see [installing ssh keys](#installing-ssh-keys)
+- `CT_GIT_IDENTITY_VALUE`: _optional_. value of an ssh key to use for git authentication. see [installing ssh keys](#installing-ssh-keys)
 
-- `CT_SSH_KEY_FILE_{name}`: _optional_. path to an ssh key to copy to the system ssh key dir. may be provided multiple times (once per `{name}`). see [installing ssh keys](#installing-ssh-keys)
+- `CT_GIT_IDENTITY_FILE`: _optional_. path to an ssh key to use for git authentication. see [installing ssh keys](#installing-ssh-keys)
 
 - `CT_TRUSTED_CA_CERT_{name}`: _optional_. path to a ca certificate to install to the system's trusted root store. may be provided multiple times (once per `{name}`). see [installing trusted ca certs](#installing-trusted-ca-certs)
 
@@ -925,9 +925,9 @@ CONSUL_CLIENT_KEY=/tmp/build/e55deab7/consul-certificates/client-key.pem
 
 - `TF_AUX_INPUT_NAME_{index}`: _optional_. directory name for aux input number `index`. see [providing auxiliary inputs](#providing-auxiliary-inputs)
 
-- `CT_SSH_KEY_VALUE_{name}`: _optional_. value of ssh key to write to the system ssh key dir. may be provided multiple times (once per `{name}`). see [installing ssh keys](#installing-ssh-keys)
+- `CT_GIT_IDENTITY_VALUE`: _optional_. value of an ssh key to use for git authentication. see [installing ssh keys](#installing-ssh-keys)
 
-- `CT_SSH_KEY_FILE_{name}`: _optional_. path to an ssh key to copy to the system ssh key dir. may be provided multiple times (once per `{name}`). see [installing ssh keys](#installing-ssh-keys)
+- `CT_GIT_IDENTITY_FILE`: _optional_. path to an ssh key to use for git authentication. see [installing ssh keys](#installing-ssh-keys)
 
 - `CT_TRUSTED_CA_CERT_{name}`: _optional_. path to a ca certificate to install to the system's trusted root store. may be provided multiple times (once per `{name}`). see [installing trusted ca certs](#installing-trusted-ca-certs)
 

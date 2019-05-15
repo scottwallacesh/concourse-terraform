@@ -11,8 +11,22 @@ import unittest.mock
 import lib.ssh_keys
 
 
-TEST_SSH_KEY_FILE_PATH_FOO = '/app/testdata/ssh-keys/foo'
-TEST_SSH_KEY_FILE_PATH_BAR = '/app/testdata/ssh-keys/bar'
+TEST_SSH_KEY_FILE_PATH = '/app/testdata/ssh-keys/foo'
+TEST_SSH_KEY_VALUE = 'foo'
+
+
+both_env_vars_set = {
+    lib.ssh_keys.SSH_KEY_FILE_VAR: TEST_SSH_KEY_FILE_PATH,
+    lib.ssh_keys.SSH_KEY_VALUE_VAR: TEST_SSH_KEY_VALUE
+}
+
+var_value_set = {
+    lib.ssh_keys.SSH_KEY_VALUE_VAR: TEST_SSH_KEY_VALUE
+}
+
+file_path_set = {
+    lib.ssh_keys.SSH_KEY_FILE_VAR: TEST_SSH_KEY_FILE_PATH
+}
 
 
 # =============================================================================
@@ -21,80 +35,81 @@ TEST_SSH_KEY_FILE_PATH_BAR = '/app/testdata/ssh-keys/bar'
 #
 # =============================================================================
 
-class TestSshKeys(unittest.TestCase):
-    def test_extracts_ssh_key_file_paths_from_environment(self):
-        test_ssh_key_name = 'foo'
-        test_ssh_key_path = TEST_SSH_KEY_FILE_PATH_FOO
-        ssh_key_file_path_var = \
-            lib.ssh_keys.SSH_KEY_FILE_VAR_PREFIX + test_ssh_key_name
-        test_environment = {
-            ssh_key_file_path_var: test_ssh_key_path
-        }
-        test_ssh_key_file_paths = \
-            lib.ssh_keys.extract_ssh_key_paths(test_environment)
-        self.assertIn(test_ssh_key_name, test_ssh_key_file_paths)
-        self.assertEqual(
-            test_ssh_key_file_paths[test_ssh_key_name],
-            test_ssh_key_path)
 
-    def test_copies_ssh_keys_to_ssh_keys_directory(self):
-        test_ssh_key_file_paths = {
-            'foo': TEST_SSH_KEY_FILE_PATH_FOO,
-            'bar': TEST_SSH_KEY_FILE_PATH_BAR
-        }
+class when_setting_ssh_key_from_var_value_and_file_path(unittest.TestCase):
+    def test_it_throws_a_runtime_error(self):
+        with self.assertRaises(RuntimeError):
+            lib.ssh_keys.main(both_env_vars_set)
+
+
+class when_setting_ssh_key_from_var_value(unittest.TestCase):
+    def test_it_creates_the_ssh_key_file(self):
         with tempfile.TemporaryDirectory() as temp_ssh_keys_dir:
-            lib.ssh_keys.install_ssh_key_files(
-                test_ssh_key_file_paths, temp_ssh_keys_dir)
-            self.assertTrue(
-                os.path.exists(
-                    os.path.join(
-                        temp_ssh_keys_dir,
-                        'foo.pem')))
-            self.assertTrue(
-                os.path.exists(
-                    os.path.join(
-                        temp_ssh_keys_dir,
-                        'bar.pem')))
+            lib.ssh_keys.main(var_value_set, ssh_keys_dir=temp_ssh_keys_dir)
+            ssh_key_file_path = os.path.join(
+                temp_ssh_keys_dir,
+                lib.ssh_keys.SSH_KEY_FILE_NAME)
+            self.assertTrue(os.path.exists(ssh_key_file_path))
 
-    def test_extracts_ssh_key_values_from_environment(self):
-        test_ssh_key_name = 'foo'
-        test_ssh_key_value = 'foo-value'
-        ssh_key_value_var = \
-            lib.ssh_keys.SSH_KEY_VAR_PREFIX + test_ssh_key_name
-        test_environment = {
-            ssh_key_value_var: test_ssh_key_value
-        }
-        test_ssh_keys = \
-            lib.ssh_keys.extract_ssh_keys(test_environment)
-        self.assertIn(test_ssh_key_name, test_ssh_keys)
-        self.assertEqual(
-            test_ssh_keys[test_ssh_key_name],
-            test_ssh_key_value)
-
-    def test_writes_ssh_keys_to_ssh_keys_directory(self):
-        test_ssh_key_values = {
-            'foo': 'foo-value',
-            'bar': 'bar-value'
-        }
+    def test_it_writes_the_var_value_to_the_ssh_key_file(self):
         with tempfile.TemporaryDirectory() as temp_ssh_keys_dir:
-            lib.ssh_keys.install_ssh_keys(
-                test_ssh_key_values, temp_ssh_keys_dir)
-            self.assertTrue(
-                os.path.exists(
-                    os.path.join(
-                        temp_ssh_keys_dir,
-                        'foo.pem')))
-            self.assertTrue(
-                os.path.exists(
-                    os.path.join(
-                        temp_ssh_keys_dir,
-                        'bar.pem')))
+            lib.ssh_keys.main(var_value_set, ssh_keys_dir=temp_ssh_keys_dir)
+            ssh_key_file_path = os.path.join(
+                temp_ssh_keys_dir,
+                lib.ssh_keys.SSH_KEY_FILE_NAME)
+            with open(ssh_key_file_path, 'r') as ssh_key_file:
+                ssh_key_file_contents = ssh_key_file.read()
+            self.assertEqual(TEST_SSH_KEY_VALUE, ssh_key_file_contents)
 
-    def test_writes_ssh_key_config(self):
+    def test_it_ensures_the_ssh_keys_dir_exists(self):
+        with tempfile.TemporaryDirectory() as temp_ssh_keys_parent_dir:
+            temp_ssh_keys_dir = os.path.join(temp_ssh_keys_parent_dir, 'foo')
+            lib.ssh_keys.main(var_value_set, ssh_keys_dir=temp_ssh_keys_dir)
+            self.assertTrue(os.path.exists(temp_ssh_keys_dir))
+
+    def test_it_creates_an_ssh_config_file(self):
         with tempfile.TemporaryDirectory() as temp_ssh_keys_dir:
-            lib.ssh_keys.create_ssh_config(temp_ssh_keys_dir)
-            self.assertTrue(
-                os.path.exists(
-                    os.path.join(
-                        temp_ssh_keys_dir,
-                        'config')))
+            lib.ssh_keys.main(var_value_set, ssh_keys_dir=temp_ssh_keys_dir)
+            ssh_config_file_path = os.path.join(
+                temp_ssh_keys_dir,
+                lib.ssh_keys.SSH_CONFIG_FILE_NAME)
+            self.assertTrue(os.path.exists(ssh_config_file_path))
+
+    def test_it_sets_ssh_config_identityfile(self):
+        with tempfile.TemporaryDirectory() as temp_ssh_keys_dir:
+            lib.ssh_keys.main(var_value_set, ssh_keys_dir=temp_ssh_keys_dir)
+            ssh_key_file_path = os.path.join(
+                temp_ssh_keys_dir,
+                lib.ssh_keys.SSH_KEY_FILE_NAME)
+            ssh_config_file_path = os.path.join(
+                temp_ssh_keys_dir,
+                lib.ssh_keys.SSH_CONFIG_FILE_NAME)
+            with open(ssh_config_file_path, 'r') as ssh_config_file:
+                ssh_config_file_contents = ssh_config_file.read()
+            self.assertIn(
+                f'IdentityFile {ssh_key_file_path}',
+                ssh_config_file_contents)
+
+
+class when_setting_ssh_key_from_var_file(unittest.TestCase):
+    def test_it_creates_the_ssh_key_file(self):
+        with tempfile.TemporaryDirectory() as temp_ssh_keys_dir:
+            lib.ssh_keys.main(file_path_set, ssh_keys_dir=temp_ssh_keys_dir)
+            ssh_key_file_path = os.path.join(
+                temp_ssh_keys_dir,
+                lib.ssh_keys.SSH_KEY_FILE_NAME)
+            self.assertTrue(os.path.exists(ssh_key_file_path))
+
+    def test_it_writes_the_file_contents_to_the_ssh_key_file(self):
+        with tempfile.TemporaryDirectory() as temp_ssh_keys_dir:
+            lib.ssh_keys.main(file_path_set, ssh_keys_dir=temp_ssh_keys_dir)
+            ssh_key_file_path = os.path.join(
+                temp_ssh_keys_dir,
+                lib.ssh_keys.SSH_KEY_FILE_NAME)
+            with open(TEST_SSH_KEY_FILE_PATH) as ssh_key_file:
+                src_ssh_key_file_contents = ssh_key_file.read()
+            with open(ssh_key_file_path, 'r') as ssh_key_file:
+                dst_ssh_key_file_contents = ssh_key_file.read()
+            self.assertEqual(
+                src_ssh_key_file_contents,
+                dst_ssh_key_file_contents)

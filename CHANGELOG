@@ -1,6 +1,6 @@
 2019-05-15
 
-- [new] supports installing ssh keys from file or var
+- [new] supports using git ssh key from file or var
 
 2019-05-14
 

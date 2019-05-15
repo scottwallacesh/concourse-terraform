@@ -4,8 +4,10 @@ import os
 import shutil
 import sys
 
-SSH_KEY_VAR_PREFIX = 'CT_SSH_KEY_VALUE_'
-SSH_KEY_FILE_VAR_PREFIX = 'CT_SSH_KEY_FILE_'
+SSH_CONFIG_FILE_NAME = 'config'
+SSH_KEY_FILE_VAR = 'CT_GIT_IDENTITY_FILE_'
+SSH_KEY_VALUE_VAR = 'CT_GIT_IDENTITY_VALUE_'
+SSH_KEY_FILE_NAME = 'git.pem'
 SSH_KEYS_DIR_PATH = '/root/.ssh'
 
 
@@ -13,86 +15,52 @@ def log(message: str) -> None:
     print(f"[install-ssh-keys] {message}", file=sys.stderr)
 
 
-def extract_ssh_key_paths(environment: dict) -> dict:
-    ssh_key_paths: dict = {}
-    for key, value in environment.items():
-        if key.startswith(SSH_KEY_FILE_VAR_PREFIX):
-            # strip prefix and use the remainder as the key name
-            key_name = key[len(SSH_KEY_FILE_VAR_PREFIX):]
-            log(f"found ssh key file '{key_name}' path: {value}")
-            ssh_key_paths[key_name] = value
-    return ssh_key_paths
-
-
-def install_ssh_key_files(
-        ssh_key_paths: dict,
-        ssh_keys_dir: str = None) -> None:
-    if not ssh_keys_dir:
-        ssh_keys_dir = SSH_KEYS_DIR_PATH
-    if not os.path.isdir(ssh_keys_dir):
-        os.makedirs(ssh_keys_dir)
-    for ssh_key_name, ssh_key_src_path in ssh_key_paths.items():
-        ssh_key_dest_path = \
-            os.path.join(
-                ssh_keys_dir,
-                ssh_key_name + '.pem')
-        shutil.copyfile(ssh_key_src_path, ssh_key_dest_path)
-        os.chmod(ssh_key_dest_path, 400)
-        log(f"installed ssh key '{ssh_key_name}' to: {ssh_key_dest_path}")
-
-
-def extract_ssh_keys(environment: dict) -> dict:
-    ssh_keys: dict = {}
-    for key, value in environment.items():
-        if key.startswith(SSH_KEY_VAR_PREFIX):
-            # strip prefix and use the remainder as the key name
-            key_name = key[len(SSH_KEY_VAR_PREFIX):]
-            log(f"found ssh key '{key_name}'")
-            ssh_keys[key_name] = value
-    return ssh_keys
-
-
-def install_ssh_keys(ssh_keys: dict, ssh_keys_dir: str = None) -> None:
-    if not ssh_keys_dir:
-        ssh_keys_dir = SSH_KEYS_DIR_PATH
-    if not os.path.isdir(ssh_keys_dir):
-        os.makedirs(ssh_keys_dir)
-    for ssh_key_name, ssh_key_value in ssh_keys.items():
-        ssh_key_dest_path = \
-            os.path.join(
-                ssh_keys_dir,
-                ssh_key_name + '.pem')
-        with open(ssh_key_dest_path, 'w') as ssh_key_file:
-            ssh_key_file.write(ssh_key_value)
-        os.chmod(ssh_key_dest_path, 400)
-        log(f"installed ssh key '{ssh_key_name}' to: {ssh_key_dest_path}")
-
-
-def create_ssh_config(ssh_keys_dir: str = None) -> None:
-    if not ssh_keys_dir:
-        ssh_keys_dir = SSH_KEYS_DIR_PATH
-    if not os.path.isdir(ssh_keys_dir):
-        os.makedirs(ssh_keys_dir)
+def create_ssh_config(
+        ssh_key_file_path: str,
+        ssh_keys_dir: str) -> None:
     ssh_config_file_path = \
         os.path.join(
             ssh_keys_dir,
-            'config')
+            SSH_CONFIG_FILE_NAME)
+    ssh_config = 'StrictHostKeyChecking no\nLogLevel quiet\n'
+    if os.path.exists(ssh_key_file_path):
+        ssh_config += f'Host *\n    IdentityFile {ssh_key_file_path}\n'
     with open(ssh_config_file_path, 'w') as ssh_config_file:
-        ssh_config_file.write(
-            'StrictHostKeyChecking no\n'
-            'LogLevel quiet\n'
-        )
+        ssh_config_file.write(ssh_config)
     log(f"wrote ssh config to: {ssh_config_file_path}")
 
 
-def main(environment: dict) -> None:
-    ssh_key_paths = extract_ssh_key_paths(environment)
-    if ssh_key_paths:
-        install_ssh_key_files(ssh_key_paths)
-    ssh_keys = extract_ssh_keys(environment)
-    if ssh_keys:
-        install_ssh_keys(ssh_keys)
-    create_ssh_config()
+def main(environment: dict, ssh_keys_dir: str = None) -> None:
+    # get vars from environment
+    ssh_key_file_from_var = environment.get(SSH_KEY_FILE_VAR)
+    ssh_key_value_from_var = environment.get(SSH_KEY_VALUE_VAR)
+
+    # check if both are set
+    if ssh_key_file_from_var and ssh_key_value_from_var:
+        raise RuntimeError('cannot specify both ssh key file path and value')
+
+    # prep ssh keys dir
+    if not ssh_keys_dir:
+        ssh_keys_dir = SSH_KEYS_DIR_PATH
+    if not os.path.isdir(ssh_keys_dir):
+        os.makedirs(ssh_keys_dir)
+
+    # prep ssh key file path
+    ssh_key_file_path = os.path.join(ssh_keys_dir, SSH_KEY_FILE_NAME)
+
+    if ssh_key_value_from_var:
+        # write value to file
+        with open(ssh_key_file_path, 'w') as ssh_key_file:
+            ssh_key_file.write(ssh_key_value_from_var)
+    elif ssh_key_file_from_var:
+        shutil.copyfile(ssh_key_file_from_var, ssh_key_file_path)
+
+    # chmod ssh file if present
+    if os.path.exists(ssh_key_file_path):
+        os.chmod(ssh_key_file_path, 400)
+
+    # create ssh config
+    create_ssh_config(ssh_key_file_path, ssh_keys_dir)
 
 
 if __name__ == '__main__':
