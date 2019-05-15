@@ -28,6 +28,8 @@
 
 		- [installing trusted ca certs](#installing-trusted-ca-certs)
 
+		- [installing ssh keys](#installing-ssh-keys)
+
 		- [using workstation mode](#using-workstation-mode)
 
 		- [running `{tf-cmd}-consul` tasks with `consul-wrapper`](#running-tf-cmd-consul-tasks-with-consul-wrapper)
@@ -460,6 +462,22 @@ set param `CT_TRUSTED_CA_CERT_{name}` to the path of a ca certificate
 
 the file will be copied to `/usr/local/share/ca-certificates/{name}.crt` and then installed to the system's root store
 
+### installing ssh keys
+
+tasks which support installing ssh keys are marked as such in their description
+
+#### ssh keys from file
+
+set param `CT_SSH_KEY_FILE_{name}` to the path of an ssh key file
+
+the file will be copied to `/root/.ssh/{name}.pem`
+
+#### ssh keys from value
+
+set param `CT_SSH_KEY_VALUE_{name}` to the value of an ssh key
+
+the value will be written to `/root/.ssh/{name}.pem`
+
 ### using workstation mode
 
 workstation mode allow users to ssh into the worker and perform advanced operations while the terraform environment is configured
@@ -665,6 +683,10 @@ CONSUL_CLIENT_KEY=/tmp/build/e55deab7/consul-certificates/client-key.pem
 
 - `TF_AUX_INPUT_NAME_{index}`: _optional_. directory name for aux input number `index`. see [providing auxiliary inputs](#providing-auxiliary-inputs)
 
+- `CT_SSH_KEY_VALUE_{name}`: _optional_. value of ssh key to write to the system ssh key dir. may be provided multiple times (once per `{name}`). see [installing ssh keys](#installing-ssh-keys)
+
+- `CT_SSH_KEY_FILE_{name}`: _optional_. path to an ssh key to copy to the system ssh key dir. may be provided multiple times (once per `{name}`). see [installing ssh keys](#installing-ssh-keys)
+
 - `CT_TRUSTED_CA_CERT_{name}`: _optional_. path to a ca certificate to install to the system's trusted root store. may be provided multiple times (once per `{name}`). see [installing trusted ca certs](#installing-trusted-ca-certs)
 
 - `DEBUG`: _optional_. prints command line arguments and increases log verbosity. set to `true` to enable. **may result in leaked credentials**. default: `false`
@@ -708,6 +730,10 @@ CONSUL_CLIENT_KEY=/tmp/build/e55deab7/consul-certificates/client-key.pem
 - `TF_AUX_INPUT_PATH_{index}`: _optional_. path to aux input number `index`. see [providing auxiliary inputs](#providing-auxiliary-inputs)
 
 - `TF_AUX_INPUT_NAME_{index}`: _optional_. directory name for aux input number `index`. see [providing auxiliary inputs](#providing-auxiliary-inputs)
+
+- `CT_SSH_KEY_VALUE_{name}`: _optional_. value of ssh key to write to the system ssh key dir. may be provided multiple times (once per `{name}`). see [installing ssh keys](#installing-ssh-keys)
+
+- `CT_SSH_KEY_FILE_{name}`: _optional_. path to an ssh key to copy to the system ssh key dir. may be provided multiple times (once per `{name}`). see [installing ssh keys](#installing-ssh-keys)
 
 - `CT_TRUSTED_CA_CERT_{name}`: _optional_. path to a ca certificate to install to the system's trusted root store. may be provided multiple times (once per `{name}`). see [installing trusted ca certs](#installing-trusted-ca-certs)
 
@@ -756,6 +782,10 @@ CONSUL_CLIENT_KEY=/tmp/build/e55deab7/consul-certificates/client-key.pem
 - `TF_AUX_INPUT_PATH_{index}`: _optional_. path to aux input number `index`. see [providing auxiliary inputs](#providing-auxiliary-inputs)
 
 - `TF_AUX_INPUT_NAME_{index}`: _optional_. directory name for aux input number `index`. see [providing auxiliary inputs](#providing-auxiliary-inputs)
+
+- `CT_SSH_KEY_VALUE_{name}`: _optional_. value of ssh key to write to the system ssh key dir. may be provided multiple times (once per `{name}`). see [installing ssh keys](#installing-ssh-keys)
+
+- `CT_SSH_KEY_FILE_{name}`: _optional_. path to an ssh key to copy to the system ssh key dir. may be provided multiple times (once per `{name}`). see [installing ssh keys](#installing-ssh-keys)
 
 - `CT_TRUSTED_CA_CERT_{name}`: _optional_. path to a ca certificate to install to the system's trusted root store. may be provided multiple times (once per `{name}`). see [installing trusted ca certs](#installing-trusted-ca-certs)
 
@@ -806,6 +836,10 @@ CONSUL_CLIENT_KEY=/tmp/build/e55deab7/consul-certificates/client-key.pem
 - `TF_AUX_INPUT_PATH_{index}`: _optional_. path to aux input number `index`. see [providing auxiliary inputs](#providing-auxiliary-inputs)
 
 - `TF_AUX_INPUT_NAME_{index}`: _optional_. directory name for aux input number `index`. see [providing auxiliary inputs](#providing-auxiliary-inputs)
+
+- `CT_SSH_KEY_VALUE_{name}`: _optional_. value of ssh key to write to the system ssh key dir. may be provided multiple times (once per `{name}`). see [installing ssh keys](#installing-ssh-keys)
+
+- `CT_SSH_KEY_FILE_{name}`: _optional_. path to an ssh key to copy to the system ssh key dir. may be provided multiple times (once per `{name}`). see [installing ssh keys](#installing-ssh-keys)
 
 - `CT_TRUSTED_CA_CERT_{name}`: _optional_. path to a ca certificate to install to the system's trusted root store. may be provided multiple times (once per `{name}`). see [installing trusted ca certs](#installing-trusted-ca-certs)
 
@@ -890,6 +924,10 @@ CONSUL_CLIENT_KEY=/tmp/build/e55deab7/consul-certificates/client-key.pem
 - `TF_AUX_INPUT_PATH_{index}`: _optional_. path to aux input number `index`. see [providing auxiliary inputs](#providing-auxiliary-inputs)
 
 - `TF_AUX_INPUT_NAME_{index}`: _optional_. directory name for aux input number `index`. see [providing auxiliary inputs](#providing-auxiliary-inputs)
+
+- `CT_SSH_KEY_VALUE_{name}`: _optional_. value of ssh key to write to the system ssh key dir. may be provided multiple times (once per `{name}`). see [installing ssh keys](#installing-ssh-keys)
+
+- `CT_SSH_KEY_FILE_{name}`: _optional_. path to an ssh key to copy to the system ssh key dir. may be provided multiple times (once per `{name}`). see [installing ssh keys](#installing-ssh-keys)
 
 - `CT_TRUSTED_CA_CERT_{name}`: _optional_. path to a ca certificate to install to the system's trusted root store. may be provided multiple times (once per `{name}`). see [installing trusted ca certs](#installing-trusted-ca-certs)
 

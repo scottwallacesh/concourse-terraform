@@ -24,7 +24,7 @@ def extract_ca_cert_paths(environment: dict) -> dict:
     return ca_cert_paths
 
 
-def install_ca_certs(ca_cert_paths: dict, ca_certs_dir: str = None) -> dict:
+def install_ca_certs(ca_cert_paths: dict, ca_certs_dir: str = None) -> None:
     if not ca_certs_dir:
         ca_certs_dir = TRUSTED_CA_CERTS_DIR_PATH
     for ca_cert_name, ca_cert_src_path in ca_cert_paths.items():

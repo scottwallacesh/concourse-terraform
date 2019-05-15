@@ -22,6 +22,8 @@ COPY \
   lib/__init__.py \
   lib/commands.py \
   lib/consul_config.py \
+  lib/environment.py \
+  lib/ssh_keys.py \
   lib/terraform_dir.py \
   lib/terraform.py \
   lib/trusted_ca_certs.py \
@@ -33,6 +35,8 @@ COPY \
   bin/consul-config \
   bin/consul-entrypoint \
   bin/consul-wrapper \
+  bin/install-ssh-keys \
+  bin/install-trusted-ca-certs \
   /app/bin/
 
 # TESTS
