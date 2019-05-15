@@ -2,6 +2,7 @@
 
 # stdlib
 import os
+import stat
 import tempfile
 import unittest
 import unittest.mock
@@ -50,6 +51,49 @@ class when_setting_ssh_key_from_var_value(unittest.TestCase):
                 temp_ssh_keys_dir,
                 lib.ssh_keys.SSH_KEY_FILE_NAME)
             self.assertTrue(os.path.exists(ssh_key_file_path))
+
+    def test_it_sets_the_ssh_key_file_permissions(self):
+        with tempfile.TemporaryDirectory() as temp_ssh_keys_dir:
+            lib.ssh_keys.main(var_value_set, ssh_keys_dir=temp_ssh_keys_dir)
+            ssh_key_file_path = os.path.join(
+                temp_ssh_keys_dir,
+                lib.ssh_keys.SSH_KEY_FILE_NAME)
+            # check for owner read/write
+            self.assertTrue(
+                bool(os.stat(ssh_key_file_path).st_mode & (
+                    stat.S_IRUSR | stat.S_IWUSR
+                ))
+            )
+            # check for group read/write
+            self.assertFalse(
+                bool(os.stat(ssh_key_file_path).st_mode & (
+                    stat.S_IRGRP | stat.S_IWGRP
+                ))
+            )
+            # check for other read/write
+            self.assertFalse(
+                bool(os.stat(ssh_key_file_path).st_mode & (
+                    stat.S_IROTH | stat.S_IWOTH
+                ))
+            )
+            # check for owner execute
+            self.assertFalse(
+                bool(os.stat(ssh_key_file_path).st_mode & (
+                    stat.S_IXUSR
+                ))
+            )
+            # check for group execute
+            self.assertFalse(
+                bool(os.stat(ssh_key_file_path).st_mode & (
+                    stat.S_IXGRP
+                ))
+            )
+            # check for other execute
+            self.assertFalse(
+                bool(os.stat(ssh_key_file_path).st_mode & (
+                    stat.S_IXOTH
+                ))
+            )
 
     def test_it_writes_the_var_value_to_the_ssh_key_file(self):
         with tempfile.TemporaryDirectory() as temp_ssh_keys_dir:

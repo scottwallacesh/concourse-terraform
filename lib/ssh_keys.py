@@ -2,6 +2,7 @@
 
 import os
 import shutil
+import stat
 import sys
 
 SSH_CONFIG_FILE_NAME = 'config'
@@ -57,7 +58,7 @@ def main(environment: dict, ssh_keys_dir: str = None) -> None:
 
     # chmod ssh file if present
     if os.path.exists(ssh_key_file_path):
-        os.chmod(ssh_key_file_path, 400)
+        os.chmod(ssh_key_file_path, stat.S_IRUSR | stat.S_IWUSR)
 
     # create ssh config
     create_ssh_config(ssh_key_file_path, ssh_keys_dir)
