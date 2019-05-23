@@ -90,7 +90,7 @@ class TestApplyTerraformDir(unittest.TestCase):
                 self.assertTrue(
                     os.path.isfile(exported_backup_state_file_path))
 
-    def test_apply_exports_state_files_on_failure(self):
+    def test_apply_exports_state_file_on_failure(self):
         # create a new temp dir as the working dir
         with common.create_test_working_dir() as test_working_dir:
             # init the terraform dir
@@ -108,19 +108,44 @@ class TestApplyTerraformDir(unittest.TestCase):
                         state_file_path=common.TEST_STATE_FILE_WITHOUT_KEY,
                         state_output_dir=state_output_dir,
                         debug=True)
-                # check for exported state files
+                # check for exported state file
                 exported_state_file_path = \
                     os.path.join(
                         state_output_dir,
                         lib.terraform_dir.TERRAFORM_STATE_FILE_NAME)
-                exported_backup_state_file_path = \
-                    os.path.join(
-                        state_output_dir,
-                        lib.terraform_dir.TERRAFORM_BACKUP_STATE_FILE_NAME)
                 self.assertTrue(
                     os.path.isfile(exported_state_file_path))
-                self.assertTrue(
-                    os.path.isfile(exported_backup_state_file_path))
+
+    def test_apply_exports_state_file_backup_if_present_on_failure(self):
+        # create a new temp dir as the working dir
+        with common.create_test_working_dir() as test_working_dir:
+            # init the terraform dir
+            terraform_dir = lib.terraform_dir.init_terraform_dir(
+                common.TEST_INVALID_TERRAFORM_DIR,
+                terraform_work_dir=test_working_dir,
+                debug=True
+            )
+            # create a new temp dir as the state output dir
+            with common.create_test_working_dir() as state_output_dir:
+                with self.assertRaises(CalledProcessError):
+                    # apply without plan
+                    lib.terraform_dir.apply_terraform_dir(
+                        terraform_dir,
+                        state_file_path=common.TEST_STATE_FILE_WITHOUT_KEY,
+                        state_output_dir=state_output_dir,
+                        debug=True)
+                # check for source backup state file
+                source_backup_state_file_path = os.path.join(
+                    terraform_dir,
+                    lib.terraform_dir.TERRAFORM_BACKUP_STATE_FILE_NAME)
+                if os.path.exists(source_backup_state_file_path):
+                    # check for exported state files
+                    exported_backup_state_file_path = \
+                        os.path.join(
+                            state_output_dir,
+                            lib.terraform_dir.TERRAFORM_BACKUP_STATE_FILE_NAME)
+                    self.assertTrue(
+                        os.path.isfile(exported_backup_state_file_path))
 
     def test_apply_imports_output_var_file_with_single_value(self):
         # create a new temp dir as the working dir
