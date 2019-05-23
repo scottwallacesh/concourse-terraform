@@ -1,3 +1,14 @@
+2019-05-23
+
+- add terraform version 0.12.0
+
+- updated state file export test for new 0.12.x behavior
+
+  - when an apply operation fails, terraform 0.12.0 catches
+    failures earlier than 0.11.x, which means sometimes
+    the state file is not modified and thus 
+    a backup state file is not always produced
+
 2019-05-21
 
 - add terraform version 0.11.14
