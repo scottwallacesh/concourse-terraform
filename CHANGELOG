@@ -1,3 +1,8 @@
+2019-07-09
+
+- add terraform version 0.12.3
+- consul image version to 1.5.2
+
 2019-06-11
 
 - add terraform version 0.12.1
