@@ -45,7 +45,7 @@ resources:
 - name: concourse-terraform-image
   type: docker-image
   source:
-    repository: snapkitchen/concourse-terraform
+    repository: public.ecr.aws/g9q9d1i9/concourse-terraform
     tag: 0.11.10
 
 # terraform plan archives

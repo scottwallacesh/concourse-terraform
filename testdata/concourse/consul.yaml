@@ -12,13 +12,13 @@ resources:
 - name: concourse-terraform-image
   type: docker-image
   source:
-    repository: snapkitchen/concourse-terraform
+    repository: public.ecr.aws/g9q9d1i9/concourse-terraform
     tag: 0.11.10-consul
 
 - name: concourse-terraform-local-image
   type: docker-image
   source:
-    repository: docker-registry.service.local.consul:5000/snapkitchen/concourse-terraform
+    repository: docker-registry.service.local.consul:5000/public.ecr.aws/g9q9d1i9/concourse-terraform
     insecure_registries: ['http://docker-registry.service.local.consul:5000']
     tag: 0.11.10-consul
 

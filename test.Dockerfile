@@ -1,4 +1,4 @@
-ARG PARENT_IMAGE=snapkitchen/concourse-terraform:latest
+ARG PARENT_IMAGE=public.ecr.aws/g9q9d1i9/concourse-terraform:latest
 FROM $PARENT_IMAGE
 
 ENV PYTHONPATH=$PYTHONPATH:/app

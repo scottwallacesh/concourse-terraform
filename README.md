@@ -119,7 +119,7 @@ resources:
 - name: concourse-terraform-image
   type: docker-image
   source:
-    repository: snapkitchen/concourse-terraform
+    repository: public.ecr.aws/g9q9d1i9/concourse-terraform
     tag: {VERSION}
 
 jobs:
@@ -500,7 +500,7 @@ a consul image is also provided and automatically built by docker hub
 
 the image is available as per:
 
-`snapkitchen/concourse-terraform:{tf-version}-consul`
+`public.ecr.aws/g9q9d1i9/concourse-terraform:{tf-version}-consul`
 
 the version of consul is determined by the value in `consul-version` at the time the image was built, thus it is recommended to build this image yourself if you want to use a specific consul version
 
@@ -1009,7 +1009,7 @@ also exports relevant variables
 
 # automated builds
 
-automated builds are handled by [docker hub](https://hub.docker.com/r/snapkitchen/concourse-terraform/)
+automated builds are handled by [docker hub](https://hub.docker.com/r/public.ecr.aws/g9q9d1i9/concourse-terraform/)
 
 custom build hooks are used to build and test every version in the `tf-versions` file
 
