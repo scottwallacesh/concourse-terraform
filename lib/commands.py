@@ -1,5 +1,5 @@
 # stdlib
-from typing import Optional
+from typing import Any, Optional
 
 # local
 import lib.terraform_dir
@@ -47,7 +47,7 @@ def plan(
         terraform_source_dir: str,
         terraform_dir_path: Optional[str] = None,
         state_file_path: Optional[str] = None,
-        output_var_files: Optional[dict] = None,
+        output_var_files: Optional[dict[str, Any]] = None,
         error_on_no_changes: Optional[bool] = None,
         destroy: Optional[bool] = None,
         debug: bool = False) -> None:
@@ -70,8 +70,8 @@ def plan(
 # =============================================================================
 def apply(
         terraform_source_dir: str,
-        terraform_dir_path: Optional[str] = None,
-        output_var_files: Optional[dict] = None,
+        terraform_dir_path: str = ".",
+        output_var_files: Optional[dict[str, Any]] = None,
         state_file_path: Optional[str] = None,
         state_output_dir: Optional[str] = None,
         debug: bool = False) -> None:
@@ -97,7 +97,7 @@ def create_plan(
         plan_file_path: Optional[str] = None,
         terraform_dir_path: Optional[str] = None,
         state_file_path: Optional[str] = None,
-        output_var_files: Optional[dict] = None,
+        output_var_files: Optional[dict[str, Any]] = None,
         source_ref: Optional[str] = None,
         source_ref_file: Optional[str] = None,
         error_on_no_changes: Optional[bool] = None,
@@ -164,7 +164,7 @@ def apply_plan(
 # =============================================================================
 def output(
         output_dir: str,
-        output_targets: Optional[dict] = None,
+        output_targets: Optional[dict[str, Any]] = None,
         state_file_path: Optional[str] = None,
         debug: bool = False) -> None:
     terraform_dir = lib.terraform_dir.init_terraform_dir(
