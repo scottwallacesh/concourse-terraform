@@ -55,6 +55,10 @@ def _terraform(
     output_file: str = "",
     debug: bool = False,
 ) -> None:
+
+    if not terraform_dir:
+        terraform_dir = "."
+
     process_args = [TERRAFORM_BIN_FILE_PATH, f"-chdir={terraform_dir}", *args]
     # force 'TF_IN_AUTOMATION'
     os.environ["TF_IN_AUTOMATION"] = "1"
@@ -155,8 +159,6 @@ def init(
     backend_config_vars: Optional[dict[str, Any]] = None,
     debug: bool = False,
 ) -> None:
-    if not terraform_dir_path:
-        terraform_dir_path = "."
     terraform_command_args = []
     # set backend config values
     if backend_config_vars:
@@ -189,8 +191,6 @@ def plan(
     var_file_paths: Optional[list[str]] = None,
     debug: bool = False,
 ) -> None:
-    if not terraform_dir_path:
-        terraform_dir_path = "."
     terraform_command_args = []
     if state_file_path:
         # specify state file
@@ -229,8 +229,6 @@ def apply(
     var_file_paths: Optional[list[str]] = None,
     debug: bool = False,
 ) -> None:
-    if not terraform_dir_path:
-        terraform_dir_path = "."
     terraform_command_args = []
     if plan_file_path:
         # target plan file if using a plan file
