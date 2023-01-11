@@ -6,11 +6,10 @@ import shutil
 import tarfile
 import tempfile
 import time
-from typing import Optional
+from typing import Any, Optional
 
 # local
 import lib.terraform
-
 
 # =============================================================================
 #
@@ -18,22 +17,22 @@ import lib.terraform
 #
 # =============================================================================
 
-AUX_INPUT_PATH_PREFIX = 'TF_AUX_INPUT_PATH_'
-AUX_INPUT_NAME_PREFIX = 'TF_AUX_INPUT_NAME_'
-AUX_INPUT_PATH_KEY = 'PATH'
-AUX_INPUT_NAME_KEY = 'NAME'
-BACKEND_FILE_NAME = 'backend.tf'
-BACKEND_TYPE_VAR = 'TF_BACKEND_TYPE'
-BACKEND_CONFIG_VAR_PREFIX = 'TF_BACKEND_CONFIG_'
-TERRAFORM_WORK_DIR = '/tmp/tfwork'
-TERRAFORM_DIR_NAME = 'terraform'
-TERRAFORM_PLUGIN_CACHE_DIR_NAME = '.tfcache'
-TERRAFORM_PLUGIN_CACHE_VAR_NAME = 'TF_PLUGIN_CACHE'
-TERRAFORM_PLAN_FILE_NAME = '.tfplan'
-TERRAFORM_STATE_FILE_NAME = 'terraform.tfstate'
-TERRAFORM_OUTPUT_FILE_NAME = 'tf-output.json'
-TERRAFORM_OUTPUT_FILE_SUFFIX = '.json'
-TERRAFORM_BACKUP_STATE_FILE_NAME = f'{TERRAFORM_STATE_FILE_NAME}.backup'
+AUX_INPUT_PATH_PREFIX = "TF_AUX_INPUT_PATH_"
+AUX_INPUT_NAME_PREFIX = "TF_AUX_INPUT_NAME_"
+AUX_INPUT_PATH_KEY = "PATH"
+AUX_INPUT_NAME_KEY = "NAME"
+BACKEND_FILE_NAME = "backend.tf"
+BACKEND_TYPE_VAR = "TF_BACKEND_TYPE"
+BACKEND_CONFIG_VAR_PREFIX = "TF_BACKEND_CONFIG_"
+TERRAFORM_WORK_DIR = "/tmp/tfwork"
+TERRAFORM_DIR_NAME = "terraform"
+TERRAFORM_PLUGIN_CACHE_DIR_NAME = ".tfcache"
+TERRAFORM_PLUGIN_CACHE_VAR_NAME = "TF_PLUGIN_CACHE"
+TERRAFORM_PLAN_FILE_NAME = ".tfplan"
+TERRAFORM_STATE_FILE_NAME = "terraform.tfstate"
+TERRAFORM_OUTPUT_FILE_NAME = "tf-output.json"
+TERRAFORM_OUTPUT_FILE_SUFFIX = ".json"
+TERRAFORM_BACKUP_STATE_FILE_NAME = f"{TERRAFORM_STATE_FILE_NAME}.backup"
 
 
 # =============================================================================
@@ -63,10 +62,13 @@ def _prep_terraform_dir(terraform_dir: str) -> None:
 # _prep_terraform_dir_path
 # =============================================================================
 def _prep_terraform_dir_path(
-        terraform_dir: str,
-        terraform_dir_path: str) -> str:
+    terraform_dir: str,
+    terraform_dir_path: str,
+) -> str:
     prepped_terraform_dir_path = os.path.join(
-        terraform_dir, terraform_dir_path)
+        terraform_dir,
+        terraform_dir_path,
+    )
     if not os.path.isdir(prepped_terraform_dir_path):
         os.makedirs(prepped_terraform_dir_path)
     return prepped_terraform_dir_path
@@ -75,9 +77,7 @@ def _prep_terraform_dir_path(
 # =============================================================================
 # _copy_terraform_dir
 # =============================================================================
-def _copy_terraform_dir(
-        source: str,
-        destination: str) -> None:
+def _copy_terraform_dir(source: str, destination: str) -> None:
     distutils.dir_util._path_created = {}
     # preserving symlinks since terraform plan archives contain them
     distutils.dir_util.copy_tree(source, destination, preserve_symlinks=1)
@@ -87,11 +87,12 @@ def _copy_terraform_dir(
 # _import_state_file_to_terraform_dir
 # =============================================================================
 def _import_state_file_to_terraform_dir(
-        state_file_path: str,
-        terraform_dir: str) -> str:
+    state_file_path: str, terraform_dir: str
+) -> str:
     destination_file_path = os.path.join(
         terraform_dir,
-        TERRAFORM_STATE_FILE_NAME)
+        TERRAFORM_STATE_FILE_NAME,
+    )
     shutil.copyfile(state_file_path, destination_file_path)
     print(f"imported state file {state_file_path} to: {destination_file_path}")
     return TERRAFORM_STATE_FILE_NAME
@@ -101,36 +102,41 @@ def _import_state_file_to_terraform_dir(
 # _export_state_files_from_terraform_dir
 # =============================================================================
 def _export_state_files_from_terraform_dir(
-        terraform_dir: str,
-        state_output_dir: str) -> None:
+    terraform_dir: str,
+    state_output_dir: str,
+) -> None:
     # create output dir, if needed
     if not os.path.isdir(state_output_dir):
         os.makedirs(state_output_dir)
     # format paths to state files
     source_state_file_path = os.path.join(
         terraform_dir,
-        TERRAFORM_STATE_FILE_NAME)
+        TERRAFORM_STATE_FILE_NAME,
+    )
     source_backup_state_file_path = os.path.join(
         terraform_dir,
-        TERRAFORM_BACKUP_STATE_FILE_NAME)
+        TERRAFORM_BACKUP_STATE_FILE_NAME,
+    )
     destination_state_file_path = os.path.join(
         state_output_dir,
-        TERRAFORM_STATE_FILE_NAME)
+        TERRAFORM_STATE_FILE_NAME,
+    )
     destination_backup_state_file_path = os.path.join(
         state_output_dir,
-        TERRAFORM_BACKUP_STATE_FILE_NAME)
+        TERRAFORM_BACKUP_STATE_FILE_NAME,
+    )
     # copy state files, if found
     if os.path.isfile(source_state_file_path):
-        shutil.copyfile(
-            source_state_file_path,
-            destination_state_file_path)
+        shutil.copyfile(source_state_file_path, destination_state_file_path)
         print(f"exported state file to: {destination_state_file_path}")
     if os.path.isfile(source_backup_state_file_path):
         shutil.copyfile(
             source_backup_state_file_path,
-            destination_backup_state_file_path)
-        print('exported backup state file to: '
-              f'{destination_backup_state_file_path}')
+            destination_backup_state_file_path,
+        )
+        print(
+            f"exported backup state file {destination_backup_state_file_path}",
+        )
 
 
 # =============================================================================
@@ -146,16 +152,15 @@ def _generate_backend_file_contents(backend_type: str) -> str:
 # _create_backend_file
 # =============================================================================
 def _create_backend_file(
-        backend_type: str,
-        backend_file_dir: str,
-        debug: bool = False) -> None:
+    backend_type: str, backend_file_dir: str, debug: bool = False
+) -> None:
     backend_file_path = os.path.join(backend_file_dir, BACKEND_FILE_NAME)
     backend_file_contents = _generate_backend_file_contents(backend_type)
-    with open(backend_file_path, 'w') as backend_file:
+    with open(backend_file_path, "w", encoding="utf-8") as backend_file:
         backend_file.write(backend_file_contents)
     if debug:
-        print('[debug] created backend file:')
-        with open(backend_file_path, 'r') as backend_file:
+        print("[debug] created backend file:")
+        with open(backend_file_path, "r", encoding="utf-8") as backend_file:
             print(backend_file.read())
 
 
@@ -163,7 +168,7 @@ def _create_backend_file(
 # _get_value_from_file
 # =============================================================================
 def _get_value_from_file(file_path: str) -> str:
-    with open(file_path, 'r') as file:
+    with open(file_path, "r", encoding="utf-8") as file:
         value = file.read()
     return value
 
@@ -173,7 +178,7 @@ def _get_value_from_file(file_path: str) -> str:
 # =============================================================================
 def _format_archive_version(
     timestamp: int,
-    source_ref: Optional[str] = None
+    source_ref: Optional[str] = None,
 ) -> str:
     if source_ref:
         return f"{timestamp}.{source_ref}"
@@ -185,9 +190,10 @@ def _format_archive_version(
 # _get_archive_version
 # =============================================================================
 def _get_archive_version(
-        source_ref: Optional[str] = None,
-        source_ref_file: Optional[str] = None,
-        timestamp: Optional[int] = None) -> str:
+    source_ref: Optional[str] = None,
+    source_ref_file: Optional[str] = None,
+    timestamp: Optional[int] = None,
+) -> str:
     if not timestamp:
         # get current unix timestamp
         timestamp = int(time.time())
@@ -201,23 +207,19 @@ def _get_archive_version(
 # _create_terraform_dir_archive
 # =============================================================================
 def _create_terraform_dir_archive(
-        terraform_dir: str,
-        output_dir: str,
-        version: str,
-        debug: bool = False) -> str:
+    terraform_dir: str, output_dir: str, version: str, debug: bool = False
+) -> str:
     archive_file_name = f"terraform-{version}.tar.gz"
     archive_file_path = os.path.join(output_dir, archive_file_name)
-    with tarfile.open(archive_file_path, 'x:gz') as archive_file:
+    with tarfile.open(archive_file_path, "x:gz") as archive_file:
         if debug:
             archive_file.debug = 3
-            print('[debug] creating terraform archive: '
-                  f"{archive_file_path}")
+            print(f"[debug] creating terraform archive: {archive_file_path}")
         archive_file.add(terraform_dir, TERRAFORM_DIR_NAME)
     if debug:
-        with tarfile.open(archive_file_path, 'r:gz') as archive_file:
+        with tarfile.open(archive_file_path, "r:gz") as archive_file:
             archive_file.debug = 3
-            print('[debug] terraform archive contents: '
-                  f"{archive_file_path}")
+            print(f"[debug] terraform archive contents: {archive_file_path}")
             archive_file.list()
     print(f"wrote archive to: {archive_file_path}")
     return archive_file_path
@@ -226,26 +228,28 @@ def _create_terraform_dir_archive(
 # =============================================================================
 # _get_archive_file_name
 # =============================================================================
-def _get_archive_file_name(archive_input_dir) -> str:
-    archive_files = [archive_file
-                     for archive_file in os.listdir(archive_input_dir)
-                     if archive_file.endswith('.tar.gz')]
+def _get_archive_file_name(archive_input_dir: str) -> str:
+    archive_files = [
+        archive_file
+        for archive_file in os.listdir(archive_input_dir)
+        if archive_file.endswith(".tar.gz")
+    ]
     if len(archive_files) == 0:
-        raise FileNotFoundError('no archive file found at path: '
-                                f"{archive_input_dir}")
+        raise FileNotFoundError(f"no archive file found at path: {archive_input_dir}")
     elif len(archive_files) > 1:
-        raise FileExistsError('multiple archive files found at path: '
-                              '{}\n{}'.format(archive_input_dir,
-                                              '\n'.join(archive_files)))
+        raise FileExistsError(
+            "multiple archive files found at path: "
+            "{}\n{}".format(archive_input_dir, "\n".join(archive_files))
+        )
     else:
-        return archive_files[0]
+        return str(archive_files[0])
 
 
 # =============================================================================
 # _print_directory_contents
 # =============================================================================
 def _print_directory_contents(directory: str) -> None:
-    for path, subdirs, files in os.walk(directory):
+    for path, _, files in os.walk(directory):
         for name in files:
             print(os.path.join(path, name))
 
@@ -254,9 +258,8 @@ def _print_directory_contents(directory: str) -> None:
 # _restore_terraform_dir_archive
 # =============================================================================
 def _restore_terraform_dir_archive(
-        terraform_dir: str,
-        input_dir: str,
-        debug: bool = False) -> None:
+    terraform_dir: str, input_dir: str, debug: bool = False
+) -> None:
     # get the archive file name
     archive_file_name = _get_archive_file_name(input_dir)
     # get the archive file path
@@ -264,18 +267,17 @@ def _restore_terraform_dir_archive(
     # get a temporary directory to extract to
     with tempfile.TemporaryDirectory() as extract_scratch_dir:
         # extract to the temporary directory
-        with tarfile.open(archive_file_path, 'r:gz') as archive_file:
+        with tarfile.open(archive_file_path, "r:gz") as archive_file:
             if debug:
                 archive_file.debug = 3
-                print('[debug] extracting terraform archive: '
-                      f"{archive_file_path}")
+                print(f"[debug] extracting terraform archive: {archive_file_path}")
             archive_file.extractall(path=extract_scratch_dir)
         # get the extracted terraform dir path
         extracted_terraform_dir = _get_terraform_dir(extract_scratch_dir)
         # copy the extracted terraform dir to the terraform dir
         _copy_terraform_dir(extracted_terraform_dir, terraform_dir)
     if debug:
-        print('[debug] extracted archive contents: ')
+        print("[debug] extracted archive contents: ")
         _print_directory_contents(terraform_dir)
     print(f"restored archive {archive_file_path} to: {terraform_dir}")
 
@@ -290,49 +292,49 @@ def _get_backend_type_from_environment() -> Optional[str]:
 # =============================================================================
 # _get_backend_config_from_environment
 # =============================================================================
-def _get_backend_config_from_environment() -> Optional[dict]:
-    backend_config: dict = {}
+def _get_backend_config_from_environment() -> Optional[dict[str, Any]]:
+    backend_config: dict[str, Any] = {}
     for key, value in os.environ.items():
         if key.startswith(BACKEND_CONFIG_VAR_PREFIX):
             # strip prefix and use the remainder as the key name
-            backend_config[key[len(BACKEND_CONFIG_VAR_PREFIX):]] = value
+            backend_config[key[len(BACKEND_CONFIG_VAR_PREFIX) :]] = value
     return backend_config or None
 
 
 # =============================================================================
 # _get_aux_inputs_from_environment
 # =============================================================================
-def _get_aux_inputs_from_environment() -> Optional[list]:
-    aux_inputs: list = []
+def _get_aux_inputs_from_environment() -> list[dict[str, Any]]:
+    aux_inputs: list[dict[str, Any]] = []
     for key, value in os.environ.items():
         if key.startswith(AUX_INPUT_PATH_PREFIX):
-            aux_input: dict = {}
+            aux_input: dict[str, Any] = {}
             # add the path
             aux_input[AUX_INPUT_PATH_KEY] = value
-            aux_input_index: str = None
+            aux_input_index: str = ""
             # strip prefix and use the remainder as the input index
-            aux_input_index = key[len(AUX_INPUT_PATH_PREFIX):]
+            aux_input_index = key[len(AUX_INPUT_PATH_PREFIX) :]
             # build the expected name key
-            aux_input_name_key = \
-                AUX_INPUT_NAME_PREFIX + aux_input_index
+            aux_input_name_key = AUX_INPUT_NAME_PREFIX + aux_input_index
             # check if the name key was set
             if aux_input_name_key in os.environ:
                 # add the name
                 aux_input[AUX_INPUT_NAME_KEY] = os.environ[aux_input_name_key]
             # add the aux input to the output list
             aux_inputs.append(aux_input)
-    return aux_inputs or None
+    return aux_inputs
 
 
 # =============================================================================
 # _copy_aux_inputs_to_terraform_dir
 # =============================================================================
 def _copy_aux_inputs_to_terraform_dir(
-        aux_inputs: list,
-        terraform_dir: str) -> None:
+    aux_inputs: list[dict[str, Any]],
+    terraform_dir: str,
+) -> None:
     for aux_input in aux_inputs:
         aux_input_source_path: str = aux_input[AUX_INPUT_PATH_KEY]
-        aux_input_name: str = None
+        aux_input_name: str = ""
         if AUX_INPUT_NAME_KEY in aux_input:
             aux_input_name = aux_input[AUX_INPUT_NAME_KEY]
         if aux_input_name:
@@ -345,23 +347,24 @@ def _copy_aux_inputs_to_terraform_dir(
 # =============================================================================
 # _get_plugin_cache_dir
 # =============================================================================
-def _get_plugin_cache_dir(terraform_dir: str):
+def _get_plugin_cache_dir(terraform_dir: str) -> str:
     return os.path.join(terraform_dir, TERRAFORM_PLUGIN_CACHE_DIR_NAME)
 
 
 # =============================================================================
 # _get_plugin_cache_dir_from_environment
 # =============================================================================
-def _get_plugin_cache_dir_from_environment() -> Optional[str]:
-    return os.environ.get(TERRAFORM_PLUGIN_CACHE_VAR_NAME)
+def _get_plugin_cache_dir_from_environment() -> str:
+    return os.environ.get(TERRAFORM_PLUGIN_CACHE_VAR_NAME, "")
 
 
 # =============================================================================
 # _import_plugin_cache_dir
 # =============================================================================
 def _import_plugin_cache_dir(
-        input_plugin_cache_dir: str,
-        plugin_cache_dir: str) -> None:
+    input_plugin_cache_dir: str,
+    plugin_cache_dir: str,
+) -> None:
     _copy_terraform_dir(input_plugin_cache_dir, plugin_cache_dir)
 
 
@@ -369,27 +372,25 @@ def _import_plugin_cache_dir(
 # _export_plugin_cache_dir
 # =============================================================================
 def _export_plugin_cache_dir(
-        plugin_cache_dir: str,
-        output_plugin_cache_dir: str) -> None:
+    plugin_cache_dir: str,
+    output_plugin_cache_dir: str,
+) -> None:
     _copy_terraform_dir(plugin_cache_dir, output_plugin_cache_dir)
 
 
 # =============================================================================
 # _export_output_file
 # =============================================================================
-def _export_output_file(
-        output_file_path: str,
-        output_dir: str) -> None:
+def _export_output_file(output_file_path: str, output_dir: str) -> None:
     # create output dir, if needed
     if not os.path.isdir(output_dir):
         os.makedirs(output_dir)
     # copy path_to/file.ext to output_dir/file.ext
     dst_output_file_path = os.path.join(
         output_dir,
-        os.path.basename(output_file_path))
-    shutil.copyfile(
-        output_file_path,
-        dst_output_file_path)
+        os.path.basename(output_file_path),
+    )
+    shutil.copyfile(output_file_path, dst_output_file_path)
     print(f"exported output to: {dst_output_file_path}")
 
 
@@ -397,43 +398,45 @@ def _export_output_file(
 # _convert_output_var_file_into_var_file
 # =============================================================================
 def _convert_output_var_file_into_var_file(
-        var_name: str,
-        output_var_file_contents: dict) -> Optional[dict]:
-    var_file: dict = {}
+    var_name: str,
+    output_var_file_contents: dict[str, Any],
+) -> dict[str, Any]:
+    var_file: dict[str, Any] = {}
     # look for 'value' key, indicating this is
     # just a single output item
-    if 'value' in output_var_file_contents:
+    if "value" in output_var_file_contents:
         # since it's just a single item
         # use the var name as the key name
-        var_file[var_name] = output_var_file_contents['value']
+        var_file[var_name] = output_var_file_contents["value"]
     else:
         # multiple items, look for 'value' in each
         for key, value in output_var_file_contents.items():
-            if value and 'value' in value:
-                var_file[key] = value['value']
-    return var_file or None
+            if value and "value" in value:
+                var_file[key] = value["value"]
+    return var_file
 
 
 # =============================================================================
 # _convert_and_import_output_var_files_to_terraform_dir
 # =============================================================================
 def _convert_and_import_output_var_files_to_terraform_dir(
-        output_var_files: dict,
-        terraform_dir: str) -> Optional[list]:
-    var_files: list = []
+    output_var_files: dict[str, Any],
+    terraform_dir: str,
+) -> list[str]:
+    var_files: list[str] = []
     for key, value in output_var_files.items():
-        with open(value, 'r') as output_var_file:
+        with open(value, "r", encoding="utf-8") as output_var_file:
             output_var_file_contents = json.load(output_var_file)
         var_file_contents = _convert_output_var_file_into_var_file(
             key,
-            output_var_file_contents)
+            output_var_file_contents,
+        )
         if var_file_contents:
-            var_file_path = os.path.join(terraform_dir,
-                                         f"{key}.tfvars.json")
-            with open(var_file_path, 'w') as var_file:
+            var_file_path = os.path.join(terraform_dir, f"{key}.tfvars.json")
+            with open(var_file_path, "w", encoding="utf-8") as var_file:
                 json.dump(var_file_contents, var_file)
             var_files.append(var_file_path)
-    return var_files or None
+    return var_files
 
 
 # =============================================================================
@@ -446,10 +449,11 @@ def _convert_and_import_output_var_files_to_terraform_dir(
 # init_terraform_dir
 # =============================================================================
 def init_terraform_dir(
-        terraform_source_dir: Optional[str] = None,
-        terraform_dir_path: Optional[str] = None,
-        terraform_work_dir: Optional[str] = None,
-        debug: bool = False) -> str:
+    terraform_source_dir: str = "",
+    terraform_dir_path: str = "",
+    terraform_work_dir: str = "",
+    debug: bool = False,
+) -> str:
     # default the work dir
     if not terraform_work_dir:
         terraform_work_dir = TERRAFORM_WORK_DIR
@@ -471,13 +475,12 @@ def init_terraform_dir(
     if backend_type:
         if terraform_dir_path:
             backend_file_dir = _prep_terraform_dir_path(
-                terraform_dir, terraform_dir_path)
+                terraform_dir,
+                terraform_dir_path,
+            )
         else:
             backend_file_dir = terraform_dir
-        _create_backend_file(
-            backend_type,
-            backend_file_dir,
-            debug=debug)
+        _create_backend_file(backend_type, backend_file_dir, debug=debug)
     # get any backend config values from environment
     backend_config_vars = _get_backend_config_from_environment()
     # get the plugin cache dir path
@@ -486,19 +489,18 @@ def init_terraform_dir(
     input_plugin_cache_dir = _get_plugin_cache_dir_from_environment()
     # optionally import the plugin cache dir into terraform plugin cache dir
     if input_plugin_cache_dir:
-        _import_plugin_cache_dir(input_plugin_cache_dir,
-                                 plugin_cache_dir)
+        _import_plugin_cache_dir(input_plugin_cache_dir, plugin_cache_dir)
     # terraform init
     lib.terraform.init(
         terraform_dir,
         terraform_dir_path=terraform_dir_path,
         plugin_cache_dir_path=plugin_cache_dir,
         backend_config_vars=backend_config_vars,
-        debug=debug)
+        debug=debug,
+    )
     # optionally export the terraform plugin cache dir back to the input
     if input_plugin_cache_dir:
-        _export_plugin_cache_dir(plugin_cache_dir,
-                                 input_plugin_cache_dir)
+        _export_plugin_cache_dir(plugin_cache_dir, input_plugin_cache_dir)
     return terraform_dir
 
 
@@ -506,26 +508,28 @@ def init_terraform_dir(
 # archive_terraform_dir
 # =============================================================================
 def archive_terraform_dir(
-        terraform_dir: str,
-        archive_output_dir: str,
-        source_ref: Optional[str] = None,
-        source_ref_file: Optional[str] = None,
-        debug: bool = False) -> str:
+    terraform_dir: str,
+    archive_output_dir: str,
+    source_ref: Optional[str] = None,
+    source_ref_file: Optional[str] = None,
+    debug: bool = False,
+) -> str:
     # check terraform dir
     if not terraform_dir:
-        raise ValueError('terraform_dir cannot be empty')
+        raise ValueError("terraform_dir cannot be empty")
     # check archive output dir
     if not archive_output_dir:
-        raise ValueError('archive_output_dir cannot be empty')
+        raise ValueError("archive_output_dir cannot be empty")
     # create archive of terraform dir
     archive_version = _get_archive_version(
         source_ref=source_ref,
-        source_ref_file=source_ref_file)
+        source_ref_file=source_ref_file,
+    )
     archive_file_path = _create_terraform_dir_archive(
         terraform_dir,
         archive_output_dir,
         archive_version,
-        debug=debug
+        debug=debug,
     )
     return archive_file_path
 
@@ -534,12 +538,13 @@ def archive_terraform_dir(
 # restore_terraform_dir
 # =============================================================================
 def restore_terraform_dir(
-        archive_input_dir: str,
-        terraform_work_dir: Optional[str] = None,
-        debug: bool = False) -> str:
+    archive_input_dir: str,
+    terraform_work_dir: Optional[str] = None,
+    debug: bool = False,
+) -> str:
     # check archive input dir
     if not archive_input_dir:
-        raise ValueError('archive_input_dir cannot be empty')
+        raise ValueError("archive_input_dir cannot be empty")
     # default the work dir
     if not terraform_work_dir:
         terraform_work_dir = TERRAFORM_WORK_DIR
@@ -551,7 +556,8 @@ def restore_terraform_dir(
     _restore_terraform_dir_archive(
         terraform_dir,
         archive_input_dir,
-        debug=debug)
+        debug=debug,
+    )
     return terraform_dir
 
 
@@ -559,36 +565,39 @@ def restore_terraform_dir(
 # plan_terraform_dir
 # =============================================================================
 def plan_terraform_dir(
-        terraform_dir: str,
-        terraform_dir_path: Optional[str] = None,
-        state_file_path: Optional[str] = None,
-        create_plan_file: bool = False,
-        plan_file_path: Optional[str] = None,
-        output_var_files: Optional[dict] = None,
-        error_on_no_changes: Optional[bool] = None,
-        destroy: Optional[bool] = None,
-        debug: bool = False) -> Optional[str]:
+    terraform_dir: str,
+    terraform_dir_path: str = "",
+    state_file_path: str = "",
+    create_plan_file: bool = False,
+    plan_file_path: str = "",
+    output_var_files: Optional[dict[str, Any]] = None,
+    error_on_no_changes: bool = True,
+    destroy: bool = False,
+    debug: bool = False,
+) -> Optional[str]:
     # check terraform dir
     if not terraform_dir:
-        raise ValueError('terraform_dir cannot be empty')
+        raise ValueError("terraform_dir cannot be empty")
     if create_plan_file and (not plan_file_path):
-            plan_file_path = TERRAFORM_PLAN_FILE_NAME
+        plan_file_path = TERRAFORM_PLAN_FILE_NAME
     if state_file_path:
         # import the state file and update the path
-        state_file_path = \
-            _import_state_file_to_terraform_dir(
-                state_file_path,
-                terraform_dir)
+        state_file_path = _import_state_file_to_terraform_dir(
+            state_file_path,
+            terraform_dir,
+        )
     # get the plugin cache path
     plugin_cache_dir = _get_plugin_cache_dir(terraform_dir)
     # optionally import var files
     var_file_paths = []
     if output_var_files:
         # convert and import the output var files
-        imported_output_var_files = \
+        imported_output_var_files = (
             _convert_and_import_output_var_files_to_terraform_dir(
                 output_var_files,
-                terraform_dir)
+                terraform_dir,
+            )
+        )
         # add their paths to the list of var files
         if imported_output_var_files:
             var_file_paths.extend(imported_output_var_files)
@@ -602,41 +611,47 @@ def plan_terraform_dir(
         error_on_no_changes=error_on_no_changes,
         destroy=destroy,
         var_file_paths=var_file_paths,
-        debug=debug)
+        debug=debug,
+    )
     if create_plan_file:
         print(f"wrote plan file to: {plan_file_path}")
         return plan_file_path
+
+    return ""
 
 
 # =============================================================================
 # apply_terraform_dir
 # =============================================================================
 def apply_terraform_dir(
-        terraform_dir: str,
-        terraform_dir_path: str = None,
-        output_var_files: Optional[dict] = None,
-        state_file_path: Optional[str] = None,
-        state_output_dir: Optional[str] = None,
-        debug: bool = False) -> None:
+    terraform_dir: str,
+    terraform_dir_path: str = "",
+    output_var_files: Optional[dict[str, Any]] = None,
+    state_file_path: str = "",
+    state_output_dir: str = "",
+    debug: bool = False,
+) -> None:
     # check terraform dir
     if not terraform_dir:
-        raise ValueError('terraform_dir cannot be empty')
+        raise ValueError("terraform_dir cannot be empty")
     if state_file_path:
         # import the state file and update the path
-        state_file_path = \
-            _import_state_file_to_terraform_dir(
-                state_file_path,
-                terraform_dir)
+        state_file_path = _import_state_file_to_terraform_dir(
+            state_file_path,
+            terraform_dir,
+        )
     # get the plugin cache path
     plugin_cache_dir = _get_plugin_cache_dir(terraform_dir)
     # optionally import var files
     var_file_paths = []
     if output_var_files:
         # convert and import the output var files
-        imported_output_var_files = \
+        imported_output_var_files = (
             _convert_and_import_output_var_files_to_terraform_dir(
                 output_var_files,
-                terraform_dir)
+                terraform_dir,
+            )
+        )
         # add their paths to the list of var files
         if imported_output_var_files:
             var_file_paths.extend(imported_output_var_files)
@@ -647,25 +662,28 @@ def apply_terraform_dir(
             plugin_cache_dir_path=plugin_cache_dir,
             var_file_paths=var_file_paths,
             state_file_path=state_file_path,
-            debug=debug)
+            debug=debug,
+        )
     finally:
         if state_output_dir:
             _export_state_files_from_terraform_dir(
                 terraform_dir,
-                state_output_dir)
+                state_output_dir,
+            )
 
 
 # =============================================================================
 # apply_terraform_plan
 # =============================================================================
 def apply_terraform_plan(
-        terraform_dir: str,
-        state_output_dir: Optional[str] = None,
-        plan_file_path: Optional[str] = None,
-        debug: bool = False) -> None:
+    terraform_dir: str,
+    state_output_dir: Optional[str] = None,
+    plan_file_path: Optional[str] = None,
+    debug: bool = False,
+) -> None:
     # check terraform dir
     if not terraform_dir:
-        raise ValueError('terraform_dir cannot be empty')
+        raise ValueError("terraform_dir cannot be empty")
     # check plan file path
     if not plan_file_path:
         plan_file_path = TERRAFORM_PLAN_FILE_NAME
@@ -676,55 +694,55 @@ def apply_terraform_plan(
             terraform_dir,
             plugin_cache_dir_path=plugin_cache_dir,
             plan_file_path=plan_file_path,
-            debug=debug)
+            debug=debug,
+        )
     finally:
         if state_output_dir:
             _export_state_files_from_terraform_dir(
                 terraform_dir,
-                state_output_dir)
+                state_output_dir,
+            )
 
 
 # =============================================================================
 # show_terraform_plan
 # =============================================================================
 def show_terraform_plan(
-        terraform_dir: str,
-        plan_file_path: Optional[str] = None,
-        debug: bool = False) -> None:
+    terraform_dir: str,
+    plan_file_path: Optional[str] = None,
+    debug: bool = False,
+) -> None:
     # check terraform dir
     if not terraform_dir:
-        raise ValueError('terraform_dir cannot be empty')
+        raise ValueError("terraform_dir cannot be empty")
     # check plan file path
     if not plan_file_path:
         plan_file_path = TERRAFORM_PLAN_FILE_NAME
-    lib.terraform.show(
-        terraform_dir,
-        plan_file_path,
-        debug=debug)
+    lib.terraform.show(terraform_dir, plan_file_path, debug=debug)
 
 
 # =============================================================================
 # output_terraform_dir
 # =============================================================================
 def output_terraform_dir(
-        terraform_dir: str,
-        output_dir: str,
-        output_targets: Optional[dict] = None,
-        terraform_work_dir: Optional[str] = None,
-        state_file_path: Optional[str] = None,
-        debug: bool = False) -> None:
+    terraform_dir: str,
+    output_dir: str,
+    output_targets: Optional[dict[str, Any]] = None,
+    state_file_path: str = "",
+    debug: bool = False,
+) -> None:
     # check terraform dir
     if not terraform_dir:
-        raise ValueError('terraform_dir cannot be empty')
+        raise ValueError("terraform_dir cannot be empty")
     # check output_dir
     if not output_dir:
-        raise ValueError('output_dir cannot be empty')
+        raise ValueError("output_dir cannot be empty")
     if state_file_path:
         # import the state file and update the path
-        state_file_path = \
-            _import_state_file_to_terraform_dir(
-                state_file_path,
-                terraform_dir)
+        state_file_path = _import_state_file_to_terraform_dir(
+            state_file_path,
+            terraform_dir,
+        )
     if output_targets:
         # get a temporary file to write to
         with tempfile.NamedTemporaryFile() as tf_output_temp_file:
@@ -733,26 +751,30 @@ def output_terraform_dir(
                 terraform_dir,
                 tf_output_temp_file.name,
                 state_file_path=state_file_path,
-                debug=debug)
+                debug=debug,
+            )
             # read contents from temporary file
             tf_output_file_contents = json.load(tf_output_temp_file)
         # each to a file named after itself
         for target_file, target_name in output_targets.items():
-            output_file_path = \
-                os.path.join(
-                    terraform_dir,
-                    target_file + TERRAFORM_OUTPUT_FILE_SUFFIX)
+            output_file_path = os.path.join(
+                terraform_dir,
+                target_file + TERRAFORM_OUTPUT_FILE_SUFFIX,
+            )
             output_target_value = tf_output_file_contents[target_name]
-            with open(output_file_path, 'w') as output_file:
+            with open(output_file_path, "w", encoding="utf-8") as output_file:
                 json.dump(output_target_value, output_file)
             _export_output_file(output_file_path, output_dir)
     else:
         # dump output(s) to default name
-        output_file_path = \
-            os.path.join(terraform_dir, TERRAFORM_OUTPUT_FILE_NAME)
+        output_file_path = os.path.join(
+            terraform_dir,
+            TERRAFORM_OUTPUT_FILE_NAME,
+        )
         lib.terraform.output(
             terraform_dir,
             output_file_path,
             state_file_path=state_file_path,
-            debug=debug)
+            debug=debug,
+        )
         _export_output_file(output_file_path, output_dir)

@@ -9,3 +9,4 @@ testdata/terraform/tfplan
 
 # python things
 __pycache__/
+.pyenv/
