@@ -1,9 +1,8 @@
 # stdlib
-import enum
 import os
 import subprocess
 import sys
-from typing import Optional
+from typing import Any, Optional, IO
 
 
 # =============================================================================
@@ -38,7 +37,7 @@ class TerraformNoChangesError(subprocess.CalledProcessError):
 # _dump_plugin_cache
 # =============================================================================
 def _dump_plugin_cache(plugin_cache_dir: str) -> None:
-    for path, dirs, files in os.walk(plugin_cache_dir):
+    for path, _, files in os.walk(plugin_cache_dir):
         print(f'[debug] plugin cache item: {path}')
         for f in files:
             print(f'[debug] plugin cache item: {os.path.join(path, f)}')
@@ -49,7 +48,8 @@ def _dump_plugin_cache(plugin_cache_dir: str) -> None:
 # =============================================================================
 def _terraform(
         *args: str,
-        input=None,
+        terraform_dir: str = ".",
+        input_arg: IO[Any] = None,
         working_dir: str = None,
         plugin_cache_dir: str = None,
         error_on_no_changes: bool = True,
@@ -57,6 +57,7 @@ def _terraform(
         debug: bool = False) -> None:
     process_args = [
         TERRAFORM_BIN_FILE_PATH,
+        f"-chdir={terraform_dir}",
         *args
     ]
     # force 'TF_IN_AUTOMATION'
@@ -76,10 +77,10 @@ def _terraform(
                 stderr=subprocess.PIPE,  # redirect stderr to stdout
                 bufsize=1,
                 universal_newlines=True,
-                stdin=input,
+                stdin=input_arg,
                 cwd=working_dir) as pipe:
             if output_file:
-                with open(output_file, 'w') as output_file_obj:
+                with open(output_file, 'w', encoding="utf-8") as output_file_obj:
                     for line in pipe.stdout:
                         output_file_obj.write(line)
                         if debug:
@@ -118,7 +119,7 @@ def _terraform(
                     masked_args)
     finally:
         if plugin_cache_dir and debug:
-            print(f'[debug] dumping updated plugin cache')
+            print('[debug] dumping updated plugin cache')
             _dump_plugin_cache(plugin_cache_dir)
 
 
@@ -141,11 +142,10 @@ def version() -> None:
 # =============================================================================
 def init(
         working_dir_path: str,
-        terraform_dir_path: Optional[str] = None,
-        plugin_cache_dir_path: Optional[str] = None,
+        terraform_dir_path: str = ".",
+        plugin_cache_dir_path: str = "",
         backend_config_vars: Optional[dict] = None,
         debug: bool = False) -> None:
-    # default terraform dir path
     if not terraform_dir_path:
         terraform_dir_path = '.'
     terraform_command_args = []
@@ -159,7 +159,7 @@ def init(
         'init',
         '-input=false',
         *terraform_command_args,
-        terraform_dir_path,
+        terraform_dir=terraform_dir_path,
         working_dir=working_dir_path,
         plugin_cache_dir=plugin_cache_dir_path,
         debug=debug)
@@ -170,8 +170,8 @@ def init(
 # =============================================================================
 def plan(
         working_dir_path: str,
-        terraform_dir_path: Optional[str] = None,
-        plugin_cache_dir_path: Optional[str] = None,
+        terraform_dir_path: str = ".",
+        plugin_cache_dir_path: str = "",
         state_file_path: Optional[str] = None,
         create_plan_file: bool = False,
         plan_file_path: Optional[str] = None,
@@ -179,12 +179,12 @@ def plan(
         destroy: Optional[bool] = None,
         var_file_paths: Optional[list] = None,
         debug: bool = False) -> None:
+    if not terraform_dir_path:
+        terraform_dir_path = '.'
     if error_on_no_changes not in [True, False]:
         error_on_no_changes = True
     if destroy not in [True, False]:
         destroy = False
-    if not terraform_dir_path:
-        terraform_dir_path = '.'
     terraform_command_args = []
     if state_file_path:
         # specify state file
@@ -204,7 +204,7 @@ def plan(
         '-input=false',
         '-detailed-exitcode',
         *terraform_command_args,
-        terraform_dir_path,
+        terraform_dir=terraform_dir_path,
         working_dir=working_dir_path,
         plugin_cache_dir=plugin_cache_dir_path,
         error_on_no_changes=error_on_no_changes,
@@ -216,8 +216,8 @@ def plan(
 # =============================================================================
 def apply(
         working_dir_path: str,
-        terraform_dir_path: Optional[str] = None,
-        plugin_cache_dir_path: Optional[str] = None,
+        terraform_dir_path: str = ".",
+        plugin_cache_dir_path: str = "",
         state_file_path: Optional[str] = None,
         output_state_file_path: Optional[str] = None,
         plan_file_path: Optional[str] = None,
@@ -243,7 +243,7 @@ def apply(
         'apply',
         '-input=false',
         *terraform_command_args,
-        terraform_dir_path,
+        terraform_dir=terraform_dir_path,
         working_dir=working_dir_path,
         plugin_cache_dir=plugin_cache_dir_path,
         debug=debug)

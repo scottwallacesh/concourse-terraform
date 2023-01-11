@@ -6,3 +6,6 @@ testdata/terraform/.terraform
 testdata/terraform/terraform.tfstate
 testdata/terraform/terraform.tfstate.backup
 testdata/terraform/tfplan
+
+# python things
+__pycache__/
